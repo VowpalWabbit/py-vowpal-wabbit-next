@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.15...3.22)
 
 project(vowpalwabbit2 VERSION "0.0.1")
 
-add_subdirectory(pybind11)
+add_subdirectory(ext_libs/pybind11)
 
 SET(VW_BUILD_VW_C_WRAPPER OFF CACHE BOOL "" FORCE)
 SET(FMT_SYS_DEP ON CACHE BOOL "" FORCE)
@@ -12,7 +12,7 @@ SET(VW_BOOST_MATH_SYS_DEP ON CACHE BOOL "" FORCE)
 SET(VW_GTEST_SYS_DEP ON CACHE BOOL "" FORCE)
 SET(VW_ZLIB_SYS_DEP ON CACHE BOOL "" FORCE)
 SET(BUILD_TESTING OFF CACHE BOOL "" FORCE)
-add_subdirectory(vowpal_wabbit EXCLUDE_FROM_ALL)
+add_subdirectory(ext_libs/vowpal_wabbit EXCLUDE_FROM_ALL)
 
 pybind11_add_module(_core MODULE src/main.cpp)
 target_compile_definitions(_core PRIVATE VERSION_INFO=${PROJECT_VERSION})
