@@ -50,7 +50,8 @@ jobs:
     - uses: pypa/cibuildwheel@v2.11.1
       env:
         CIBW_ARCHS_MACOS: auto universal2
-        CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake
+        CIBW_ENVIRONMENT: CMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake
+        CIBW_ENVIRONMENT_WINDOWS: VCPKG_FORCE_DOWNLOADED_BINARIES=true
 
     - name: Verify clean directory
       run: git diff --exit-code
