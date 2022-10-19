@@ -5,7 +5,7 @@ on:
   pull_request:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   build:
@@ -24,11 +24,10 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-
     - name: Build and install
       run: pip install --verbose .[test]
       env:
-        CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+        CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake
 
     - name: Test
       run: pytest
