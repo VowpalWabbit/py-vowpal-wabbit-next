@@ -49,9 +49,9 @@ jobs:
 
     - uses: pypa/cibuildwheel@v2.11.1
       env:
-        CIBW_ARCHS_MACOS: auto universal2
-        CIBW_ENVIRONMENT_MACOS: CMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake
-        CIBW_ENVIRONMENT_WINDOWS: VCPKG_FORCE_DOWNLOADED_BINARIES=true CMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake
+        CIBW_ARCHS_MACOS: x86_64 arm64
+        CIBW_ENVIRONMENT_MACOS: CMAKE_TOOLCHAIN_FILE=${{github.workspace}}/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake
+        CIBW_ENVIRONMENT_WINDOWS: VCPKG_FORCE_DOWNLOADED_BINARIES=true CMAKE_TOOLCHAIN_FILE=ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake
         CIBW_ENVIRONMENT_LINUX: CMAKE_TOOLCHAIN_FILE=/project/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake
 
     - name: Verify clean directory
