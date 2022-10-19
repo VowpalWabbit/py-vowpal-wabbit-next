@@ -1,10 +1,7 @@
-[submodule "vcpkg"]
+[submodule "ext_libs/vcpkg"]
 	path = ext_libs/vcpkg
 	url = https://github.com/Microsoft/vcpkg.git
-[submodule "vowpal_wabbit"]
-	path = ext_libs/vowpal_wabbit
-	url = https://github.com/VowpalWabbit/vowpal_wabbit.git
-[submodule "pybind11"]
+[submodule "ext_libs/pybind11"]
 	path = ext_libs/pybind11
 	url = https://github.com/pybind/pybind11.git
 [submodule "ext_libs/vowpal_wabbit"]
