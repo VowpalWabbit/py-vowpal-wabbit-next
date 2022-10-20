@@ -1,7 +1,7 @@
 include README.md LICENSE
 graft src
-graft pybind11
-include vowpal_wabbit/CMakeLists.txt
-graft vowpal_wabbit/cmake
-graft vowpal_wabbit/vowpalwabbit
-include vowpal_wabbit/ext_libs/ext_libs.cmake
+graft ext_libs/pybind11
+include ext_libs/vowpal_wabbit/CMakeLists.txt
+graft ext_libs/vowpal_wabbit/cmake
+graft ext_libs/vowpal_wabbit/vowpalwabbit
+include ext_libs/vowpal_wabbit/ext_libs/ext_libs.cmake

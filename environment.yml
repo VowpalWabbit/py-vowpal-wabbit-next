@@ -1,0 +1,13 @@
+name: rtd38
+
+channels:
+  - defaults
+
+dependencies:
+  - boost
+  - flatbuffers
+  - fmt
+  - python=3.8
+  - rapidjson
+  - spdlog
+  - zlib
