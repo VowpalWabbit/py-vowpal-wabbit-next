@@ -39,7 +39,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        cibw_python: [ "cp38-*", "cp39-*", "cp310-*"]
+        cibw_python: [ "cp38-*", "cp39-*", "cp310-*", "cp311-*"]
 
     steps:
     - uses: actions/checkout@v3
@@ -64,7 +64,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        cibw_python: [ "cp38-*", "cp39-*", "cp310-*"]
+        cibw_python: [ "cp38-*", "cp39-*", "cp310-*", "cp311-*"]
 
     steps:
     - uses: actions/checkout@v3
@@ -89,7 +89,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest]
-        cibw_python: [ "cp38-*", "cp39-*", "cp310-*"]
+        cibw_python: [ "cp38-*", "cp39-*", "cp310-*", "cp311-*"]
 
     steps:
     - uses: actions/checkout@v3
