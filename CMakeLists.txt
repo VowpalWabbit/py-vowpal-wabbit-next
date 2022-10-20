@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.15...3.22)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS On)
 project(vowpalwabbit_next VERSION "0.0.1")
 
 add_subdirectory(ext_libs/pybind11)

@@ -11,6 +11,9 @@ build-backend = "setuptools.build_meta"
 [tool.isort]
 profile = "black"
 
+[tool.black]
+extend-exclude = "_core.pyi"
+
 [tool.cibuildwheel]
 test-command = "pytest {project}/tests"
 test-extras = ["test"]

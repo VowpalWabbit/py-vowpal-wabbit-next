@@ -4,3 +4,6 @@ _skbuild/
 __pycache__/
 .pytest_cache/
 .DS_Store
+.mypy_cache/
+compile_commands.json
+.cache/

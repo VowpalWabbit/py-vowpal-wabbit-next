@@ -29,5 +29,4 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - run: pip install black
-    - name: Test
-      run: black --check src tests
+    - run: black --check src tests
