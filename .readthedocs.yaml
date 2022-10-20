@@ -5,14 +5,19 @@ build:
   tools:
     python: "3.8"
 
-conda:
-  environment: environment.yml
-
 submodules:
   include:
     - ext_libs/pybind11
     - ext_libs/vowpal_wabbit
   recursive: false
+
+conda:
+  environment: environment.yml
+
+python:
+   install:
+   - method: pip
+     path: .
 
 sphinx:
   builder: html
