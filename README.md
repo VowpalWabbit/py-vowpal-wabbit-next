@@ -4,9 +4,19 @@ These are parallel bindings to the existing set of Python bindings for VW. These
 
 ## Goals
 
+- Fully typed
+- No command line based configuration
+
 ## Local debug if using vcpkg deps
-```
+```sh
 export CMAKE_TOOLCHAIN_FILE=$(pwd)/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake
 pip install -e .
 pytest
+```
+
+## Update pybind11 module type stub
+
+After updating the native module the type stub must be updated. This can be done automatically like so (ideally automatically in future, or at least checked if it is stale):
+```sh
+./generate_types.sh
 ```

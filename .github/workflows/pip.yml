@@ -38,3 +38,6 @@ jobs:
 
     - name: Test
       run: pytest
+
+    - name: Typecheck
+      run: mypy

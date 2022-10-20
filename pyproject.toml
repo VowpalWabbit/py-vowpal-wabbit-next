@@ -14,12 +14,19 @@ profile = "black"
 [tool.cibuildwheel]
 test-command = "pytest {project}/tests"
 test-extras = ["test"]
-test-skip = ["*universal2:arm64"]
-# Skip 32-bit builds
-skip = ["*-win32", "*-manylinux_i686"]
+test-skip = ["*-macosx_arm64"]
+# Skip 32-bit builds and musl
+skip = ["*-win32", "*_i686", "*-musllinux_*"]
+build-verbosity = 3
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-testpaths = [
-    "tests",
-]
+testpaths = ["tests"]
+
+[tool.mypy]
+files = "src/**/*.py,tests/**/*.py"
+python_version = "3.8"
+strict = true
+show_error_codes = true
+enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
+warn_unreachable = true
