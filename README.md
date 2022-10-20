@@ -8,14 +8,29 @@ These are parallel bindings to the existing set of Python bindings for VW. These
 - No command line based configuration
 - ...
 
-## Local debug if using vcpkg deps
+## Install
+
+```sh
+pip install vowpalwabbit_next
+```
+
+## Supported platforms
+
+Wheels are provided for the following platforms:
+
+- OS+arch: Windows x64, MacOS x64, MacOS arm64, Linux x64
+- Python: 3.8, 3.9, 3.10
+
+## Development information
+
+### Local debug if using vcpkg deps
 ```sh
 export CMAKE_TOOLCHAIN_FILE=$(pwd)/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake
 pip install -e .
 pytest
 ```
 
-## Update pybind11 module type stub
+### Update pybind11 module type stub
 
 After updating the native module the type stub must be updated. This can be done automatically like so (ideally automatically in future, or at least checked if it is stale):
 ```sh
