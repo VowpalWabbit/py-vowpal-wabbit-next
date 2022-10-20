@@ -1,9 +1,10 @@
 version: 2
 
+conda:
+  environment: docs/environment.yml
+
 build:
-  os: ubuntu-20.04
-  tools:
-    python: "3.8"
+   image: latest
 
 submodules:
   include:
@@ -11,10 +12,8 @@ submodules:
     - ext_libs/vowpal_wabbit
   recursive: false
 
-conda:
-  environment: environment.yml
-
 python:
+   version: "3.8"
    install:
    - method: pip
      path: .

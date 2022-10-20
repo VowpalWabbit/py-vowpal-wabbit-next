@@ -1,8 +1,4 @@
-name: rtd38
-
-channels:
-  - defaults
-
+name: readthedocs
 dependencies:
   - boost
   - flatbuffers
