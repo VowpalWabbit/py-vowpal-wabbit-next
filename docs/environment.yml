@@ -7,3 +7,6 @@ dependencies:
   - rapidjson
   - spdlog
   - zlib
+  - pip:
+    - furo
+
