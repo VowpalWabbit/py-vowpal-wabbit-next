@@ -3,6 +3,10 @@ cmake_minimum_required(VERSION 3.15...3.22)
 set(CMAKE_EXPORT_COMPILE_COMMANDS On)
 project(vowpalwabbit_next VERSION "0.0.1")
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 add_subdirectory(ext_libs/pybind11)
 
 SET(VW_BUILD_VW_C_WRAPPER OFF CACHE BOOL "" FORCE)
