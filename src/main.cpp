@@ -27,6 +27,8 @@ PYBIND11_MODULE(_core, m) {
         Add two numbers
 
         Some other explanation about the add function.
+
+        Additional explanation.
     )pbdoc");
 
     m.def("subtract", [](int i, int j) { return i - j; }, R"pbdoc(
