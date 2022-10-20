@@ -22,6 +22,6 @@ setup(
     package_dir={"": "src"},
     package_data={"vowpalwabbit_next": ["py.typed", "_core.pyi"]},
     cmake_install_dir="src/vowpalwabbit_next",
-    extras_require={"test": ["pytest", "mypy"]},
+    extras_require={"test": ["pytest", "mypy"], "docs": ["furo", "sphinx"]},
     python_requires=">=3.8",
 )
