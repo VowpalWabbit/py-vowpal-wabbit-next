@@ -6,6 +6,7 @@ These are parallel bindings to the existing set of Python bindings for VW. These
 
 - Fully typed
 - No command line based configuration
+- ...
 
 ## Local debug if using vcpkg deps
 ```sh

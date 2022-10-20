@@ -14,11 +14,7 @@ from __future__ import annotations
 import vowpalwabbit_next._core
 import typing
 
-__all__ = [
-    "add",
-    "subtract"
-]
-
+__all__ = ["add", "subtract"]
 
 def add(arg0: int, arg1: int) -> int:
     """
@@ -26,10 +22,12 @@ def add(arg0: int, arg1: int) -> int:
 
     Some other explanation about the add function.
     """
+
 def subtract(arg0: int, arg1: int) -> int:
     """
     Subtract two numbers
 
     Some other explanation about the subtract function.
     """
-__version__ = '0.0.1'
+
+__version__ = "0.0.1"
