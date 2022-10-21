@@ -82,7 +82,7 @@ PYBIND11_MODULE(_core, m)
                  std::string_view bytes_view;
                  if (bytes.has_value())
                  {
-                   bytes_view = bytes.value();
+                   bytes_view = *bytes;
                    model_reader = VW::io::create_buffer_view(bytes_view.data(), bytes_view.size());
                  }
 
