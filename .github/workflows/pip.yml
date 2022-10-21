@@ -33,7 +33,7 @@ jobs:
     - name: Set VCPKG_DEFAULT_TRIPLET on Windows
       if: matrix.os == 'windows-latest'
       run: |
-        "SKBUILD_CONFIGURE_OPTIONS=-DVCPKG_TARGET_TRIPLET=x64-windows-static" >> $env:GITHUB_ENV
+        "SKBUILD_CONFIGURE_OPTIONS=-DVCPKG_TARGET_TRIPLET=x64-windows-static -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded" >> $env:GITHUB_ENV
 
     - name: Build and install
       run: pip install --verbose .[test]
