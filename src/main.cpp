@@ -1,43 +1,102 @@
+#include "vw/config/options_cli.h"
+#include "vw/core/constant.h"
+#include "vw/core/example.h"
+#include "vw/core/global_data.h"
+#include "vw/core/loss_functions.h"
+#include "vw/core/simple_label.h"
+#include "vw/core/vw.h"
+#include "vw/io/io_adapter.h"
+#include "vw/io/logger.h"
+
 #include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
+#include <pybind11/stl.h>
+
+#include <iostream>
+#include <memory>
+#include <optional>
 
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
 
-int add(int i, int j) {
-    return i + j;
-}
-
 namespace py = pybind11;
 
-PYBIND11_MODULE(_core, m) {
-    m.doc() = R"pbdoc(
-        Pybind11 example plugin
-        -----------------------
+struct logger_context
+{
+  py::object driver_logger;
+  py::object log_logger;
+};
 
-        .. currentmodule:: vowpalwabbit_next
+struct workspace_with_logger_contexts
+{
+  std::unique_ptr<logger_context> logger_context_ptr;
+  std::unique_ptr<VW::workspace> workspace_ptr;
+};
 
-        .. autosummary::
-           :toctree: _generate
+void driver_log(void* context, const std::string& message)
+{
+  py::object& driver_logger = static_cast<logger_context*>(context)->driver_logger;
+  driver_logger.attr("info")(message);
+}
 
-           add
-           subtract
-    )pbdoc";
+void log_log(void* context, VW::io::log_level level, const std::string& message)
+{
+  py::object& log_logger = static_cast<logger_context*>(context)->log_logger;
+  switch (level)
+  {
+    case VW::io::log_level::TRACE_LEVEL:
+      log_logger.attr("debug")(message);
+      break;
+    case VW::io::log_level::DEBUG_LEVEL:
+      log_logger.attr("debug")(message);
+      break;
+    case VW::io::log_level::INFO_LEVEL:
+      log_logger.attr("info")(message);
+      break;
+    case VW::io::log_level::WARN_LEVEL:
+      log_logger.attr("warning")(message);
+      break;
+    case VW::io::log_level::ERROR_LEVEL:
+      log_logger.attr("error")(message);
+      break;
+    case VW::io::log_level::CRITICAL_LEVEL:
+      log_logger.attr("critical")(message);
+      break;
+    case VW::io::log_level::OFF_LEVEL:
+      break;
+  }
+}
 
-    m.def("add", &add, R"pbdoc(
-        Add two numbers
+PYBIND11_MODULE(_core, m)
+{
+  py::class_<workspace_with_logger_contexts>(m, "Workspace")
+      .def(py::init(
+               [](const std::vector<std::string>& args, const std::optional<py::bytes>& bytes)
+               {
+                 auto opts = std::make_unique<VW::config::options_cli>(args);
+                 std::unique_ptr<VW::io::reader> model_reader = nullptr;
+                 std::string_view bytes_view;
+                 if (bytes.has_value())
+                 {
+                   bytes_view = bytes.value();
+                   model_reader = VW::io::create_buffer_view(bytes_view.data(), bytes_view.size());
+                 }
 
-        Some other explanation about the add function.
-    )pbdoc");
-
-    m.def("subtract", [](int i, int j) { return i - j; }, R"pbdoc(
-        Subtract two numbers
-
-        Some other explanation about the subtract function.
-    )pbdoc");
+                 auto wrapped_object = std::make_unique<workspace_with_logger_contexts>();
+                 wrapped_object->logger_context_ptr = std::make_unique<logger_context>();
+                 py::object get_logger = py::module::import("logging").attr("getLogger");
+                 wrapped_object->logger_context_ptr->driver_logger = get_logger("vowpalwabbit_next.driver");
+                 wrapped_object->logger_context_ptr->log_logger = get_logger("vowpalwabbit_next.log");
+                 auto logger = VW::io::create_custom_sink_logger(wrapped_object->logger_context_ptr.get(), log_log);
+                 wrapped_object->workspace_ptr = VW::initialize_experimental(std::move(opts), std::move(model_reader),
+                     driver_log, wrapped_object->logger_context_ptr.get(), &logger);
+                 return wrapped_object;
+               }),
+          py::arg("args"), py::kw_only(), py::arg("model_data") = std::nullopt);
 
 #ifdef VERSION_INFO
-    m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
+  m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
 #else
-    m.attr("__version__") = "dev";
+  m.attr("__version__") = "dev";
 #endif
 }

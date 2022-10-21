@@ -1,9 +1,21 @@
-Welcome to vowpalwabbit_next's documentation!
-=============================================
+vowpalwabbit_next
+=================
+
+.. warning::
+   If you are looking for `VowpalWabbit's <https://github.com/VowpalWabbit/vowpal_wabbit>`_
+   Python bindings go `here <https://pypi.org/project/vowpalwabbit/>`_
+
+`vowpalwabbit_next` is currently a place to experiment with a new Python
+interface for `VowpalWabbit <https://github.com/VowpalWabbit/vowpal_wabbit>`_.
+
+They are not ready for consumption and if you are looking for
+VowpalWabbit Python bindings you should use the `existing bindings
+<https://pypi.org/project/vowpalwabbit/>`_.
+
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :caption: Reference
+   :maxdepth: 1
 
+   reference/vowpalwabbit_next.learner
 
-.. automodule:: vowpalwabbit_next
