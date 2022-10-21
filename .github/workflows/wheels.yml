@@ -76,9 +76,7 @@ jobs:
       env:
         CIBW_BUILD: ${{ matrix.cibw_python }}
         CIBW_ARCHS: AMD64
-        CIBW_ENVIRONMENT_WINDOWS: VCPKG_FORCE_DOWNLOADED_BINARIES=true CMAKE_TOOLCHAIN_FILE=${{ steps.change-path.outputs.UNIX_PATH }}/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake
-        CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
-        CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair -w {dest_dir} {wheel}"
+        CIBW_ENVIRONMENT_WINDOWS: VCPKG_FORCE_DOWNLOADED_BINARIES=true CMAKE_TOOLCHAIN_FILE=${{ steps.change-path.outputs.UNIX_PATH }}/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake SKBUILD_CONFIGURE_OPTIONS=-DVCPKG_TARGET_TRIPLET=x64-windows-static
 
     - uses: actions/upload-artifact@v3
       with:
