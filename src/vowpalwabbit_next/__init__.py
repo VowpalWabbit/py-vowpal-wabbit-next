@@ -1,3 +1,3 @@
-from ._core import __doc__, __version__
+from ._core import __version__
 
-__all__ = ["__doc__", "__version__"]
+__all__ = ["__version__"]
