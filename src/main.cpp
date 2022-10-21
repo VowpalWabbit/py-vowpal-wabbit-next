@@ -35,12 +35,16 @@ struct workspace_with_logger_contexts
 
 void driver_log(void* context, const std::string& message)
 {
+  // We don't need to take the GIL here because all C++ should be driven by
+  // Python and not a background thread.
   py::object& driver_logger = static_cast<logger_context*>(context)->driver_logger;
   driver_logger.attr("info")(message);
 }
 
 void log_log(void* context, VW::io::log_level level, const std::string& message)
 {
+  // We don't need to take the GIL here because all C++ should be driven by
+  // Python and not a background thread.
   py::object& log_logger = static_cast<logger_context*>(context)->log_logger;
   switch (level)
   {
