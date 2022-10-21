@@ -30,6 +30,11 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    - name: Set VCPKG_DEFAULT_TRIPLET on Windows
+      if: matrix.os == 'windows-latest'
+      run: |
+        "VCPKG_DEFAULT_TRIPLET=x64-windows-static" >> $env:GITHUB_ENV
+
     - name: Build and install
       run: pip install --verbose .[test]
       env:
