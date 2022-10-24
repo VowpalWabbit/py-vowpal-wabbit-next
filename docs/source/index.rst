@@ -1,5 +1,5 @@
 Welcome to vowpal_wabbit_next's documentation!
-=============================================
+==============================================
 
 .. toctree::
    :maxdepth: 2
