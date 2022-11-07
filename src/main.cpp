@@ -14,7 +14,7 @@ PYBIND11_MODULE(_core, m) {
         Pybind11 example plugin
         -----------------------
 
-        .. currentmodule:: vowpalwabbit_next
+        .. currentmodule:: vowpal_wabbit_next
 
         .. autosummary::
            :toctree: _generate

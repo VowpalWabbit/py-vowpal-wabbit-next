@@ -1,4 +1,4 @@
-import vowpalwabbit_next as m
+import vowpal_wabbit_next as m
 
 
 def test_version() -> None:

@@ -13,15 +13,15 @@ except ImportError:
 from setuptools import find_packages
 
 setup(
-    name="vowpalwabbit_next",
+    name="vowpal_wabbit_next",
     version="0.0.1",
     description="Experimental python bindings for VowpalWabbit",
     author="Jack Gerrits",
     license="BSD-3-Clause",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
-    package_data={"vowpalwabbit_next": ["py.typed", "_core.pyi"]},
-    cmake_install_dir="src/vowpalwabbit_next",
+    package_data={"vowpal_wabbit_next": ["py.typed", "_core.pyi"]},
+    cmake_install_dir="src/vowpal_wabbit_next",
     extras_require={"test": ["pytest", "mypy"]},
     python_requires=">=3.8",
 )
