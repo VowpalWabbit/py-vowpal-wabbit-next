@@ -89,8 +89,8 @@ PYBIND11_MODULE(_core, m)
                  auto wrapped_object = std::make_unique<workspace_with_logger_contexts>();
                  wrapped_object->logger_context_ptr = std::make_unique<logger_context>();
                  py::object get_logger = py::module::import("logging").attr("getLogger");
-                 wrapped_object->logger_context_ptr->driver_logger = get_logger("vowpalwabbit_next.driver");
-                 wrapped_object->logger_context_ptr->log_logger = get_logger("vowpalwabbit_next.log");
+                 wrapped_object->logger_context_ptr->driver_logger = get_logger("vowpal_wabbit_next.driver");
+                 wrapped_object->logger_context_ptr->log_logger = get_logger("vowpal_wabbit_next.log");
                  auto logger = VW::io::create_custom_sink_logger(wrapped_object->logger_context_ptr.get(), log_log);
                  wrapped_object->workspace_ptr = VW::initialize_experimental(std::move(opts), std::move(model_reader),
                      driver_log, wrapped_object->logger_context_ptr.get(), &logger);

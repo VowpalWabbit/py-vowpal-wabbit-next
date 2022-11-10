@@ -1,7 +1,7 @@
-vowpalwabbit_next.learner
+vowpal_wabbit_next.learner
 =========================
 
-.. automodule:: vowpalwabbit_next.learner
+.. automodule:: vowpal_wabbit_next.learner
     :members:
     :undoc-members:
 
