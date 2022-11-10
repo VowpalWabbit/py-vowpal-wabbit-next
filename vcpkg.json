@@ -3,6 +3,7 @@
   "name": "py-vowpal-wabbit",
   "dependencies": [
     "boost-math",
+    "eigen3",
     "fmt",
     "rapidjson",
     "spdlog",
