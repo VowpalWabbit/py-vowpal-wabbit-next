@@ -1,5 +1,5 @@
 from __future__ import annotations
-import vowpalwabbit_next._core
+import vowpal_wabbit_next._core
 import typing
 
 __all__ = [

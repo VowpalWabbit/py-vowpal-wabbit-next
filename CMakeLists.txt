@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15...3.22)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS On)
-project(vowpalwabbit_next VERSION "0.0.1")
+project(vowpal_wabbit_next VERSION "0.0.1")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

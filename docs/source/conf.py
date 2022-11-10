@@ -6,7 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'vowpalwabbit_next'
+project = 'vowpal_wabbit_next'
 copyright = '2022, VowpalWabbit'
 author = 'VowpalWabbit'
 
