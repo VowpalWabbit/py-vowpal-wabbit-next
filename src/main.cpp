@@ -20,7 +20,8 @@
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
 
 namespace py = pybind11;
-
+namespace
+{
 struct logger_context
 {
   py::object driver_logger;
@@ -69,6 +70,7 @@ void log_log(void* context, VW::io::log_level level, const std::string& message)
     case VW::io::log_level::OFF_LEVEL:
       break;
   }
+}
 }
 
 PYBIND11_MODULE(_core, m)

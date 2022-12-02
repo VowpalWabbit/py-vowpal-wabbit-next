@@ -16,15 +16,24 @@ These are parallel bindings to the existing set of Python bindings for VW. These
 Wheels are provided for the following platforms:
 
 - OS+arch: Windows x64, MacOS x64, MacOS arm64, Linux x64
-- Python: 3.8, 3.9, 3.10
+- Python: 3.8, 3.9, 3.10, 3.11
 
 ## Development information
 
 ### Local debug if using vcpkg deps
 ```sh
+# Build
 export CMAKE_TOOLCHAIN_FILE=$(pwd)/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake
 pip install -e .
+
+# Test
 pytest
+
+# Type check
+mypy
+
+# Format
+black src tests
 ```
 
 ### Update pybind11 module type stub
