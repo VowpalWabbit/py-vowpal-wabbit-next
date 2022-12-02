@@ -51,7 +51,7 @@ jobs:
         CIBW_BUILD: ${{ matrix.cibw_python }}
         CIBW_ARCHS: x86_64
         CIBW_ENVIRONMENT_MACOS: CMAKE_TOOLCHAIN_FILE=${{github.workspace}}/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake
-        CIBW_ENVIRONMENT_LINUX: CMAKE_TOOLCHAIN_FILE=${{github.workspace}}/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake
+        CIBW_ENVIRONMENT_LINUX: CMAKE_TOOLCHAIN_FILE=/project/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake
         CIBW_MANYLINUX_X86_64_IMAGE: vowpalwabbit/manylinux2014_x86_64-build
 
     - uses: actions/upload-artifact@v3
