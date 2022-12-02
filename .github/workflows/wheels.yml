@@ -53,9 +53,6 @@ jobs:
         CIBW_ENVIRONMENT_MACOS: CMAKE_TOOLCHAIN_FILE=${{github.workspace}}/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake
         CIBW_MANYLINUX_X86_64_IMAGE: vowpalwabbit/manylinux2014_x86_64-build
 
-    - run: cat _skbuild/linux-x86_64-3.9/cmake-build/vcpkg-bootstrap.log
-      if: always()
-
     - uses: actions/upload-artifact@v3
       with:
         path: wheelhouse/*.whl
