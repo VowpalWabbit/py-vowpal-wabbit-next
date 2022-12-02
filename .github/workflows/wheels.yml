@@ -52,14 +52,8 @@ jobs:
         CIBW_ARCHS: x86_64
         CIBW_ENVIRONMENT_MACOS: CMAKE_TOOLCHAIN_FILE=${{github.workspace}}/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake
         CIBW_ENVIRONMENT_LINUX: CMAKE_TOOLCHAIN_FILE=/project/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake
-        # CIBW_MANYLINUX_X86_64_IMAGE: vowpalwabbit/manylinux2014_x86_64-build
-
-    - name: Setup upterm session
-      uses: lhotari/action-upterm@v1
-      if: always()
-
-    # - run: cat _skbuild/linux-x86_64-3.9/cmake-build/vcpkg-bootstrap.log
-    #   if: always()
+        # Need to get things ready before we can use vcpkg.
+        CIBW_BEFORE_ALL_LINUX: yum install -y curl zip unzip tar && /project/ext_libs/vcpkg/bootstrap-vcpkg.sh
 
     - uses: actions/upload-artifact@v3
       with:
