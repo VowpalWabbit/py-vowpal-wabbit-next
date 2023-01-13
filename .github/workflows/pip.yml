@@ -40,6 +40,7 @@ jobs:
       env:
         CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake
         VCPKG_FORCE_DOWNLOADED_BINARIES: true
+        MACOSX_DEPLOYMENT_TARGET: "10.13"
 
     - name: Test
       run: pytest

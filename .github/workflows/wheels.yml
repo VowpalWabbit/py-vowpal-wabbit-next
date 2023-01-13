@@ -50,7 +50,7 @@ jobs:
       env:
         CIBW_BUILD: ${{ matrix.cibw_python }}
         CIBW_ARCHS: x86_64
-        CIBW_ENVIRONMENT_MACOS: CMAKE_TOOLCHAIN_FILE=${{github.workspace}}/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake
+        CIBW_ENVIRONMENT_MACOS: CMAKE_TOOLCHAIN_FILE=${{github.workspace}}/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake MACOSX_DEPLOYMENT_TARGET=10.13
         CIBW_ENVIRONMENT_LINUX: CMAKE_TOOLCHAIN_FILE=/project/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake
         # Need to get things ready before we can use vcpkg.
         CIBW_BEFORE_ALL_LINUX: yum install -y curl zip unzip tar && /project/ext_libs/vcpkg/bootstrap-vcpkg.sh
@@ -102,7 +102,7 @@ jobs:
       env:
         CIBW_BUILD: ${{ matrix.cibw_python }}
         CIBW_ARCHS_MACOS: arm64
-        CIBW_ENVIRONMENT_MACOS: CMAKE_TOOLCHAIN_FILE=${{github.workspace}}/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake VCPKG_DEFAULT_TRIPLET=arm64-osx
+        CIBW_ENVIRONMENT_MACOS: CMAKE_TOOLCHAIN_FILE=${{github.workspace}}/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake VCPKG_DEFAULT_TRIPLET=arm64-osx MACOSX_DEPLOYMENT_TARGET=10.13
 
     - uses: actions/upload-artifact@v3
       with:
