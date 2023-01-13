@@ -73,7 +73,7 @@ static VW::object_pool<VW::example> example_pool;
 
 void clean_example(VW::example& ec)
 {
-  for (features& fs : ec) { fs.clear(); }
+  for (auto& fs : ec) { fs.clear(); }
 
   ec.indices.clear();
   ec.tag.clear();
@@ -180,7 +180,7 @@ struct cache_reader
     auto return_value = get_example_from_pool();
     examples.push_back(return_value.get());
 
-    auto bytes_read = VW::read_example_from_cache(_workspace.get(), _buffer, examples);
+    auto bytes_read = VW::parsers::cache::read_example_from_cache(_workspace.get(), _buffer, examples);
     if (bytes_read == 0) { return nullptr; }
 
     return return_value;
@@ -231,7 +231,7 @@ private:
   }
 
   py::object _file;
-  io_buf _buffer;
+  VW::io_buf _buffer;
   std::shared_ptr<VW::workspace> _workspace;
 };
 
@@ -289,7 +289,7 @@ void log_log(void* context, VW::io::log_level level, const std::string& message)
 std::shared_ptr<VW::example> parse_text_line(workspace_with_logger_contexts& workspace, std::string_view line)
 {
   auto ex = get_example_from_pool();
-  VW::read_line(*workspace.workspace_ptr, ex.get(), line);
+  VW::parsers::text::read_line(*workspace.workspace_ptr, ex.get(), line);
   return ex;
 }
 
@@ -308,10 +308,10 @@ void write_cache_header(workspace_with_logger_contexts& workspace, py::object fi
 
 void write_cache_example(workspace_with_logger_contexts& workspace, VW::example& ex, py::object file)
 {
-  VW::details::cache_temp_buffer temp_buffer;
-  io_buf output;
+  VW::parsers::cache::details::cache_temp_buffer temp_buffer;
+  VW::io_buf output;
   output.add_file(VW::make_unique<python_writer>(file));
-  VW::write_example_to_cache(output, &ex, workspace.workspace_ptr->example_parser->lbl_parser,
+  VW::parsers::cache::write_example_to_cache(output, &ex, workspace.workspace_ptr->example_parser->lbl_parser,
       workspace.workspace_ptr->parse_mask, temp_buffer);
   output.flush();
 }
