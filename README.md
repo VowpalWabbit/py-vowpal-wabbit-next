@@ -8,7 +8,7 @@ These are parallel bindings to the existing set of Python bindings for VW. These
 ## Goals
 
 - Fully typed
-- No command line based configuration
+- All artifacts automatically build in CI
 - ...
 
 ## Supported platforms
@@ -24,7 +24,7 @@ Wheels are provided for the following platforms:
 ```sh
 # Build
 export CMAKE_TOOLCHAIN_FILE=$(pwd)/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake
-pip install -e .
+pip install -v .
 
 # Test
 pytest

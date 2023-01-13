@@ -9,3 +9,6 @@ compile_commands.json
 .cache/
 docs/build/
 docs/source/_generate/
+backup/
+build/
+.ipynb_checkpoints/
