@@ -1,9 +1,9 @@
 from typing import List, Optional
 import typing
-import vowpal_wabbit_next._core
+from vowpal_wabbit_next import _core, Example
 
-from vowpal_wabbit_next._core import Example
-from . import PredictionType, LabelType
+PredictionType = _core.PredictionType
+LabelType = _core.LabelType
 
 Prediction = typing.Union[
     float,
@@ -20,12 +20,10 @@ Prediction = typing.Union[
 
 
 class Workspace:
-    _workspace: vowpal_wabbit_next._core.Workspace
+    _workspace: _core.Workspace
 
     def __init__(self, args: List[str], *, model_data: Optional[bytes] = None):
-        self._workspace = vowpal_wabbit_next._core.Workspace(
-            args, model_data=model_data
-        )
+        self._workspace = _core.Workspace(args, model_data=model_data)
 
     def predict_one(self, example: typing.Union[Example, List[Example]]) -> Prediction:
         # TODO: ensure setup
