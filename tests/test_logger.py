@@ -1,5 +1,5 @@
 from io import StringIO
-import vowpal_wabbit_next.learner
+import vowpal_wabbit_next as vw
 import logging
 
 
@@ -9,6 +9,6 @@ def test_logger_capture() -> None:
     driver_logger.setLevel("INFO")
     stream_handler = logging.StreamHandler(stream=log_stream)
     driver_logger.addHandler(stream_handler)
-    learner = vowpal_wabbit_next.learner._LearnerBase([])
+    _ = vw.Workspace([])
     driver_logger.removeHandler(stream_handler)
     assert log_stream.getvalue() != ""
