@@ -12,4 +12,8 @@ They are not ready for consumption and if you are looking for
 VowpalWabbit Python bindings you should use the `existing bindings
 <https://pypi.org/project/vowpalwabbit/>`_.
 
-.. automodule:: vowpal_wabbit_next
+.. toctree::
+   :caption: Reference
+   :hidden:
+
+   reference
