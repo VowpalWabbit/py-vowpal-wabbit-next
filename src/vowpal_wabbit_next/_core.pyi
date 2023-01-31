@@ -5,6 +5,7 @@ import typing
 __all__ = [
     "Example",
     "LabelType",
+    "ModelDelta",
     "PredictionType",
     "Workspace"
 ]
@@ -68,6 +69,10 @@ class LabelType():
     Simple: vowpal_wabbit_next._core.LabelType # value = <LabelType.Simple: 0>
     Slates: vowpal_wabbit_next._core.LabelType # value = <LabelType.Slates: 7>
     __members__: dict # value = {'Simple': <LabelType.Simple: 0>, 'CB': <LabelType.CB: 1>, 'CBEval': <LabelType.CBEval: 2>, 'CS': <LabelType.CS: 3>, 'Multilabel': <LabelType.Multilabel: 4>, 'Multiclass': <LabelType.Multiclass: 5>, 'CCB': <LabelType.CCB: 6>, 'Slates': <LabelType.Slates: 7>, 'NoLabel': <LabelType.NoLabel: 8>, 'Continuous': <LabelType.Continuous: 9>}
+    pass
+class ModelDelta():
+    def __init__(self, model_data: bytes) -> None: ...
+    def serialize(self) -> bytes: ...
     pass
 class PredictionType():
     """
@@ -142,11 +147,18 @@ class Workspace():
     def learn_one(self, examples: Example) -> None: ...
     def predict_multi_ex_one(self, examples: typing.List[Example]) -> typing.Union[float, typing.List[float], typing.List[typing.Tuple[int, float]], typing.List[typing.List[typing.Tuple[int, float]]], int, typing.List[int], typing.List[typing.Tuple[float, float, float]], typing.Tuple[float, float], typing.Tuple[float, typing.List[int]], None]: ...
     def predict_one(self, examples: Example) -> typing.Union[float, typing.List[float], typing.List[typing.Tuple[int, float]], typing.List[typing.List[typing.Tuple[int, float]]], int, typing.List[int], typing.List[typing.Tuple[float, float, float]], typing.Tuple[float, float], typing.Tuple[float, typing.List[int]], None]: ...
+    def serialize(self) -> bytes: ...
     def setup_example(self, arg0: Example) -> None: ...
     pass
 class _CacheReader():
     def __init__(self, arg0: Workspace, arg1: object) -> None: ...
     def _get_next(self) -> typing.Optional[Example]: ...
+    pass
+def _apply_delta(base_workspace: Workspace, delta: ModelDelta) -> Workspace:
+    pass
+def _calculate_delta(base_workspace: Workspace, derived_workspace: Workspace) -> ModelDelta:
+    pass
+def _merge_deltas(deltas: typing.List[ModelDelta]) -> ModelDelta:
     pass
 def _parse_line_text(workspace: Workspace, line: str) -> Example:
     pass

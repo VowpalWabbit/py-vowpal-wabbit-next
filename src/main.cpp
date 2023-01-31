@@ -8,10 +8,12 @@
 #include "vw/core/learner.h"
 #include "vw/core/loss_functions.h"
 #include "vw/core/memory.h"
+#include "vw/core/merge.h"
 #include "vw/core/object_pool.h"
 #include "vw/core/parse_example.h"
 #include "vw/core/prediction_type.h"
 #include "vw/core/simple_label.h"
+#include "vw/core/version.h"
 #include "vw/core/vw.h"
 #include "vw/io/io_adapter.h"
 #include "vw/io/logger.h"
@@ -315,6 +317,56 @@ void write_cache_example(workspace_with_logger_contexts& workspace, VW::example&
       workspace.workspace_ptr->parse_mask, temp_buffer);
   output.flush();
 }
+
+std::unique_ptr<VW::model_delta> merge_deltas(const std::vector<const VW::model_delta*>& deltas_to_merge)
+{
+  auto result = VW::merge_deltas(deltas_to_merge);
+  return std::make_unique<VW::model_delta>(std::move(result));
+}
+
+std::unique_ptr<VW::model_delta> calculate_delta(
+    const workspace_with_logger_contexts& base_workspace, const workspace_with_logger_contexts& derived_workspace)
+{
+  auto delta = *base_workspace.workspace_ptr - *derived_workspace.workspace_ptr;
+  return std::make_unique<VW::model_delta>(std::move(delta));
+}
+
+std::unique_ptr<workspace_with_logger_contexts> apply_delta(
+    const workspace_with_logger_contexts& base_workspace, const VW::model_delta& delta)
+{
+  auto applied = *base_workspace.workspace_ptr + delta;
+  return std::make_unique<workspace_with_logger_contexts>(
+      workspace_with_logger_contexts{std::make_unique<logger_context>(*base_workspace.logger_context_ptr),
+          std::shared_ptr<VW::workspace>(std::move(applied))});
+}
+
+template <typename LearnerT, typename ExampleT>
+void update_stats_recursive(VW::workspace& workspace, LearnerT& learner, ExampleT& example)
+{
+  if (learner.has_update_stats())
+  {
+    learner.update_stats(workspace, example);
+    return;
+  }
+
+  const auto has_at_least_one_new_style_func = learner.has_update_stats() || learner.has_output_example_prediction() ||
+      learner.has_print_update() || learner.has_cleanup_example();
+
+  // Finish example used to utilize the copy forwarding semantics.
+  // Traverse until first hit to mimic this but with greater type safety.
+  auto* base = learner.get_learn_base();
+  if (base != nullptr)
+  {
+    if (learner.is_multiline() != base->is_multiline())
+    {
+      THROW("Cannot forward update_stats call across multiline/singleline boundary.");
+    }
+    if (base->is_multiline()) { as_multiline(base)->finish_example(workspace, (VW::multi_ex&)example); }
+    else { as_singleline(base)->finish_example(workspace, (VW::example&)example); }
+  }
+  else { THROW("No update_stats functions were registered in the stack."); }
+}
+
 }  // namespace
 
 PYBIND11_MODULE(_core, m)
@@ -388,7 +440,8 @@ PYBIND11_MODULE(_core, m)
             workspace.workspace_ptr->learn(example);
 
             // TODO - when updating VW submodule if learn calls update stats then remove this to avoid a double call.
-            VW::LEARNER::as_singleline(workspace.workspace_ptr->l)->update_stats(*workspace.workspace_ptr, example);
+            update_stats_recursive(
+                *workspace.workspace_ptr, *VW::LEARNER::as_singleline(workspace.workspace_ptr->l), example);
           },
           py::arg("examples"), py::kw_only())
       .def(
@@ -399,7 +452,8 @@ PYBIND11_MODULE(_core, m)
             workspace.workspace_ptr->learn(example);
 
             // TODO - when updating VW submodule if learn calls update stats then remove this to avoid a double call.
-            VW::LEARNER::as_multiline(workspace.workspace_ptr->l)->update_stats(*workspace.workspace_ptr, example);
+            update_stats_recursive(
+                *workspace.workspace_ptr, *VW::LEARNER::as_multiline(workspace.workspace_ptr->l), example);
           },
           py::arg("examples"), py::kw_only())
       .def(
@@ -412,7 +466,8 @@ PYBIND11_MODULE(_core, m)
             workspace.workspace_ptr->predict(example);
 
             // TODO - when updating VW submodule if learn calls update stats then remove this to avoid a double call.
-            VW::LEARNER::as_singleline(workspace.workspace_ptr->l)->update_stats(*workspace.workspace_ptr, example);
+            update_stats_recursive(
+                *workspace.workspace_ptr, *VW::LEARNER::as_singleline(workspace.workspace_ptr->l), example);
             example.test_only = test_only;
             return to_prediction(example.pred, workspace.workspace_ptr->l->get_output_prediction_type());
           },
@@ -429,7 +484,8 @@ PYBIND11_MODULE(_core, m)
             workspace.workspace_ptr->predict(example);
 
             // TODO - when updating VW submodule if learn calls update stats then remove this to avoid a double call.
-            VW::LEARNER::as_multiline(workspace.workspace_ptr->l)->update_stats(*workspace.workspace_ptr, example);
+            update_stats_recursive(
+                *workspace.workspace_ptr, *VW::LEARNER::as_multiline(workspace.workspace_ptr->l), example);
             for (size_t i = 0; i < example.size(); i++) { example[i]->test_only = test_onlys[i]; }
             return to_prediction(example[0]->pred, workspace.workspace_ptr->l->get_output_prediction_type());
           },
@@ -444,7 +500,17 @@ PYBIND11_MODULE(_core, m)
           { return workspace.workspace_ptr->l->get_input_label_type(); })
       .def("setup_example",
           [](const workspace_with_logger_contexts& workspace, VW::example& ex)
-          { VW::setup_example(*workspace.workspace_ptr, &ex); });
+          { VW::setup_example(*workspace.workspace_ptr, &ex); })
+      .def("serialize",
+          [](const workspace_with_logger_contexts& workspace) -> py::bytes
+          {
+            auto backing_vector = std::make_shared<std::vector<char>>();
+            VW::io_buf io_writer;
+            io_writer.add_file(VW::io::create_vector_writer(backing_vector));
+            VW::save_predictor(*workspace.workspace_ptr, io_writer);
+            io_writer.flush();
+            return py::bytes(backing_vector->data(), backing_vector->size());  // Return the data without transcoding
+          });
 
   m.def("_parse_line_text", &::parse_text_line, py::arg("workspace"), py::arg("line"));
   m.def("_write_cache_header", &::write_cache_header, py::arg("workspace"), py::arg("file"));
@@ -461,9 +527,36 @@ PYBIND11_MODULE(_core, m)
             return next_example;
           });
 
+  py::class_<VW::model_delta>(m, "ModelDelta")
+      .def(py::init(
+               [](const py::bytes& bytes)
+               {
+                 std::string_view bytes_view = bytes;
+                 auto model_reader = VW::io::create_buffer_view(bytes_view.data(), bytes_view.size());
+                 return VW::model_delta::deserialize(*model_reader);
+                 ;
+               }),
+          py::arg("model_data"))
+      .def("serialize",
+          [](const VW::model_delta& delta) -> py::bytes
+          {
+            auto backing_vector = std::make_shared<std::vector<char>>();
+            VW::io_buf io_writer;
+            auto writer = VW::io::create_vector_writer(backing_vector);
+            delta.serialize(*writer);
+            return py::bytes(backing_vector->data(), backing_vector->size());  // Return the data without transcoding
+          });
+
+  m.def("_merge_deltas", &::merge_deltas, py::arg("deltas"));
+  m.def("_calculate_delta", &::calculate_delta, py::arg("base_workspace"), py::arg("derived_workspace"));
+  m.def("_apply_delta", &::apply_delta, py::arg("base_workspace"), py::arg("delta"));
+
 #ifdef VERSION_INFO
   m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
 #else
   m.attr("__version__") = "dev";
 #endif
+
+  m.attr("_vw_version") = VW::VERSION.to_string();
+  m.attr("_vw_commit") = VW::GIT_COMMIT;
 }
