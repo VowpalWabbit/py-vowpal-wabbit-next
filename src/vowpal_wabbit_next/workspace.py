@@ -20,10 +20,17 @@ Prediction = typing.Union[
 
 
 class Workspace:
-    _workspace: _core.Workspace
-
-    def __init__(self, args: List[str], *, model_data: Optional[bytes] = None):
-        self._workspace = _core.Workspace(args, model_data=model_data)
+    def __init__(
+        self,
+        args: List[str],
+        *,
+        model_data: Optional[bytes] = None,
+        _existing_workspace: Optional[_core.Workspace] = None
+    ):
+        if _existing_workspace is not None:
+            self._workspace = _existing_workspace
+        else:
+            self._workspace = _core.Workspace(args, model_data=model_data)
 
     def predict_one(self, example: typing.Union[Example, List[Example]]) -> Prediction:
         # TODO: ensure setup
@@ -59,6 +66,9 @@ class Workspace:
         else:
             for example in example:
                 self._workspace.setup_example(example)
+
+    def serialize(self) -> bytes:
+        return self._workspace.serialize()
 
     # TODO: implement
     # def unsetup_example(self) -> None:

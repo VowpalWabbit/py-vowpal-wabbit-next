@@ -3,7 +3,7 @@ from .example import Example
 from .workspace import Workspace, PredictionType, LabelType
 from .text_format import TextFormatParser, TextFormatReader
 from .cache_format import CacheFormatWriter, CacheFormatReader
-
+from .delta import ModelDelta, calculate_delta, apply_delta, merge_deltas
 
 __all__ = [
     "__version__",
@@ -15,4 +15,8 @@ __all__ = [
     "TextFormatReader",
     "CacheFormatWriter",
     "CacheFormatReader",
+    "ModelDelta",
+    "calculate_delta",
+    "apply_delta",
+    "merge_deltas",
 ]
