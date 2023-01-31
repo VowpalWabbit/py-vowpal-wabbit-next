@@ -69,7 +69,7 @@ private:
 };
 
 // This is a global object pool for examples.
-static VW::object_pool<VW::example> example_pool;
+static VW::object_pool<VW::example> SHARED_EXAMPLE_POOL;
 
 void clean_example(VW::example& ec)
 {
@@ -86,11 +86,11 @@ void clean_example(VW::example& ec)
 
 std::shared_ptr<VW::example> get_example_from_pool()
 {
-  return std::shared_ptr<VW::example>(example_pool.get_object(),
+  return std::shared_ptr<VW::example>(SHARED_EXAMPLE_POOL.get_object(),
       [](VW::example* ptr)
       {
         clean_example(*ptr);
-        example_pool.return_object(ptr);
+        SHARED_EXAMPLE_POOL.return_object(ptr);
       });
 }
 
@@ -386,6 +386,9 @@ PYBIND11_MODULE(_core, m)
           {
             // TODO check if setup.
             workspace.workspace_ptr->learn(example);
+
+            // TODO - when updating VW submodule if learn calls update stats then remove this to avoid a double call.
+            VW::LEARNER::as_singleline(workspace.workspace_ptr->l)->update_stats(*workspace.workspace_ptr, example);
           },
           py::arg("examples"), py::kw_only())
       .def(
@@ -394,6 +397,9 @@ PYBIND11_MODULE(_core, m)
           {
             assert(!example.empty());
             workspace.workspace_ptr->learn(example);
+
+            // TODO - when updating VW submodule if learn calls update stats then remove this to avoid a double call.
+            VW::LEARNER::as_multiline(workspace.workspace_ptr->l)->update_stats(*workspace.workspace_ptr, example);
           },
           py::arg("examples"), py::kw_only())
       .def(
@@ -404,6 +410,9 @@ PYBIND11_MODULE(_core, m)
             // We must save and restore test_only because the library sets this values and does not undo it.
             bool test_only = example.test_only;
             workspace.workspace_ptr->predict(example);
+
+            // TODO - when updating VW submodule if learn calls update stats then remove this to avoid a double call.
+            VW::LEARNER::as_singleline(workspace.workspace_ptr->l)->update_stats(*workspace.workspace_ptr, example);
             example.test_only = test_only;
             return to_prediction(example.pred, workspace.workspace_ptr->l->get_output_prediction_type());
           },
@@ -418,6 +427,9 @@ PYBIND11_MODULE(_core, m)
             test_onlys.reserve(example.size());
             for (auto ex : example) { test_onlys.push_back(ex->test_only); }
             workspace.workspace_ptr->predict(example);
+
+            // TODO - when updating VW submodule if learn calls update stats then remove this to avoid a double call.
+            VW::LEARNER::as_multiline(workspace.workspace_ptr->l)->update_stats(*workspace.workspace_ptr, example);
             for (size_t i = 0; i < example.size(); i++) { example[i]->test_only = test_onlys[i]; }
             return to_prediction(example[0]->pred, workspace.workspace_ptr->l->get_output_prediction_type());
           },
