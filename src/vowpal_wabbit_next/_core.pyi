@@ -16,29 +16,6 @@ class Example():
     def _is_newline(self) -> bool: ...
     pass
 class LabelType():
-    """
-    Members:
-
-      Simple
-
-      CB
-
-      CBEval
-
-      CS
-
-      Multilabel
-
-      Multiclass
-
-      CCB
-
-      Slates
-
-      NoLabel
-
-      Continuous
-    """
     def __eq__(self, other: object) -> bool: ...
     def __getstate__(self) -> int: ...
     def __hash__(self) -> int: ...
@@ -75,35 +52,6 @@ class ModelDelta():
     def serialize(self) -> bytes: ...
     pass
 class PredictionType():
-    """
-    Members:
-
-      Scalar
-
-      Scalars
-
-      ActionScores
-
-      Pdf
-
-      ActionProbs
-
-      Multiclass
-
-      Multilabels
-
-      Prob
-
-      MulticlassProbs
-
-      DecisionProbs
-
-      ActionPdfValue
-
-      ActiveMulticlass
-
-      NoPred
-    """
     def __eq__(self, other: object) -> bool: ...
     def __getstate__(self) -> int: ...
     def __hash__(self) -> int: ...
@@ -159,6 +107,8 @@ def _apply_delta(base_workspace: Workspace, delta: ModelDelta) -> Workspace:
 def _calculate_delta(base_workspace: Workspace, derived_workspace: Workspace) -> ModelDelta:
     pass
 def _merge_deltas(deltas: typing.List[ModelDelta]) -> ModelDelta:
+    pass
+def _parse_line_dsjson(workspace: Workspace, line: str) -> typing.List[Example]:
     pass
 def _parse_line_text(workspace: Workspace, line: str) -> Example:
     pass
