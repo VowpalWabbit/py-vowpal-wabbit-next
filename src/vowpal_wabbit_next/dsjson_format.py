@@ -20,7 +20,7 @@ class DSJsonFormatParser:
             >>> from vowpal_wabbit_next import Workspace, DSJsonFormatParser
             >>> workspace = Workspace(["--cb_explore_adf])
             >>> parser = DSJsonFormatParser(workspace)
-            >>> input = """
+            >>> json_str = """
             ... {
             ...     "_label_cost": -1.0,
             ...     "_label_probability": 0.5,
@@ -34,7 +34,7 @@ class DSJsonFormatParser:
             ...     "p": [0.5, 0.5]
             ... }
             ... """
-            >>> example = parser.parse_json(input)
+            >>> example = parser.parse_json(json_str)
 
         Args:
             text (str): JSON string of input
