@@ -8,6 +8,22 @@ CacheFormatReaderT = typing.TypeVar("CacheFormatReaderT", bound="CacheFormatRead
 
 class CacheFormatReader:
     def __init__(self, workspace: Workspace, file: typing.BinaryIO):
+        """Read VW examples in cache format from the given file.
+
+        Examples:
+
+            >>> from vowpal_wabbit_next import Workspace, TextFormatParser, CacheFormatWriter
+            >>> workspace = Workspace([])
+            >>> with open("data.cache", "rb") as f:
+            ...     with CacheFormatReader(workspace, f) as reader:
+            ...         for example in reader:
+            ...               workspace.predict_one(example)
+
+
+        Args:
+            workspace (Workspace): Workspace object used to configure this reader
+            file (typing.BinaryIO): File to read from
+        """
         self._workspace = workspace
         self._file = file
         self._reader = _core._CacheReader(self._workspace._workspace, self._file)
@@ -50,6 +66,20 @@ CacheFormatWriterT = typing.TypeVar("CacheFormatWriterT", bound="CacheFormatWrit
 
 class CacheFormatWriter:
     def __init__(self, workspace: Workspace, file: typing.BinaryIO):
+        """Creates a VW cache file.
+
+        Examples:
+            >>> from vowpal_wabbit_next import Workspace, TextFormatParser, CacheFormatWriter
+            >>> workspace = Workspace([])
+            >>> parser = TextFormatParser(workspace)
+            >>> with open("data.cache", "wb") as f:
+            ...     with CacheFormatWriter(workspace, f) as writer:
+            ...         writer.write_example(parser.parse_line("1.0 | price:.18 sqft:.15 age:.35 1976"))
+
+        Args:
+            workspace (Workspace): Workspace object used to configure this writer.
+            file (typing.BinaryIO): File to write cache to
+        """
         self._workspace = workspace
         self._file = file
         # TODO: workout a better way to handle this one...
