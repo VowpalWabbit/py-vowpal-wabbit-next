@@ -33,14 +33,12 @@ class Workspace:
             self._workspace = _core.Workspace(args, model_data=model_data)
 
     def predict_one(self, example: typing.Union[Example, List[Example]]) -> Prediction:
-        # TODO: ensure setup
         if isinstance(example, Example):
             return self._workspace.predict_one(example)
         else:
             return self._workspace.predict_multi_ex_one(example)
 
     def learn_one(self, example: typing.Union[Example, List[Example]]) -> None:
-        # TODO: ensure setup
         if isinstance(example, Example):
             self._workspace.learn_one(example)
         else:
@@ -58,19 +56,13 @@ class Workspace:
     def multiline(self) -> bool:
         return self._workspace.get_is_multiline()
 
-    def setup_example(
-        self, example: typing.Union[Example, typing.List[Example]]
-    ) -> None:
-        if isinstance(example, Example):
-            self._workspace.setup_example(example)
-        else:
-            for example in example:
-                self._workspace.setup_example(example)
-
     def serialize(self) -> bytes:
         return self._workspace.serialize()
 
-    # TODO: implement
-    # def unsetup_example(self) -> None:
-    #     # not implemented yet
-    #     ...
+    def json_weights(
+        self, *, include_feature_names: bool = False, include_online_state: bool = False
+    ) -> str:
+        return self._workspace.json_weights(
+            include_feature_names=include_feature_names,
+            include_online_state=include_online_state,
+        )
