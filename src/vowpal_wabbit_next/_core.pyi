@@ -108,6 +108,8 @@ def _calculate_delta(base_workspace: Workspace, derived_workspace: Workspace) ->
     pass
 def _merge_deltas(deltas: typing.List[ModelDelta]) -> ModelDelta:
     pass
+def _parse_line_dsjson(workspace: Workspace, line: str) -> typing.List[Example]:
+    pass
 def _parse_line_text(workspace: Workspace, line: str) -> Example:
     pass
 def _write_cache_example(workspace: Workspace, example: Example, file: object) -> None:
