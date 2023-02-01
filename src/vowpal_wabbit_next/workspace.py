@@ -29,6 +29,12 @@ class Workspace:
     ):
         """Main object used for making predictions and training a model.
 
+        The VW library logs various things while running. There are two streams of logging exposed, which can be accessed via the standard Python logging interface.
+        * `vowpal_wabbit_next.log` - VW's structured logging stream. If it outputs a warning it will be logged here.
+        * `vowpal_wabbit_next.driver` - This is essentially the CLI driver output. This is rarely needed from Python.
+
+        See the logging example below.
+
         Examples:
 
             Load a model from a file:
@@ -42,6 +48,14 @@ class Workspace:
 
             >>> from vowpal_wabbit_next import Workspace
             >>> workspace = Workspace(["--cb_explore_adf"])
+
+            Outputting structured logging messages from VW:
+
+            >>> from vowpal_wabbit_next import Workspace
+            >>> import logging
+            >>> logging.basicConfig(level=logging.INFO)
+            >>> logging.getLogger("vowpal_wabbit_next.log").setLevel("INFO")
+            >>> workspace = Workspace([])
 
         Args:
             args (List[str]): VowpalWabbit command line options for configuring the model. An overall list can be found `here <https://vowpalwabbit.org/docs/vowpal_wabbit/python/latest/command_line_args.html>`_. Some options are unsupported which are:
