@@ -298,6 +298,61 @@ std::shared_ptr<VW::example> parse_text_line(workspace_with_logger_contexts& wor
   return ex;
 }
 
+std::vector<std::shared_ptr<VW::example>> parse_dsjson_line(
+    workspace_with_logger_contexts& workspace, std::string_view line)
+{
+  auto ex = get_example_from_pool();
+
+  VW::multi_ex examples;
+  examples.push_back(SHARED_EXAMPLE_POOL.get_object());
+
+  auto example_factory = [](void* context) -> VW::example&
+  {
+    auto* pool = static_cast<VW::object_pool<VW::example>*>(context);
+    return *pool->get_object();
+  };
+
+  VW::parsers::json::decision_service_interaction interaction;
+  try
+  {
+    std::vector<char> owned_str;
+    owned_str.resize(line.size() + 1);
+    std::memcpy(owned_str.data(), line.data(), line.size());
+    owned_str[line.size()] = '\0';
+
+    // Not using the copy_line param as there were parse issues caused. It is possible they are due to the fact the line
+    // input does not necessarily have a null terminator.
+    bool result = VW::parsers::json::read_line_decision_service_json<false>(*workspace.workspace_ptr, examples,
+        owned_str.data(), owned_str.size(), false, example_factory, &SHARED_EXAMPLE_POOL, &interaction);
+
+    // Since we are using strict parse any errors should be surfaced via an exception.
+    assert(result);
+  }
+  catch (const VW::vw_exception& ex)
+  {
+    for (auto* ex : examples)
+    {
+      clean_example(*ex);
+      SHARED_EXAMPLE_POOL.return_object(ex);
+    }
+    throw;
+  }
+
+  std::vector<std::shared_ptr<VW::example>> result;
+  result.reserve(examples.size());
+  for (auto* ex : examples)
+  {
+    result.emplace_back(ex,
+        [](VW::example* ex)
+        {
+          clean_example(*ex);
+          SHARED_EXAMPLE_POOL.return_object(ex);
+        });
+  }
+
+  return result;
+}
+
 // Impl from VW
 void write_cache_header(workspace_with_logger_contexts& workspace, py::object file)
 {
@@ -665,6 +720,7 @@ PYBIND11_MODULE(_core, m)
           py::kw_only(), py::arg("include_feature_names") = false, py::arg("include_online_state") = false);
 
   m.def("_parse_line_text", &::parse_text_line, py::arg("workspace"), py::arg("line"));
+  m.def("_parse_line_dsjson", &::parse_dsjson_line, py::arg("workspace"), py::arg("line"));
   m.def("_write_cache_header", &::write_cache_header, py::arg("workspace"), py::arg("file"));
   m.def("_write_cache_example", &::write_cache_example, py::arg("workspace"), py::arg("example"), py::arg("file"));
 
