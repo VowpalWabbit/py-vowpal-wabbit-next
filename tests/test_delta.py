@@ -2,30 +2,27 @@ import vowpal_wabbit_next as vw
 import pytest
 
 
+@pytest.mark.skip(
+    reason="Requires this fix to enable: https://github.com/VowpalWabbit/vowpal_wabbit/pull/4483"
+)
 def test_equivalent_models() -> None:
-    model = vw.Workspace([])
+    model = vw.Workspace(["--invert_hash=unused"])
     parser = vw.TextFormatParser(model)
-    train_example_input1 = "1 | a b c"
-    train_example_input2 = "1 | b c d"
-    test_example = "| a d"
 
-    train_example = parser.parse_line(train_example_input1)
-    model.setup_example(train_example)
-    model.learn_one(train_example)
+    model.learn_one(parser.parse_line("1 | a b c"))
 
-    base_model_data = model.serialize()
-    base_model = vw.Workspace([], model_data=base_model_data)
+    model_after_1_learn = vw.Workspace([], model_data=model.serialize())
 
-    train_example = parser.parse_line(train_example_input2)
-    model.setup_example(train_example)
-    model.learn_one(train_example)
+    model.learn_one(parser.parse_line("1 | d e f"))
 
-    delta = vw.calculate_delta(base_model, model)
-    delta_applied_model = vw.apply_delta(base_model, delta)
+    delta_of_second_learn = vw.calculate_delta(model_after_1_learn, model)
+    model_after_1_learn_and_delta_of_second_learn_applied = vw.apply_delta(
+        model_after_1_learn, delta_of_second_learn
+    )
 
-    parser.parse_line(test_example)
-    model.setup_example(train_example)
-
-    assert model.predict_one(train_example) == pytest.approx(
-        delta_applied_model.predict_one(train_example)
+    test_example = "| d"
+    assert model.predict_one(parser.parse_line(test_example)) == pytest.approx(
+        model_after_1_learn_and_delta_of_second_learn_applied.predict_one(
+            parser.parse_line(test_example)
+        )
     )

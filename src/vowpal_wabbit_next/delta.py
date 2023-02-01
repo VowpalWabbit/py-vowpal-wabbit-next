@@ -15,11 +15,11 @@ class ModelDelta:
         return self._model_delta.serialize()
 
 
-def calculate_delta(model: Workspace, derived_model: Workspace) -> ModelDelta:
+def calculate_delta(base_model: Workspace, derived_model: Workspace) -> ModelDelta:
     return ModelDelta(
         bytes(),
         _existing_model_delta=_core._calculate_delta(
-            model._workspace, derived_model._workspace
+            base_model._workspace, derived_model._workspace
         ),
     )
 
