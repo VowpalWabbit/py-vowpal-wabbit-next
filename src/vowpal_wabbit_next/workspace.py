@@ -27,18 +27,69 @@ class Workspace:
         model_data: Optional[bytes] = None,
         _existing_workspace: Optional[_core.Workspace] = None
     ):
+        """Main object used for making predictions and training a model.
+
+        Examples:
+
+            Load a model from a file:
+
+            >>> from vowpal_wabbit_next import Workspace
+            >>> with open("model.bin", "rb") as f:
+            ...     model_data = f.read()
+            >>> workspace = Workspace([], model_data=model_data)
+
+            Create a workspace for training a contextual bandit with action dependent features model:
+
+            >>> from vowpal_wabbit_next import Workspace
+            >>> workspace = Workspace(["--cb_explore_adf"])
+
+        Args:
+            args (List[str]): VowpalWabbit command line options for configuring the model. An overall list can be found `here <https://vowpalwabbit.org/docs/vowpal_wabbit/python/latest/command_line_args.html>`_. Some options are unsupported which are:
+                `--sort_features`, `--ngram`, `--feature_limit`, `--ignore`.
+            model_data (Optional[bytes], optional): Bytes of a VW model to be loadeed.
+            _existing_workspace (Optional[_core.Workspace], optional): This is for internal usage and should not be set by a user.
+        """
         if _existing_workspace is not None:
             self._workspace = _existing_workspace
         else:
             self._workspace = _core.Workspace(args, model_data=model_data)
 
     def predict_one(self, example: typing.Union[Example, List[Example]]) -> Prediction:
+        """Make a single prediction.
+
+        Examples:
+            >>> from vowpal_wabbit_next import Workspace, TextFormatParser
+            >>> workspace = Workspace([])
+            >>> parser = TextFormatParser(workspace)
+            >>> workspace.learn_one(parser.parse_line("1.0 | price:.18 sqft:.15 age:.35 1976"))
+            >>> workspace.predict_one(parser.parse_line("| price:.53 sqft:.32 age:.87 1924"))
+            1.0
+
+        Args:
+            example (typing.Union[Example, List[Example]]): Example to use for prediction. This should be a list if this workspace is :py:meth:`vowpal_wabbit_next.Workspace.multiline`, otherwise it is should be a single Example
+
+        Returns:
+            Prediction: Prediction produced by this example. The type corresponds to the :py:meth:`vowpal_wabbit_next.Workspace.prediction_type` of the model. See :py:class:`vowpal_wabbit_next.PredictionType` for the mapping to types.
+        """
         if isinstance(example, Example):
             return self._workspace.predict_one(example)
         else:
             return self._workspace.predict_multi_ex_one(example)
 
     def learn_one(self, example: typing.Union[Example, List[Example]]) -> None:
+        """Learn from one single example. Note, passing a list of examples here means the input is a multiline example, and not several individual examples. The label type of the example must match what is returned by :py:meth:`vowpal_wabbit_next.Workspace.label_type`
+
+        Examples:
+            >>> from vowpal_wabbit_next import Workspace, TextFormatParser
+            >>> workspace = Workspace([])
+            >>> parser = TextFormatParser(workspace)
+            >>> workspace.learn_one(parser.parse_line("1.0 | price:.18 sqft:.15 age:.35 1976"))
+            >>> workspace.predict_one(parser.parse_line("| price:.53 sqft:.32 age:.87 1924"))
+            1.0
+
+        Args:
+            example (typing.Union[Example, List[Example]]): Example to learn on.
+        """
         if isinstance(example, Example):
             self._workspace.learn_one(example)
         else:
@@ -46,22 +97,57 @@ class Workspace:
 
     @property
     def prediction_type(self) -> PredictionType:
+        """Based on the command line parameters used to setup VW a certain type of prediction is produced. See :py:class:`vowpal_wabbit_next.PredictionType` for the list of types and their corresponding Python type.
+
+        Returns:
+            PredictionType: The type of prediction this Workspace produces
+        """
         return self._workspace.get_prediction_type()
 
     @property
     def label_type(self) -> LabelType:
+        """Based on the command line parameters used to setup VW a certain label type is required.
+        This can also be thought of as the type of problem being solved.
+
+        Returns:
+            LabelType: The type of label Examples must have to be used by this Workspace
+        """
         return self._workspace.get_label_type()
 
     @property
     def multiline(self) -> bool:
+        """Based on the command line parameters used to setup VW, the input to learn, predict or parsers expects either single Examples or lists of Examples.
+
+        Returns:
+            bool: True if this Workspace is configured as multiline, otherwise False
+        """
         return self._workspace.get_is_multiline()
 
     def serialize(self) -> bytes:
+        """Serialize the current workspace as a VW model that can be loaded by the Workspace constructor, or command line tool.
+
+        Returns:
+            bytes: raw bytes of serialized Workspace
+        """
         return self._workspace.serialize()
 
     def json_weights(
         self, *, include_feature_names: bool = False, include_online_state: bool = False
     ) -> str:
+        """Debugging utility which dumps the weights in the model currently as a JSON string.
+
+        .. DANGER::
+            This is an experimental feature.
+
+        Args:
+            include_feature_names (bool, optional): Includes the feature names and interaction terms in the output. This requires the workspace to be configured to support it. This is not well exposed to Python currently but the way to do it is:
+                `--dump_json_weights_experimental=unused ---dump_json_weights_include_feature_names_experimental`
+            include_online_state (bool, optional): Includes extra save_resume state in the output.This requires the workspace to be configured to support it. This is not well exposed to Python currently but the way to do it is:
+                `--dump_json_weights_experimental=unused ---dump_json_weights_include_extra_online_state_experimental`
+
+        Returns:
+            str: JSON string representing model weights
+        """
         return self._workspace.json_weights(
             include_feature_names=include_feature_names,
             include_online_state=include_online_state,

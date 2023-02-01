@@ -1,9 +1,14 @@
-from ._core import __version__
+from ._core import __version__, _vw_version, _vw_commit
 from .example import Example
 from .workspace import Workspace, PredictionType, LabelType
 from .text_format import TextFormatParser, TextFormatReader
 from .cache_format import CacheFormatWriter, CacheFormatReader
 from .delta import ModelDelta, calculate_delta, apply_delta, merge_deltas
+
+VW_COMMIT: str = _vw_commit
+"""Commit of VowpalWabbit that this package is built with"""
+VW_VERSION: str = _vw_version
+"""Version number of VowpalWabbit that this package is built with"""
 
 __all__ = [
     "__version__",
@@ -19,4 +24,6 @@ __all__ = [
     "calculate_delta",
     "apply_delta",
     "merge_deltas",
+    "VW_COMMIT",
+    "VW_VERSION",
 ]
