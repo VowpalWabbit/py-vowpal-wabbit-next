@@ -1,0 +1,49 @@
+name: "Check typestubs"
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Check typestubs
+    runs-on: ${{ matrix.platform }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ubuntu-latest]
+        python-version: ["3.11"]
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+
+    - uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Build and install
+      run: pip install --verbose .[test]
+      env:
+        CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake
+        VCPKG_FORCE_DOWNLOADED_BINARIES: true
+
+    - name: Install pybind11-stubgen
+      run: pip install pybind11-stubgen==0.12.0
+
+    - name: Generate stubs
+      run: |
+        pybind11-stubgen vowpal_wabbit_next._core --no-setup-py
+        mv stubs/vowpal_wabbit_next/_core-stubs/__init__.pyi src/vowpal_wabbit_next/_core.pyi
+        rm -r stubs
+
+    - name: Check if stubs are different
+      run: git diff --exit-code
