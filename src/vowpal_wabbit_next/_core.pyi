@@ -16,29 +16,6 @@ class Example():
     def _is_newline(self) -> bool: ...
     pass
 class LabelType():
-    """
-    Members:
-
-      Simple
-
-      CB
-
-      CBEval
-
-      CS
-
-      Multilabel
-
-      Multiclass
-
-      CCB
-
-      Slates
-
-      NoLabel
-
-      Continuous
-    """
     def __eq__(self, other: object) -> bool: ...
     def __getstate__(self) -> int: ...
     def __hash__(self) -> int: ...
@@ -75,35 +52,6 @@ class ModelDelta():
     def serialize(self) -> bytes: ...
     pass
 class PredictionType():
-    """
-    Members:
-
-      Scalar
-
-      Scalars
-
-      ActionScores
-
-      Pdf
-
-      ActionProbs
-
-      Multiclass
-
-      Multilabels
-
-      Prob
-
-      MulticlassProbs
-
-      DecisionProbs
-
-      ActionPdfValue
-
-      ActiveMulticlass
-
-      NoPred
-    """
     def __eq__(self, other: object) -> bool: ...
     def __getstate__(self) -> int: ...
     def __hash__(self) -> int: ...
@@ -167,3 +115,5 @@ def _write_cache_example(workspace: Workspace, example: Example, file: object) -
 def _write_cache_header(workspace: Workspace, file: object) -> None:
     pass
 __version__ = '0.0.1'
+_vw_commit = '4909225fe'
+_vw_version = '9.7.0'
