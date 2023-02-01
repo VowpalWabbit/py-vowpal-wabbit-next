@@ -371,6 +371,9 @@ void update_stats_recursive(VW::workspace& workspace, LearnerT& learner, Example
 
 PYBIND11_MODULE(_core, m)
 {
+  py::options options;
+  options.disable_enum_members_docstring();
+
   py::enum_<VW::label_type_t>(m, "LabelType")
       .value("Simple", VW::label_type_t::SIMPLE)
       .value("CB", VW::label_type_t::CB)
