@@ -12,11 +12,14 @@
 #include "vw/core/object_pool.h"
 #include "vw/core/parse_example.h"
 #include "vw/core/prediction_type.h"
+#include "vw/core/scope_exit.h"
 #include "vw/core/simple_label.h"
 #include "vw/core/version.h"
 #include "vw/core/vw.h"
 #include "vw/io/io_adapter.h"
 #include "vw/io/logger.h"
+#include "vw/json_parser/decision_service_utils.h"
+#include "vw/json_parser/parse_example_json.h"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
@@ -327,7 +330,7 @@ std::unique_ptr<VW::model_delta> merge_deltas(const std::vector<const VW::model_
 std::unique_ptr<VW::model_delta> calculate_delta(
     const workspace_with_logger_contexts& base_workspace, const workspace_with_logger_contexts& derived_workspace)
 {
-  auto delta = *base_workspace.workspace_ptr - *derived_workspace.workspace_ptr;
+  auto delta = *derived_workspace.workspace_ptr - *base_workspace.workspace_ptr;
   return std::make_unique<VW::model_delta>(std::move(delta));
 }
 
@@ -365,6 +368,99 @@ void update_stats_recursive(VW::workspace& workspace, LearnerT& learner, Example
     else { as_singleline(base)->finish_example(workspace, (VW::example&)example); }
   }
   else { THROW("No update_stats functions were registered in the stack."); }
+}
+
+void py_setup_example(VW::workspace& ws, VW::example& ex)
+{
+#ifndef NDEBUG
+  for (auto& fg : *ae) { assert(fg.validate_extents()); }
+#endif
+
+  ex.partial_prediction = 0.;
+  ex.num_features = 0;
+  ex.reset_total_sum_feat_sq();
+  ex.loss = 0.;
+  ex.debug_current_reduction_depth = 0;
+  // TODO: workout if this is necessary or how to set it from a non-friend function
+  // ex._use_permutations = all.permutations;
+
+  ex.weight = ws.example_parser->lbl_parser.get_weight(ex.l, ex.ex_reduction_features);
+
+  if (ws.add_constant)
+  {
+    // TODO make workspace a const arg here.
+    VW::add_constant_feature(ws, &ex);
+  }
+
+  uint64_t multiplier = static_cast<uint64_t>(ws.wpp) << ws.weights.stride_shift();
+
+  if (multiplier != 1)
+  {  // make room for per-feature information.
+    for (auto& fs : ex)
+    {
+      for (auto& j : fs.indices) { j *= multiplier; }
+    }
+  }
+  ex.num_features = 0;
+  for (const auto& fs : ex) { ex.num_features += fs.size(); }
+
+  if (ex.interactions != nullptr)
+  {
+    THROW("Example has either already been setup, or was never unsetup. This should never happen and is a bug.")
+  }
+
+  // Set the interactions for this example to the global set.
+  ex.interactions = &ws.interactions;
+  ex.extent_interactions = &ws.extent_interactions;
+}
+
+void py_setup_example(VW::workspace& ws, std::vector<VW::example*>& ex)
+{
+  for (auto& example : ex) { py_setup_example(ws, *example); }
+}
+
+void py_unsetup_example(VW::workspace& ws, VW::example& ex)
+{
+  // Reset these to avoid reuse issues.
+  // This is wasteful from a memory perspective but important for correctness at
+  // the moment.
+  ex.l = VW::polylabel{};
+  ex.pred = VW::polyprediction{};
+
+  if (ws.add_constant)
+  {
+    if (ex.feature_space[VW::details::CONSTANT_NAMESPACE].size() != 1)
+    {
+      THROW("Constant feature not found. This should not happen.");
+    }
+    ex.feature_space[VW::details::CONSTANT_NAMESPACE].clear();
+    auto num_times = std::count(ex.indices.begin(), ex.indices.end(), VW::details::CONSTANT_NAMESPACE);
+    if (num_times != 1) { THROW("Constant index not found. This should not happen."); }
+    auto it = std::find(ex.indices.begin(), ex.indices.end(), VW::details::CONSTANT_NAMESPACE);
+    ex.indices.erase(it);
+  }
+
+  uint32_t multiplier = ws.wpp << ws.weights.stride_shift();
+  if (multiplier != 1)
+  {
+    for (auto ns : ex.indices)
+    {
+      for (auto& idx : ex.feature_space[ns].indices) { idx /= multiplier; }
+    }
+  }
+
+  if (ex.interactions == nullptr)
+  {
+    THROW("Example has either already been unsetup, or was never setup. This should never happen and is a bug.")
+  }
+
+  ex.interactions = nullptr;
+  ex.extent_interactions = nullptr;
+}
+
+void py_unsetup_example(VW::workspace& ws, std::vector<VW::example*>& ex)
+{
+  for (auto& example : ex) { py_unsetup_example(ws, *example); }
 }
 
 }  // namespace
@@ -429,6 +525,33 @@ PYBIND11_MODULE(_core, m)
                  wrapped_object->workspace_ptr =
                      std::shared_ptr<VW::workspace>(VW::initialize_experimental(std::move(opts),
                          std::move(model_reader), driver_log, wrapped_object->logger_context_ptr.get(), &logger));
+                 // This should cause parsing failures to be thrown instead of just logged.
+                 wrapped_object->workspace_ptr->example_parser->strict_parse = true;
+
+                 // Check for unsupported features.
+                 // The main reason for this is we want to remove the concept of "setup_example" in the python bindings
+                 // This is achieved by performing necessary steps in the learn/predict call and undoing them on the way
+                 // out.
+                 if (wrapped_object->workspace_ptr->example_parser->sort_features)
+                 {
+                   THROW("The command line option 'sort_features' is not supported in py-vowpal-wabbit-next.");
+                 }
+
+                 if (wrapped_object->workspace_ptr->ignore_some)
+                 {
+                   THROW("The command line option 'ignore' is not supported in py-vowpal-wabbit-next.");
+                 }
+
+                 if (wrapped_object->workspace_ptr->skip_gram_transformer != nullptr)
+                 {
+                   THROW("The command line option 'ngram' is not supported in py-vowpal-wabbit-next.");
+                 }
+
+                 if (!wrapped_object->workspace_ptr->limit_strings.empty())
+                 {
+                   THROW("The command line option 'feature_limit' is not supported in py-vowpal-wabbit-next.");
+                 }
+
                  return wrapped_object;
                }),
           py::arg("args"), py::kw_only(), py::arg("model_data") = std::nullopt)
@@ -436,7 +559,8 @@ PYBIND11_MODULE(_core, m)
           "learn_one",
           [](workspace_with_logger_contexts& workspace, VW::example& example) -> void
           {
-            // TODO check if setup.
+            py_setup_example(*workspace.workspace_ptr, example);
+            auto on_exit = VW::scope_exit([&]() { py_unsetup_example(*workspace.workspace_ptr, example); });
             workspace.workspace_ptr->learn(example);
 
             // TODO - when updating VW submodule if learn calls update stats then remove this to avoid a double call.
@@ -449,6 +573,8 @@ PYBIND11_MODULE(_core, m)
           [](workspace_with_logger_contexts& workspace, std::vector<VW::example*>& example) -> void
           {
             assert(!example.empty());
+            py_setup_example(*workspace.workspace_ptr, example);
+            auto on_exit = VW::scope_exit([&]() { py_unsetup_example(*workspace.workspace_ptr, example); });
             workspace.workspace_ptr->learn(example);
 
             // TODO - when updating VW submodule if learn calls update stats then remove this to avoid a double call.
@@ -460,7 +586,8 @@ PYBIND11_MODULE(_core, m)
           "predict_one",
           [](workspace_with_logger_contexts& workspace, VW::example& example) -> prediction_t
           {
-            // TODO check if setup.
+            py_setup_example(*workspace.workspace_ptr, example);
+            auto on_exit = VW::scope_exit([&]() { py_unsetup_example(*workspace.workspace_ptr, example); });
             // We must save and restore test_only because the library sets this values and does not undo it.
             bool test_only = example.test_only;
             workspace.workspace_ptr->predict(example);
@@ -477,6 +604,8 @@ PYBIND11_MODULE(_core, m)
           [](workspace_with_logger_contexts& workspace, std::vector<VW::example*>& example) -> prediction_t
           {
             assert(!example.empty());
+            py_setup_example(*workspace.workspace_ptr, example);
+            auto on_exit = VW::scope_exit([&]() { py_unsetup_example(*workspace.workspace_ptr, example); });
             // We must save and restore test_only because the library sets this values and does not undo it.
             std::vector<bool> test_onlys;
             test_onlys.reserve(example.size());
@@ -498,9 +627,6 @@ PYBIND11_MODULE(_core, m)
       .def("get_label_type",
           [](const workspace_with_logger_contexts& workspace) -> VW::label_type_t
           { return workspace.workspace_ptr->l->get_input_label_type(); })
-      .def("setup_example",
-          [](const workspace_with_logger_contexts& workspace, VW::example& ex)
-          { VW::setup_example(*workspace.workspace_ptr, &ex); })
       .def("serialize",
           [](const workspace_with_logger_contexts& workspace) -> py::bytes
           {
@@ -510,7 +636,30 @@ PYBIND11_MODULE(_core, m)
             VW::save_predictor(*workspace.workspace_ptr, io_writer);
             io_writer.flush();
             return py::bytes(backing_vector->data(), backing_vector->size());  // Return the data without transcoding
-          });
+          })
+      .def(
+          "json_weights",
+          [](const workspace_with_logger_contexts& workspace, bool include_feature_names,
+              bool include_online_state) -> std::string
+          {
+            // Invert hash is enabled with "--invert_hash"
+            auto old_dump_json_weights_include_feature_names =
+                workspace.workspace_ptr->dump_json_weights_include_feature_names;
+            workspace.workspace_ptr->dump_json_weights_include_feature_names = include_feature_names;
+            auto old_dump_json_weights_include_extra_online_state =
+                workspace.workspace_ptr->dump_json_weights_include_extra_online_state;
+            workspace.workspace_ptr->dump_json_weights_include_extra_online_state = include_online_state;
+            auto on_exit = VW::scope_exit(
+                [&]()
+                {
+                  workspace.workspace_ptr->dump_json_weights_include_feature_names =
+                      old_dump_json_weights_include_feature_names;
+                  workspace.workspace_ptr->dump_json_weights_include_extra_online_state =
+                      old_dump_json_weights_include_extra_online_state;
+                });
+            return workspace.workspace_ptr->dump_weights_to_json_experimental();
+          },
+          py::kw_only(), py::arg("include_feature_names") = false, py::arg("include_online_state") = false);
 
   m.def("_parse_line_text", &::parse_text_line, py::arg("workspace"), py::arg("line"));
   m.def("_write_cache_header", &::write_cache_header, py::arg("workspace"), py::arg("file"));
