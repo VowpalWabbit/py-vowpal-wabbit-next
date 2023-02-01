@@ -467,6 +467,9 @@ void py_unsetup_example(VW::workspace& ws, std::vector<VW::example*>& ex)
 
 PYBIND11_MODULE(_core, m)
 {
+  py::options options;
+  options.disable_enum_members_docstring();
+
   py::enum_<VW::label_type_t>(m, "LabelType")
       .value("Simple", VW::label_type_t::SIMPLE)
       .value("CB", VW::label_type_t::CB)
