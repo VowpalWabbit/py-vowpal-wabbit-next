@@ -6,7 +6,7 @@ from types import TracebackType
 
 class DSJsonFormatParser:
     def __init__(self, workspace: Workspace):
-        """Parse VW DSJson format examples
+        """Parse VW DSJson format examples.
 
         Args:
             workspace (Workspace): Workspace object used to configure this parser
@@ -14,7 +14,7 @@ class DSJsonFormatParser:
         self._workspace = workspace
 
     def parse_json(self, text: str) -> typing.List[Example]:
-        '''Parse a single json object in dsjson format
+        '''Parse a single json object in dsjson format.
 
         Examples:
             >>> from vowpal_wabbit_next import Workspace, DSJsonFormatParser
@@ -51,10 +51,9 @@ DSJsonFormatReaderT = typing.TypeVar("DSJsonFormatReaderT", bound="DSJsonFormatR
 # takes a file and uses a context manager to generate based on the contents of the file
 class DSJsonFormatReader:
     def __init__(self, workspace: Workspace, file: typing.TextIO):
-        """ "Read VW DSJson format examples from the given text file. This reader always produces lists of examples.
+        """Read VW DSJson format examples from the given text file. This reader always produces lists of examples.
 
         Examples:
-
             >>> from vowpal_wabbit_next import Workspace, DSJsonFormatReader
             >>> workspace = Workspace([])
             >>> with open("data.txt", "r") as f:

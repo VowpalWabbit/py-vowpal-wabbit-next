@@ -1,4 +1,4 @@
-name: "Check typestubs"
+name: "Lint"
 
 on:
   workflow_dispatch:
@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   build:
-    name: Check typestubs
+    name: Lint
     runs-on: ${{ matrix.platform }}
     strategy:
       fail-fast: false
@@ -30,16 +30,22 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Build and install
-      run: pip install --verbose .[test]
+    - name: Install dev dependencies
+      run: pip install -r requirements-dev.txt
+
+    - name: Check formatting
+      run: black --check src tests
+
+    - name: Check docstrings
+      run: pydocstyle src
+
+    - name: Build and install package
+      run: pip install --verbose .
       env:
         CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake
         VCPKG_FORCE_DOWNLOADED_BINARIES: true
 
-    - name: Install pybind11-stubgen
-      run: pip install pybind11-stubgen==0.12.0
-
-    - name: Generate stubs
+    - name: Generate type stubs
       run: |
         pybind11-stubgen vowpal_wabbit_next._core --no-setup-py
         mv stubs/vowpal_wabbit_next/_core-stubs/__init__.pyi src/vowpal_wabbit_next/_core.pyi

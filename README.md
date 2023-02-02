@@ -26,6 +26,9 @@ Wheels are provided for the following platforms:
 export CMAKE_TOOLCHAIN_FILE=$(pwd)/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake
 pip install -v .
 
+# Install dev dependncies
+pip install -r requirements-dev.txt
+
 # Test
 pytest
 
@@ -34,6 +37,9 @@ mypy
 
 # Format
 black src tests
+
+# Check documentation
+pydocstyle src
 ```
 
 ### Update pybind11 module type stub
