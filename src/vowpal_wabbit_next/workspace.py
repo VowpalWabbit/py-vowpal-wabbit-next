@@ -149,7 +149,7 @@ class Workspace:
     ) -> str:
         """Debugging utility which dumps the weights in the model currently as a JSON string.
 
-        .. DANGER::
+        .. warning::
             This is an experimental feature.
 
         Args:

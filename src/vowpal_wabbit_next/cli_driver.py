@@ -41,7 +41,7 @@ def run_cli_driver(
     * The argfile input to command line is not supported
     * If any place in VW writes to stdout, stderr directly it is not captured. This means that `--version` and `--help` are not currently captured.
 
-    .. DANGER::
+    .. warning::
         This is an experimental feature.
 
     Examples:
