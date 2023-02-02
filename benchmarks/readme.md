@@ -1,10 +1,28 @@
 # Benchmarks
 
+## Python Benchmarks
+
+### Results
+
+![Results python](plot_python.png "Results python")
+
+| Benchmark | PyVW | Python |
+| --- | --- | --- |
+| init workspace | 1.82 ms ± 0.14 ms | 1.89 ms ± 0.13 ms |
+| init + parse dsjson | 2.06 ms ± 0.13 ms | 1.94 ms ± 0.12 ms |
+| init + parse + learn dsjson | 2.07 ms ± 0.11 ms | 1.95 ms ± 0.12 ms |
+
+PyVW version `9.6.0` used.
+
+### How to reproduce
+
+Run: `python pyvw_comparison.py`
+
 ## CLI Benchmarks
 
 ### Results
 
-![Results](plot.png "Results")
+![Results CLI](plot_cli.png "Results CLI")
 
 | Command | CLI | Python |
 | --- | --- | --- |
@@ -14,6 +32,9 @@
 | `-d rcv1.5k.txt --quiet -q:: -k` | 0.1739 s ± 0.0092 s | 0.2042 s ± 0.014 s |
 | `-d rcv1.10k.txt --quiet -q:: -k` | 0.2807 s ± 0.0079 s | 0.3097 s ± 0.0173 s |
 | `-d rcv1.20k.txt --quiet -q:: -k` | 0.4714 s ± 0.0025 s | 0.5248 s ± 0.0201 s |
+| `cache_create.py` | 0.0959 s ± 0.0182 s | 0.1132 s ± 0.0024 s |
+
+`cache_create.py` - Creates a cache file containing the first 10k examples of rcv1.
 
 The Python startup overhead was also directly measured:
 
