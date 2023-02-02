@@ -518,6 +518,59 @@ void py_unsetup_example(VW::workspace& ws, std::vector<VW::example*>& ex)
   for (auto& example : ex) { py_unsetup_example(ws, *example); }
 }
 
+// return type is an optional error information (nullopt if success), driver output, list of log messages
+// stdin is not supported
+std::tuple<std::optional<std::string>, std::string, std::vector<std::string>> run_cli_driver(
+    const std::vector<std::string>& args, bool onethread)
+{
+  auto args_copy = args;
+  args_copy.push_back("--no_stdin");
+  auto options = VW::make_unique<VW::config::options_cli>(args_copy);
+  std::stringstream driver_log;
+  std::vector<std::string> log_log;
+
+  auto logger = VW::io::create_custom_sink_logger(&log_log,
+      [](void* context, VW::io::log_level /* unused */, const std::string& message)
+      {
+        auto* log_log = static_cast<std::vector<std::string>*>(context);
+        log_log->push_back(message);
+      });
+
+  auto driver_logger = [](void* context, const std::string& message)
+  {
+    auto* driver_log = static_cast<std::stringstream*>(context);
+    *driver_log << message;
+  };
+
+  try
+  {
+    auto all = VW::initialize(std::move(options), nullptr, driver_logger, &driver_log, &logger);
+    all->vw_is_main = true;
+
+    if (onethread) { VW::LEARNER::generic_driver_onethread(*all); }
+    else
+    {
+      VW::start_parser(*all);
+      VW::LEARNER::generic_driver(*all);
+      VW::end_parser(*all);
+    }
+
+    if (all->example_parser->exc_ptr) { std::rethrow_exception(all->example_parser->exc_ptr); }
+    VW::sync_stats(*all);
+    all->finish();
+  }
+  catch (const std::exception& ex)
+  {
+    return std::make_tuple(ex.what(), driver_log.str(), log_log);
+  }
+  catch (...)
+  {
+    return std::make_tuple("Unknown exception occurred", driver_log.str(), log_log);
+  }
+
+  return std::make_tuple(std::nullopt, driver_log.str(), log_log);
+}
+
 }  // namespace
 
 PYBIND11_MODULE(_core, m)
@@ -723,6 +776,7 @@ PYBIND11_MODULE(_core, m)
   m.def("_parse_line_dsjson", &::parse_dsjson_line, py::arg("workspace"), py::arg("line"));
   m.def("_write_cache_header", &::write_cache_header, py::arg("workspace"), py::arg("file"));
   m.def("_write_cache_example", &::write_cache_example, py::arg("workspace"), py::arg("example"), py::arg("file"));
+  m.def("_run_cli_driver", &::run_cli_driver, py::arg("args"), py::kw_only(), py::arg("onethread") = false);
 
   py::class_<cache_reader>(m, "_CacheReader")
       .def(py::init([](workspace_with_logger_contexts& workspace, py::object file)

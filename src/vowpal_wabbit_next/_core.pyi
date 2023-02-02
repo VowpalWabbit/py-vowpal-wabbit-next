@@ -112,10 +112,12 @@ def _parse_line_dsjson(workspace: Workspace, line: str) -> typing.List[Example]:
     pass
 def _parse_line_text(workspace: Workspace, line: str) -> Example:
     pass
+def _run_cli_driver(args: typing.List[str], *, onethread: bool = False) -> typing.Tuple[typing.Optional[str], str, typing.List[str]]:
+    pass
 def _write_cache_example(workspace: Workspace, example: Example, file: object) -> None:
     pass
 def _write_cache_header(workspace: Workspace, file: object) -> None:
     pass
 __version__ = '0.0.1'
-_vw_commit = 'a2db93c'
+_vw_commit = '4909225fe'
 _vw_version = '9.7.0'

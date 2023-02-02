@@ -5,6 +5,7 @@ from .text_format import TextFormatParser, TextFormatReader
 from .dsjson_format import DSJsonFormatParser, DSJsonFormatReader
 from .cache_format import CacheFormatWriter, CacheFormatReader
 from .delta import ModelDelta, calculate_delta, apply_delta, merge_deltas
+from .cli_driver import CLIError, run_cli_driver
 
 VW_COMMIT: str = _vw_commit
 """Commit of VowpalWabbit that this package is built with"""
@@ -27,6 +28,8 @@ __all__ = [
     "calculate_delta",
     "apply_delta",
     "merge_deltas",
+    "CLIError",
+    "run_cli_driver",
     "VW_COMMIT",
     "VW_VERSION",
 ]
