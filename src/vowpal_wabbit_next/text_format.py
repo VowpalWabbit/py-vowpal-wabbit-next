@@ -6,7 +6,7 @@ from types import TracebackType
 
 class TextFormatParser:
     def __init__(self, workspace: Workspace):
-        """Parse VW text format examples
+        """Parse VW text format examples.
 
         Args:
             workspace (Workspace): Workspace object used to configure this parser
@@ -14,7 +14,7 @@ class TextFormatParser:
         self._workspace = workspace
 
     def parse_line(self, text: str) -> Example:
-        """Parse a single line
+        """Parse a single line.
 
         Examples:
             >>> from vowpal_wabbit_next import Workspace, TextFormatParser
@@ -40,7 +40,6 @@ class TextFormatReader:
         """Read VW text format examples from the given text file. This reader produces either single Examples or List[Example] based on if the given workspace is multiline or not.
 
         Examples:
-
             >>> from vowpal_wabbit_next import Workspace, TextFormatReader
             >>> workspace = Workspace([])
             >>> with open("data.txt", "r") as f:

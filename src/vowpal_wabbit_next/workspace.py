@@ -36,7 +36,6 @@ class Workspace:
         See the logging example below.
 
         Examples:
-
             Load a model from a file:
 
             >>> from vowpal_wabbit_next import Workspace
@@ -91,7 +90,7 @@ class Workspace:
             return self._workspace.predict_multi_ex_one(example)
 
     def learn_one(self, example: typing.Union[Example, List[Example]]) -> None:
-        """Learn from one single example. Note, passing a list of examples here means the input is a multiline example, and not several individual examples. The label type of the example must match what is returned by :py:meth:`vowpal_wabbit_next.Workspace.label_type`
+        """Learn from one single example. Note, passing a list of examples here means the input is a multiline example, and not several individual examples. The label type of the example must match what is returned by :py:meth:`vowpal_wabbit_next.Workspace.label_type`.
 
         Examples:
             >>> from vowpal_wabbit_next import Workspace, TextFormatParser

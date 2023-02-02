@@ -37,3 +37,10 @@ warn_unreachable = true
 [[tool.mypy.overrides]]
 module = "vowpal_wabbit_next._core"
 ignore_errors = true
+
+[tool.pydocstyle]
+convention = "google"
+# Choosing to ignore module level docs, class level docs (document __init__
+# instead), magic functions (__enter__), ignore blank line requirement between
+# summary and content
+add_ignore = "D100,D101,D104,D105,D205"

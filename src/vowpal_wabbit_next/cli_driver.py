@@ -18,6 +18,13 @@ def _working_directory(path: Path) -> Generator[None, None, None]:
 
 class CLIError(Exception):
     def __init__(self, message: str, driver_output: str, log_output: List[str]):
+        """Represents a failure when running the CLI. Exposes output for additional context.
+
+        Args:
+            message (str): Error message
+            driver_output (str): Output of the VW driver
+            log_output (List[str]): List of logs messages
+        """
         super().__init__(message)
         self.driver_output = driver_output
         self.log_output = log_output
@@ -26,7 +33,9 @@ class CLIError(Exception):
 def run_cli_driver(
     args: List[str], *, onethread: bool = False, cwd: Optional[Path] = None
 ) -> Tuple[str, List[str]]:
-    """Is the equivalent of running the VW command line tool with the given command line. There are a few differences:
+    """Is the equivalent of running the VW command line tool with the given command line.
+
+    There are a few differences:
 
     * Any input from stdin is not supported
     * The argfile input to command line is not supported
@@ -36,7 +45,6 @@ def run_cli_driver(
         This is an experimental feature.
 
     Examples:
-
         >>> from vowpal_wabbit_next import run_cli_driver
         >>> driver_output, logs = run_cli_driver(["-d", "my_data.txt"])
 
@@ -57,7 +65,6 @@ def run_cli_driver(
     Returns:
         Tuple[str, List[str]]: driver output and log messages respectively as a tuple
     """
-
     with _working_directory(cwd) if cwd is not None else contextlib.nullcontext():
         error_info, driver_output, log_output = _core._run_cli_driver(
             args, onethread=onethread
