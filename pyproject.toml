@@ -15,6 +15,7 @@ profile = "black"
 extend-exclude = "_core.pyi"
 
 [tool.cibuildwheel]
+test-requires = "pytest"
 test-command = "pytest {project}/tests"
 test-extras = ["test"]
 test-skip = ["*-macosx_arm64"]
