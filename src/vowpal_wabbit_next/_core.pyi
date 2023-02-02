@@ -119,5 +119,5 @@ def _write_cache_example(workspace: Workspace, example: Example, file: object) -
 def _write_cache_header(workspace: Workspace, file: object) -> None:
     pass
 __version__ = '0.0.1'
-_vw_commit = '4909225fe'
+_vw_commit = 'a2db93c'
 _vw_version = '9.7.0'
