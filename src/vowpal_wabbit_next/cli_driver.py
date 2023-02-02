@@ -4,6 +4,7 @@ import contextlib
 from pathlib import Path
 import os
 
+
 # From: https://stackoverflow.com/questions/41742317/how-can-i-change-directory-with-python-pathlib
 @contextlib.contextmanager
 def _working_directory(path: Path) -> Generator[None, None, None]:
