@@ -11,7 +11,6 @@ class CacheFormatReader:
         """Read VW examples in cache format from the given file.
 
         Examples:
-
             >>> from vowpal_wabbit_next import Workspace, TextFormatParser, CacheFormatWriter
             >>> workspace = Workspace([])
             >>> with open("data.cache", "rb") as f:
@@ -100,6 +99,11 @@ class CacheFormatWriter:
     def write_example(
         self, example: typing.Union[Example, typing.List[Example]]
     ) -> None:
+        """Write a single example to the cache file.
+
+        Args:
+            example (typing.Union[Example, typing.List[Example]]): Either a single or multiex to be written.
+        """
         if isinstance(example, list):
             for e in example:
                 _core._write_cache_example(self._workspace._workspace, e, self._file)

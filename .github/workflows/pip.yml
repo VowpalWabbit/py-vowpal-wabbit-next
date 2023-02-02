@@ -36,11 +36,14 @@ jobs:
         "SKBUILD_CONFIGURE_OPTIONS=-DVCPKG_TARGET_TRIPLET=x64-windows-static -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded" >> $env:GITHUB_ENV
 
     - name: Build and install
-      run: pip install --verbose .[test]
+      run: pip install --verbose .
       env:
         CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake
         VCPKG_FORCE_DOWNLOADED_BINARIES: true
         MACOSX_DEPLOYMENT_TARGET: "10.13"
+
+    - name: Install dev dependencies
+      run: pip install -r requirements-dev.txt
 
     - name: Test
       run: pytest
