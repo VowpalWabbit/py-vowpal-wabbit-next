@@ -1,0 +1,40 @@
+# Benchmarks
+
+## CLI Benchmarks
+
+### Results
+
+![Results](plot.png "Results")
+
+| Command | CLI | Python |
+| --- | --- | --- |
+| `--quiet --no_stdin` | 0.0101 s ± 0.0058 s | 0.0306 s ± 0.0064 s |
+| `-d rcv1.5k.txt -q:: -k` | 0.1726 s ± 0.0084 s | 0.1959 s ± 0.0119 s |
+| `-d rcv1.5k.txt --quiet -q:: -k -c --passes 5` | 0.4562 s ± 0.0507 s | 0.5254 s ± 0.0425 s |
+| `-d rcv1.5k.txt --quiet -q:: -k` | 0.1739 s ± 0.0092 s | 0.2042 s ± 0.014 s |
+| `-d rcv1.10k.txt --quiet -q:: -k` | 0.2807 s ± 0.0079 s | 0.3097 s ± 0.0173 s |
+| `-d rcv1.20k.txt --quiet -q:: -k` | 0.4714 s ± 0.0025 s | 0.5248 s ± 0.0201 s |
+
+The Python startup overhead was also directly measured:
+
+- Completely empty file - `13.1 ms ± 3.8 ms`
+- `import vowpal_wabbit_next as vw` and `import sys` - `24.9 ms ± 2.9 ms`
+
+Benchmarks done using:
+- Commit `484031bc8787fd8dfdde8a4f05dd8f92acc5a490`
+- Python 3.10.8
+- Apple M1 Max
+
+### How to reproduce
+
+#### Dependencies
+
+- `hyperfine`
+- Python packages: `matplotlib`, `numpy`
+
+#### Steps
+
+1. Build VW CLI in release mode and update `VW_BIN` in benchmarks.sh
+2. Build and install `vowpal_wabbit_next` python package
+3. Run `./benchmarks.sh`
+4. Run `plot.py`
