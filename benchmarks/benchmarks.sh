@@ -21,3 +21,4 @@ hyperfine --warmup 5 --export-csv bench4.csv "$VW_BIN -d rcv1.5k.txt --quiet -q:
 hyperfine --warmup 5 --export-csv bench5.csv "$VW_BIN -d rcv1.10k.txt --quiet -q:: -k" "python ./cli_runner.py -d rcv1.10k.txt --quiet -q:: -k"
 hyperfine --warmup 5 --export-csv bench6.csv "$VW_BIN -d rcv1.15k.txt --quiet -q:: -k" "python ./cli_runner.py -d rcv1.15k.txt --quiet -q:: -k"
 hyperfine --warmup 5 --export-csv bench7.csv "$VW_BIN -d rcv1.20k.txt --quiet -q:: -k" "python ./cli_runner.py -d rcv1.20k.txt --quiet -q:: -k"
+hyperfine --warmup 5 --export-csv bench8.csv "python cache_create.py" "$VW_BIN -d rcv1.10k.txt -c -k --quiet --noop"
