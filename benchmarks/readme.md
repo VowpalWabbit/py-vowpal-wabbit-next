@@ -1,10 +1,28 @@
 # Benchmarks
 
+## Python Benchmarks
+
+### Results
+
+![Results python](plot_python.png "Results python")
+
+| Benchmark | PyVW | Python |
+| --- | --- | --- |
+| init workspace | 1.82 ms ± 0.14 ms | 1.89 ms ± 0.13 ms |
+| init + parse dsjson | 2.06 ms ± 0.13 ms | 1.94 ms ± 0.12 ms |
+| init + parse + learn dsjson | 2.07 ms ± 0.11 ms | 1.95 ms ± 0.12 ms |
+
+PyVW version `9.6.0` used.
+
+### How to reproduce
+
+Run: `python pyvw_comparison.py`
+
 ## CLI Benchmarks
 
 ### Results
 
-![Results](plot.png "Results")
+![Results CLI](plot_cli.png "Results CLI")
 
 | Command | CLI | Python |
 | --- | --- | --- |
