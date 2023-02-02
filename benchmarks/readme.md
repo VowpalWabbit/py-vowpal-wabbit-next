@@ -15,6 +15,11 @@
 | `-d rcv1.10k.txt --quiet -q:: -k` | 0.2807 s ± 0.0079 s | 0.3097 s ± 0.0173 s |
 | `-d rcv1.20k.txt --quiet -q:: -k` | 0.4714 s ± 0.0025 s | 0.5248 s ± 0.0201 s |
 
+The Python startup overhead was also directly measured:
+
+- Completely empty file - `13.1 ms ± 3.8 ms`
+- `import vowpal_wabbit_next as vw` and `import sys` - `24.9 ms ± 2.9 ms`
+
 Benchmarks done using:
 - Commit `484031bc8787fd8dfdde8a4f05dd8f92acc5a490`
 - Python 3.10.8
