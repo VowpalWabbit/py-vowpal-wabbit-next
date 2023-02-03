@@ -13,4 +13,6 @@ dependencies:
   - zlib
   - pip:
     - furo
+    - nbsphinx
+    - pandas
 
