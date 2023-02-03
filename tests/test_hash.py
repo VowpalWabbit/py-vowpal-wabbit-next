@@ -20,6 +20,60 @@ def test_get_scalar_index() -> None:
     )
 
 
+def test_get_weight_interleaved_models():
+    model = vw.Workspace(["--automl=4", "--cb_adf"])
+    parser = vw.TextFormatParser(model)
+
+    example = [
+        parser.parse_line("shared | s_1"),
+        parser.parse_line("0:1.5:0.25 |namespace feature a:0.5 b:1"),
+        parser.parse_line("| a:-1 b:-0.5"),
+        parser.parse_line("| a:-2 b:-1"),
+    ]
+    model.learn_one(example)
+
+    assert (
+        model.weights()[
+            model.get_index_for_scalar_feature("feature", namespace_name="namespace")
+        ][0][0]
+        != 0
+    )
+    assert (
+        model.weights()[
+            model.get_index_for_scalar_feature("feature", namespace_name="namespace")
+        ][1][0]
+        != 0
+    )
+    assert (
+        model.weights()[
+            model.get_index_for_scalar_feature("feature", namespace_name="namespace")
+        ][2][0]
+        != 0
+    )
+    assert (
+        model.weights()[
+            model.get_index_for_scalar_feature("feature", namespace_name="namespace")
+        ][3][0]
+        != 0
+    )
+    assert (
+        model.weights()[model.get_index_for_scalar_feature("unknown_feature")][0][0]
+        == 0
+    )
+    assert (
+        model.weights()[model.get_index_for_scalar_feature("unknown_feature")][1][0]
+        == 0
+    )
+    assert (
+        model.weights()[model.get_index_for_scalar_feature("unknown_feature")][2][0]
+        == 0
+    )
+    assert (
+        model.weights()[model.get_index_for_scalar_feature("unknown_feature")][3][0]
+        == 0
+    )
+
+
 @pytest.mark.skip("Not yet implemented")
 def test_get_interacted_index() -> None:
     model = vw.Workspace([])
