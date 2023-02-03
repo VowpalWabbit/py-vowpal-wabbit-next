@@ -2,9 +2,6 @@ import vowpal_wabbit_next as vw
 import pytest
 
 
-@pytest.mark.skip(
-    reason="Requires this fix to enable: https://github.com/VowpalWabbit/vowpal_wabbit/pull/4483"
-)
 def test_equivalent_models() -> None:
     model = vw.Workspace(["--invert_hash=unused"])
     parser = vw.TextFormatParser(model)
