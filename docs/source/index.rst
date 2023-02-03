@@ -1,7 +1,7 @@
 vowpal_wabbit_next
 ==================
 
-.. info::
+.. important::
    If you are looking for `VowpalWabbit's <https://github.com/VowpalWabbit/vowpal_wabbit>`_
    existing Python bindings go `here <https://pypi.org/project/vowpalwabbit/>`_
 
@@ -35,3 +35,4 @@ prefer a more stable package then the `existing bindings
    :hidden:
 
    reference
+   vw_versions
