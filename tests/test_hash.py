@@ -20,7 +20,7 @@ def test_get_scalar_index() -> None:
     )
 
 
-def test_get_weight_interleaved_models():
+def test_get_weight_interleaved_models() -> None:
     model = vw.Workspace(["--automl=4", "--cb_adf"])
     parser = vw.TextFormatParser(model)
 
