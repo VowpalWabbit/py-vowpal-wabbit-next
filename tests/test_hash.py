@@ -15,7 +15,9 @@ def test_get_scalar_index() -> None:
     model_with_wpp = vw.Workspace(["--automl=4", "--cb_adf"])
     # This hash causes a truncation since the wpp multiplies beyond the end of the weight array
     # We are ensuring the wrap around is calculated correctly.
-    assert 45701 == model_with_wpp.get_index_for_scalar_feature("feature", namespace_name="namespace")
+    assert 45701 == model_with_wpp.get_index_for_scalar_feature(
+        "feature", namespace_name="namespace"
+    )
 
 
 @pytest.mark.skip("Not yet implemented")
