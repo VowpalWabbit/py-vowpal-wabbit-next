@@ -16,4 +16,4 @@ dependencies:
     - nbsphinx
     - pandas
     - ipykernel
-
+    - matplotlib
