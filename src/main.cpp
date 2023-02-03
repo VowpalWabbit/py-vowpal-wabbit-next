@@ -1,5 +1,6 @@
 #include "vw/common/text_utils.h"
 #include "vw/config/options_cli.h"
+#include "vw/core/array_parameters_dense.h"
 #include "vw/core/cache.h"
 #include "vw/core/constant.h"
 #include "vw/core/example.h"
@@ -21,6 +22,7 @@
 #include "vw/json_parser/decision_service_utils.h"
 #include "vw/json_parser/parse_example_json.h"
 
+#include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>
@@ -571,12 +573,40 @@ std::tuple<std::optional<std::string>, std::string, std::vector<std::string>> ru
   return std::make_tuple(std::nullopt, driver_log.str(), log_log);
 }
 
+struct dense_weight_holder
+{
+  dense_weight_holder(VW::dense_parameters* weights, size_t wpp, std::shared_ptr<VW::workspace> ws)
+      : weights(weights), wpp(wpp), ws(ws)
+  {
+  }
+
+  VW::dense_parameters* weights;
+  size_t wpp;
+  std::shared_ptr<VW::workspace> ws;
+};
 }  // namespace
 
 PYBIND11_MODULE(_core, m)
 {
   py::options options;
   options.disable_enum_members_docstring();
+
+  py::class_<dense_weight_holder>(m, "DenseParameters", py::buffer_protocol())
+      .def_buffer(
+          [](dense_weight_holder& m) -> py::buffer_info
+          {
+            auto length = (m.weights->mask() + 1) >> m.weights->stride_shift();
+            return py::buffer_info(m.weights->first(),  /* Pointer to buffer */
+                sizeof(float),                          /* Size of one scalar */
+                py::format_descriptor<float>::format(), /* Python struct-style format descriptor */
+                3,                                      /* Number of dimensions */
+                {static_cast<ssize_t>(length), static_cast<ssize_t>(m.wpp),
+                    static_cast<ssize_t>(m.weights->stride())}, /* Buffer dimensions */
+                {sizeof(float) * static_cast<ssize_t>(m.wpp) * static_cast<ssize_t>(m.weights->stride()),
+                    sizeof(float) * static_cast<ssize_t>(m.weights->stride()), sizeof(float)}
+                /* Strides (in bytes) for each index */
+            );
+          });
 
   py::enum_<VW::label_type_t>(m, "LabelType")
       .value("Simple", VW::label_type_t::SIMPLE)
@@ -747,6 +777,32 @@ PYBIND11_MODULE(_core, m)
             VW::save_predictor(*workspace.workspace_ptr, io_writer);
             io_writer.flush();
             return py::bytes(backing_vector->data(), backing_vector->size());  // Return the data without transcoding
+          })
+      .def(
+          "get_index_for_scalar_feature",
+          [](const workspace_with_logger_contexts& workspace, std::string_view feature_name,
+              std::optional<std::string_view> feature_value, std::string_view namespace_name) -> uint64_t
+          {
+            auto& ws = *workspace.workspace_ptr;
+
+            const auto ns_hash = ws.example_parser->hasher(namespace_name.data(), namespace_name.size(), ws.hash_seed);
+            const auto feature_hash = ws.example_parser->hasher(feature_name.data(), feature_name.size(), ns_hash);
+            if (feature_value.has_value())
+            {
+              const auto feature_value_hash =
+                  ws.example_parser->hasher(feature_value.value().data(), feature_value.value().size(), feature_hash);
+              return feature_value_hash & ws.parse_mask;
+            }
+
+            return feature_hash & ws.parse_mask;
+          },
+          py::arg("feature_name"), py::arg("feature_value") = std::nullopt, py::arg("namespace_name") = " ")
+      .def("weights",
+          [](const workspace_with_logger_contexts& workspace) -> std::unique_ptr<dense_weight_holder>
+          {
+            if (workspace.workspace_ptr->weights.sparse) { THROW("weights are sparse, cannot return dense weights"); }
+            return std::make_unique<dense_weight_holder>(
+                &workspace.workspace_ptr->weights.dense_weights, workspace.workspace_ptr->wpp, workspace.workspace_ptr);
           })
       .def(
           "json_weights",

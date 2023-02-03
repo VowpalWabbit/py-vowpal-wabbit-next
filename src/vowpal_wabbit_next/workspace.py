@@ -1,6 +1,9 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple
 import typing
 from vowpal_wabbit_next import _core, Example
+
+import numpy as np
+import numpy.typing as npt
 
 PredictionType = _core.PredictionType
 LabelType = _core.LabelType
@@ -144,6 +147,32 @@ class Workspace:
         """
         return self._workspace.serialize()
 
+    def weights(self) -> npt.NDArray[np.float32]:
+        """Access to the weights of the model currently.
+
+        This only supports dense weights.
+
+        This function returns a view of the weights and any changes to the returned array will be reflected in the model.
+
+        There are 3 dimensions:
+        - The feature index (aka weight index)
+        - The index of the interleaved model, which should usually be 0
+        - The weight itself and the extra state stored with the weight
+
+        .. warning::
+            This is an experimental feature.
+
+        Examples:
+            >>> from vowpal_wabbit_next import Workspace
+            >>> model = Workspace([])
+            >>> print(model.weights().shape)
+            (262144, 1, 4)
+
+        Returns:
+            np.ndarray: Array of weights
+        """
+        return np.array(self._workspace.weights(), copy=False)
+
     def json_weights(
         self, *, include_feature_names: bool = False, include_online_state: bool = False
     ) -> str:
@@ -165,3 +194,52 @@ class Workspace:
             include_feature_names=include_feature_names,
             include_online_state=include_online_state,
         )
+
+    def get_index_for_scalar_feature(
+        self,
+        feature_name: str,
+        *,
+        feature_value: Optional[str] = None,
+        namespace_name: str = " "
+    ) -> int:
+        """Calculate the has for a given feature.
+
+        .. warning::
+            This is an experimental feature, the interface may change.
+
+        Examples:
+            >>> from vowpal_wabbit_next import Workspace
+            >>> model = Workspace([])
+            >>> # Feature which looks like "|test thing" in text format
+            >>> model.get_index_for_scalar_feature("thing", namespace_name="test")
+            148099
+
+        Args:
+            feature_name (str): The name of the feature
+            feature_value (Optional[str], optional): String value of feature. If passed chain hashing will be used. In text format this looks like `feature_name:feature_value`
+            namespace_name (str, optional): Namespace of feature. Defaults to " " which is the default namespace.
+
+        Returns:
+            int: The index of the feature
+        """
+        return self._workspace.get_index_for_scalar_feature(
+            feature_name=feature_name,
+            feature_value=feature_value,
+            namespace_name=namespace_name,
+        )
+
+    def get_index_for_interacted_feature(
+        self, terms: List[Tuple[str, Optional[str], str]]
+    ) -> int:
+        """Calculate the hash for an interacted feature.
+
+        .. warning::
+            This is an experimental feature, the interface may change.
+
+        Args:
+            terms (List[Tuple[str, Optional[str], str]]): List of features which are interacted. (feature_name, feature_value, namespace_name)
+
+        Returns:
+            int: The index of the feature
+        """
+        raise NotImplementedError()
