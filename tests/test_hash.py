@@ -1,5 +1,6 @@
 import vowpal_wabbit_next as vw
-import pytest
+
+# import pytest
 
 
 def test_get_scalar_index() -> None:
@@ -74,13 +75,14 @@ def test_get_weight_interleaved_models() -> None:
     )
 
 
-@pytest.mark.skip("Not yet implemented")
-def test_get_interacted_index() -> None:
-    model = vw.Workspace([])
+# TODO: uncomment when implemented
+# @pytest.mark.skip("Not yet implemented")
+# def test_get_interacted_index() -> None:
+#     model = vw.Workspace([])
 
-    assert 2692 == model.get_index_for_interacted_feature(
-        [("a", None, " "), ("a", None, " ")]
-    )
-    assert 210827 == model.get_index_for_interacted_feature(
-        [("thing", None, "test"), ("val", "test", "another")]
-    )
+#     assert 2692 == model.get_index_for_interacted_feature(
+#         [("a", None, " "), ("a", None, " ")]
+#     )
+#     assert 210827 == model.get_index_for_interacted_feature(
+#         [("thing", None, "test"), ("val", "test", "another")]
+#     )

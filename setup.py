@@ -14,7 +14,7 @@ from setuptools import find_packages
 
 setup(
     name="vowpal_wabbit_next",
-    version="0.0.1",
+    version="0.1.0",
     description="Experimental python bindings for VowpalWabbit",
     author="Jack Gerrits",
     license="BSD-3-Clause",

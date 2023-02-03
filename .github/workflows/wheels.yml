@@ -6,9 +6,6 @@ on:
   push:
     branches:
      - main
-  release:
-    types:
-      - published
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -108,23 +105,45 @@ jobs:
       with:
         path: wheelhouse/*.whl
 
+  deploy_to_test:
+    name: Upload if release
+    environment: "Test-PyPi"
+    needs: [build_wheels_x64, build_wheels_windows_x64, build_wheels_macos_arm, build_sdist]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
 
-  # upload_all:
-  #   name: Upload if release
-  #   needs: [build_wheels_x64, build_wheels_windows_x64, build_wheels_macos_arm, build_sdist]
-  #   runs-on: ubuntu-latest
-  #   if: github.event_name == 'release' && github.event.action == 'published'
+    steps:
+    - uses: actions/setup-python@v4
+      with:
+        python-version: "3.x"
 
-  #   steps:
-  #   - uses: actions/setup-python@v4
-  #     with:
-  #       python-version: "3.x"
+    - uses: actions/download-artifact@v3
+      with:
+        name: artifact
+        path: dist
 
-  #   - uses: actions/download-artifact@v3
-  #     with:
-  #       name: artifact
-  #       path: dist
+    - uses: pypa/gh-action-pypi-publish@v1.6.4
+      with:
+        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        repository_url: https://test.pypi.org/legacy/
 
-  #   - uses: pypa/gh-action-pypi-publish@v1.5.1
-  #     with:
-  #       password: ${{ secrets.pypi_password }}
+  deploy_to_prod:
+    name: Upload if release
+    environment: "Prod-PyPi"
+    needs: [build_wheels_x64, build_wheels_windows_x64, build_wheels_macos_arm, build_sdist, deploy_to_test]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+
+    steps:
+    - uses: actions/setup-python@v4
+      with:
+        python-version: "3.x"
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: artifact
+        path: dist
+
+    - uses: pypa/gh-action-pypi-publish@v1.6.4
+      with:
+        password: ${{ secrets.PYPI_API_TOKEN }}

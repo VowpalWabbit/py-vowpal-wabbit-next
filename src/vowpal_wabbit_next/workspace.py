@@ -178,9 +178,10 @@ class Workspace:
         This function returns a view of the weights and any changes to the returned array will be reflected in the model.
 
         There are 3 dimensions:
-        - The feature index (aka weight index)
-        - The index of the interleaved model, which should usually be 0
-        - The weight itself and the extra state stored with the weight
+
+        * The feature index (aka weight index)
+        * The index of the interleaved model, which should usually be 0
+        * The weight itself and the extra state stored with the weight
 
         .. warning::
             This is an experimental feature.
@@ -206,9 +207,9 @@ class Workspace:
 
         Args:
             include_feature_names (bool, optional): Includes the feature names and interaction terms in the output. This requires the workspace to be configured to support it. This is not well exposed to Python currently but the way to do it is:
-                `--dump_json_weights_experimental=unused ---dump_json_weights_include_feature_names_experimental`
+                `--dump_json_weights_experimental=unused --dump_json_weights_include_feature_names_experimental`
             include_online_state (bool, optional): Includes extra save_resume state in the output.This requires the workspace to be configured to support it. This is not well exposed to Python currently but the way to do it is:
-                `--dump_json_weights_experimental=unused ---dump_json_weights_include_extra_online_state_experimental`
+                `--dump_json_weights_experimental=unused --dump_json_weights_include_extra_online_state_experimental`
 
         Returns:
             str: JSON string representing model weights
@@ -254,18 +255,19 @@ class Workspace:
             namespace_name=namespace_name,
         )
 
-    def get_index_for_interacted_feature(
-        self, terms: List[Tuple[str, Optional[str], str]]
-    ) -> int:
-        """Calculate the hash for an interacted feature.
+    # TODO implement
+    # def get_index_for_interacted_feature(
+    #     self, terms: List[Tuple[str, Optional[str], str]]
+    # ) -> int:
+    #     """Calculate the hash for an interacted feature.
 
-        .. warning::
-            This is an experimental feature, the interface may change.
+    #     .. warning::
+    #         This is an experimental feature, the interface may change.
 
-        Args:
-            terms (List[Tuple[str, Optional[str], str]]): List of features which are interacted. (feature_name, feature_value, namespace_name)
+    #     Args:
+    #         terms (List[Tuple[str, Optional[str], str]]): List of features which are interacted. (feature_name, feature_value, namespace_name)
 
-        Returns:
-            int: The index of the feature
-        """
-        raise NotImplementedError()
+    #     Returns:
+    #         int: The index of the feature
+    #     """
+    #     raise NotImplementedError()
