@@ -13,4 +13,7 @@ dependencies:
   - zlib
   - pip:
     - furo
-
+    - nbsphinx
+    - pandas
+    - ipykernel
+    - matplotlib

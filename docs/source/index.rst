@@ -13,6 +13,12 @@ VowpalWabbit Python bindings you should use the `existing bindings
 <https://pypi.org/project/vowpalwabbit/>`_.
 
 .. toctree::
+   :caption: Tutorials
+   :hidden:
+
+   contextual_bandit_content_personalization.ipynb
+
+.. toctree::
    :caption: Reference
    :hidden:
 
