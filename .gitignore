@@ -12,3 +12,7 @@ docs/source/_generate/
 backup/
 build/
 .ipynb_checkpoints/
+benchmarks/*.tar.gz
+benchmarks/*.txt
+benchmarks/*.cache
+benchmarks/*.csv

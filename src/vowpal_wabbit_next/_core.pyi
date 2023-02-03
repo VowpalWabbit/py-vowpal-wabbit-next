@@ -3,6 +3,7 @@ import vowpal_wabbit_next._core
 import typing
 
 __all__ = [
+    "DenseParameters",
     "Example",
     "LabelType",
     "ModelDelta",
@@ -11,6 +12,8 @@ __all__ = [
 ]
 
 
+class DenseParameters():
+    pass
 class Example():
     def __init__(self) -> None: ...
     def _is_newline(self) -> bool: ...
@@ -88,6 +91,7 @@ class PredictionType():
     pass
 class Workspace():
     def __init__(self, args: typing.List[str], *, model_data: typing.Optional[bytes] = None) -> None: ...
+    def get_index_for_scalar_feature(self, feature_name: str, feature_value: typing.Optional[str] = None, namespace_name: str = ' ') -> int: ...
     def get_is_multiline(self) -> bool: ...
     def get_label_type(self) -> LabelType: ...
     def get_prediction_type(self) -> PredictionType: ...
@@ -97,6 +101,7 @@ class Workspace():
     def predict_multi_ex_one(self, examples: typing.List[Example]) -> typing.Union[float, typing.List[float], typing.List[typing.Tuple[int, float]], typing.List[typing.List[typing.Tuple[int, float]]], int, typing.List[int], typing.List[typing.Tuple[float, float, float]], typing.Tuple[float, float], typing.Tuple[float, typing.List[int]], None]: ...
     def predict_one(self, examples: Example) -> typing.Union[float, typing.List[float], typing.List[typing.Tuple[int, float]], typing.List[typing.List[typing.Tuple[int, float]]], int, typing.List[int], typing.List[typing.Tuple[float, float, float]], typing.Tuple[float, float], typing.Tuple[float, typing.List[int]], None]: ...
     def serialize(self) -> bytes: ...
+    def weights(self) -> DenseParameters: ...
     pass
 class _CacheReader():
     def __init__(self, arg0: Workspace, arg1: object) -> None: ...
@@ -119,5 +124,5 @@ def _write_cache_example(workspace: Workspace, example: Example, file: object) -
 def _write_cache_header(workspace: Workspace, file: object) -> None:
     pass
 __version__ = '0.0.1'
-_vw_commit = 'a2db93c'
+_vw_commit = 'a2db93cc2'
 _vw_version = '9.7.0'

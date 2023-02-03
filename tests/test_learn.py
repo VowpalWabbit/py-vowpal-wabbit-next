@@ -12,3 +12,7 @@ def test_learn() -> None:
 
     # Learn should result in a non-zero prediction.
     assert pred != 0
+
+    idx = model.get_index_for_scalar_feature("a")
+
+    assert model.weights()[idx][0][0] != 0
