@@ -787,14 +787,25 @@ PYBIND11_MODULE(_core, m)
 
             const auto ns_hash = ws.example_parser->hasher(namespace_name.data(), namespace_name.size(), ws.hash_seed);
             const auto feature_hash = ws.example_parser->hasher(feature_name.data(), feature_name.size(), ns_hash);
+            uint32_t raw_index = 0;
             if (feature_value.has_value())
             {
-              const auto feature_value_hash =
+              raw_index =
                   ws.example_parser->hasher(feature_value.value().data(), feature_value.value().size(), feature_hash);
-              return feature_value_hash & ws.parse_mask;
             }
+            else { raw_index = feature_hash; }
 
-            return feature_hash & ws.parse_mask;
+            // Apply parse mask.
+            raw_index = raw_index & ws.parse_mask;
+
+            // Now we need to handle if the multiplier were to cause truncation.
+            const auto weight_mask = ws.weights.mask();
+            const auto multiplier = static_cast<uint64_t>(ws.wpp) << static_cast<uint64_t>(ws.weights.stride_shift());
+
+            // We essentially do what setup_example does by expanding the weight space then masking based on the weight
+            // mask and then undo the multiplier.
+            const auto final_index = ((static_cast<uint64_t>(raw_index) * multiplier) & weight_mask) / multiplier;
+            return final_index;
           },
           py::arg("feature_name"), py::arg("feature_value") = std::nullopt, py::arg("namespace_name") = " ")
       .def("weights",

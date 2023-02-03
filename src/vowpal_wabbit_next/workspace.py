@@ -204,6 +204,9 @@ class Workspace:
     ) -> int:
         """Calculate the has for a given feature.
 
+        The logic is rather complicated to work out an index. This function also takes into account index
+        truncation caused by the index multiplier taking the index out of the standard weight space.
+
         .. warning::
             This is an experimental feature, the interface may change.
 
