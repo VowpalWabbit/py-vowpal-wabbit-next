@@ -15,4 +15,5 @@ dependencies:
     - furo
     - nbsphinx
     - pandas
+    - ipykernel
 
