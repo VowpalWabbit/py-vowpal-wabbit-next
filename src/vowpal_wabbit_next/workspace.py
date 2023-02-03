@@ -178,9 +178,10 @@ class Workspace:
         This function returns a view of the weights and any changes to the returned array will be reflected in the model.
 
         There are 3 dimensions:
-        - The feature index (aka weight index)
-        - The index of the interleaved model, which should usually be 0
-        - The weight itself and the extra state stored with the weight
+
+        * The feature index (aka weight index)
+        * The index of the interleaved model, which should usually be 0
+        * The weight itself and the extra state stored with the weight
 
         .. warning::
             This is an experimental feature.
