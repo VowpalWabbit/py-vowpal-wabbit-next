@@ -702,7 +702,12 @@ PYBIND11_MODULE(_core, m)
           {
             py_setup_example(*workspace.workspace_ptr, example);
             auto on_exit = VW::scope_exit([&]() { py_unsetup_example(*workspace.workspace_ptr, example); });
-            workspace.workspace_ptr->learn(example);
+
+            // Learner is used directly as VW makes decisions about training and
+            // learn returns prediction in the workspace API and ends up calling
+            // potentially the wrong thing.
+            auto* learner = VW::LEARNER::as_singleline(workspace.workspace_ptr->l);
+            learner->learn(example);
 
             // TODO - when updating VW submodule if learn calls update stats then remove this to avoid a double call.
             update_stats_recursive(
@@ -716,7 +721,12 @@ PYBIND11_MODULE(_core, m)
             assert(!example.empty());
             py_setup_example(*workspace.workspace_ptr, example);
             auto on_exit = VW::scope_exit([&]() { py_unsetup_example(*workspace.workspace_ptr, example); });
-            workspace.workspace_ptr->learn(example);
+
+            // Learner is used directly as VW makes decisions about training and
+            // learn returns prediction in the workspace API and ends up calling
+            // potentially the wrong thing.
+            auto* learner = VW::LEARNER::as_multiline(workspace.workspace_ptr->l);
+            learner->learn(example);
 
             // TODO - when updating VW submodule if learn calls update stats then remove this to avoid a double call.
             update_stats_recursive(
@@ -731,7 +741,12 @@ PYBIND11_MODULE(_core, m)
             auto on_exit = VW::scope_exit([&]() { py_unsetup_example(*workspace.workspace_ptr, example); });
             // We must save and restore test_only because the library sets this values and does not undo it.
             bool test_only = example.test_only;
-            workspace.workspace_ptr->predict(example);
+
+            // Learner is used directly as VW makes decisions about training and
+            // learn returns prediction in the workspace API and ends up calling
+            // potentially the wrong thing.
+            auto* learner = VW::LEARNER::as_singleline(workspace.workspace_ptr->l);
+            learner->predict(example);
 
             // TODO - when updating VW submodule if learn calls update stats then remove this to avoid a double call.
             update_stats_recursive(
@@ -751,12 +766,89 @@ PYBIND11_MODULE(_core, m)
             std::vector<bool> test_onlys;
             test_onlys.reserve(example.size());
             for (auto ex : example) { test_onlys.push_back(ex->test_only); }
-            workspace.workspace_ptr->predict(example);
+
+            // Learner is used directly as VW makes decisions about training and
+            // learn returns prediction in the workspace API and ends up calling
+            // potentially the wrong thing.
+            auto* learner = VW::LEARNER::as_multiline(workspace.workspace_ptr->l);
+            learner->predict(example);
 
             // TODO - when updating VW submodule if learn calls update stats then remove this to avoid a double call.
             update_stats_recursive(
                 *workspace.workspace_ptr, *VW::LEARNER::as_multiline(workspace.workspace_ptr->l), example);
             for (size_t i = 0; i < example.size(); i++) { example[i]->test_only = test_onlys[i]; }
+            return to_prediction(example[0]->pred, workspace.workspace_ptr->l->get_output_prediction_type());
+          },
+          py::arg("examples"), py::kw_only())
+      .def(
+          "predict_then_learn_one",
+          [](workspace_with_logger_contexts& workspace, VW::example& example) -> prediction_t
+          {
+            py_setup_example(*workspace.workspace_ptr, example);
+            auto on_exit = VW::scope_exit([&]() { py_unsetup_example(*workspace.workspace_ptr, example); });
+
+            if (workspace.workspace_ptr->l->learn_returns_prediction)
+            {
+              // Learner is used directly as VW makes decisions about training and
+              // learn returns prediction in the workspace API and ends up calling
+              // potentially the wrong thing.
+              auto* learner = VW::LEARNER::as_singleline(workspace.workspace_ptr->l);
+              learner->learn(example);
+            }
+            else
+            {
+              // Learner is used directly as VW makes decisions about training and
+              // learn returns prediction in the workspace API and ends up calling
+              // potentially the wrong thing.
+              auto* learner = VW::LEARNER::as_singleline(workspace.workspace_ptr->l);
+              // We must save and restore test_only because the library sets this values and does not undo it.
+              bool test_only = example.test_only;
+              learner->predict(example);
+              example.test_only = test_only;
+
+              learner->learn(example);
+            }
+
+            // TODO - when updating VW submodule if learn calls update stats then remove this to avoid a double call.
+            update_stats_recursive(
+                *workspace.workspace_ptr, *VW::LEARNER::as_singleline(workspace.workspace_ptr->l), example);
+            return to_prediction(example.pred, workspace.workspace_ptr->l->get_output_prediction_type());
+          },
+          py::arg("examples"), py::kw_only())
+      .def(
+          "predict_then_learn_multi_ex_one",
+          [](workspace_with_logger_contexts& workspace, std::vector<VW::example*>& example) -> prediction_t
+          {
+            py_setup_example(*workspace.workspace_ptr, example);
+            auto on_exit = VW::scope_exit([&]() { py_unsetup_example(*workspace.workspace_ptr, example); });
+
+            if (workspace.workspace_ptr->l->learn_returns_prediction)
+            {
+              // Learner is used directly as VW makes decisions about training and
+              // learn returns prediction in the workspace API and ends up calling
+              // potentially the wrong thing.
+              auto* learner = VW::LEARNER::as_multiline(workspace.workspace_ptr->l);
+              learner->learn(example);
+            }
+            else
+            {
+              // Learner is used directly as VW makes decisions about training and
+              // learn returns prediction in the workspace API and ends up calling
+              // potentially the wrong thing.
+              auto* learner = VW::LEARNER::as_multiline(workspace.workspace_ptr->l);
+              // We must save and restore test_only because the library sets this values and does not undo it.
+              std::vector<bool> test_onlys;
+              test_onlys.reserve(example.size());
+              for (auto ex : example) { test_onlys.push_back(ex->test_only); }
+              learner->predict(example);
+              for (size_t i = 0; i < example.size(); i++) { example[i]->test_only = test_onlys[i]; }
+
+              learner->learn(example);
+            }
+
+            // TODO - when updating VW submodule if learn calls update stats then remove this to avoid a double call.
+            update_stats_recursive(
+                *workspace.workspace_ptr, *VW::LEARNER::as_multiline(workspace.workspace_ptr->l), example);
             return to_prediction(example[0]->pred, workspace.workspace_ptr->l->get_output_prediction_type());
           },
           py::arg("examples"), py::kw_only())
