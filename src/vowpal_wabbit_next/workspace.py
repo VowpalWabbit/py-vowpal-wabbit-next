@@ -111,6 +111,29 @@ class Workspace:
         else:
             self._workspace.learn_multi_ex_one(example)
 
+    def predict_then_learn_one(
+        self, example: typing.Union[Example, List[Example]]
+    ) -> Prediction:
+        """Make a prediction then learn from the example. This is potentially more efficient than a predict_one call followed by a learn_one call as the implementation is able to avoid duplicated work as long as the prediction is guaranteed to be from before learning.
+
+        Examples:
+            >>> from vowpal_wabbit_next import Workspace, TextFormatParser
+            >>> workspace = Workspace([])
+            >>> parser = TextFormatParser(workspace)
+            >>> workspace.predict_then_learn_one(parser.parse_line("1.0 | price:.18 sqft:.15 age:.35 1976"))
+            0.0
+
+        Args:
+            example (typing.Union[Example, List[Example]]): Example to use for prediction. This should be a list if this workspace is :py:meth:`vowpal_wabbit_next.Workspace.multiline`, otherwise it is should be a single Example
+
+        Returns:
+            Prediction: Prediction produced by this example. The type corresponds to the :py:meth:`vowpal_wabbit_next.Workspace.prediction_type` of the model. See :py:class:`vowpal_wabbit_next.PredictionType` for the mapping to types.
+        """
+        if isinstance(example, Example):
+            return self._workspace.predict_then_learn_one(example)
+        else:
+            return self._workspace.predict_then_learn_multi_ex_one(example)
+
     @property
     def prediction_type(self) -> PredictionType:
         """Based on the command line parameters used to setup VW a certain type of prediction is produced. See :py:class:`vowpal_wabbit_next.PredictionType` for the list of types and their corresponding Python type.
