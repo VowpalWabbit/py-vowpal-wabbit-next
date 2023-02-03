@@ -43,7 +43,7 @@ def append_benchmark_result(filename):
             cli_results_means.append(result["mean"])
             cli_results_stddevs.append(result["stddev"])
 
-for i in range(1, 9):
+for i in range(1, 8):
     append_benchmark_result(f"bench{i}.csv")
 
 # Print a markdown table of the results

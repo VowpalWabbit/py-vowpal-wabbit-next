@@ -1,5 +1,9 @@
 # Benchmarks
 
+Benchmarks done using:
+- Python 3.10.8
+- Apple M1 Max
+
 ## Python Benchmarks
 
 ### Results
@@ -18,7 +22,19 @@ PyVW version `9.6.0` used.
 
 Run: `python pyvw_comparison.py`
 
-## CLI Benchmarks
+## Native/Python Benchmarks
+
+### Results
+
+![Results native](plot_native_compare.png "Results native")
+
+| Benchmark | CLI | Python |
+| --- | --- | --- |
+| `cache_create.py` | 0.0959 s ± 0.0182 s | 0.1132 s ± 0.0024 s |
+
+`cache_create.py` - Creates a cache file containing the first 10k examples of rcv1.
+
+## CLI/Python Benchmarks
 
 ### Results
 
@@ -32,19 +48,11 @@ Run: `python pyvw_comparison.py`
 | `-d rcv1.5k.txt --quiet -q:: -k` | 0.1739 s ± 0.0092 s | 0.2042 s ± 0.014 s |
 | `-d rcv1.10k.txt --quiet -q:: -k` | 0.2807 s ± 0.0079 s | 0.3097 s ± 0.0173 s |
 | `-d rcv1.20k.txt --quiet -q:: -k` | 0.4714 s ± 0.0025 s | 0.5248 s ± 0.0201 s |
-| `cache_create.py` | 0.0959 s ± 0.0182 s | 0.1132 s ± 0.0024 s |
-
-`cache_create.py` - Creates a cache file containing the first 10k examples of rcv1.
 
 The Python startup overhead was also directly measured:
 
 - Completely empty file - `13.1 ms ± 3.8 ms`
 - `import vowpal_wabbit_next as vw` and `import sys` - `24.9 ms ± 2.9 ms`
-
-Benchmarks done using:
-- Commit `484031bc8787fd8dfdde8a4f05dd8f92acc5a490`
-- Python 3.10.8
-- Apple M1 Max
 
 ### How to reproduce
 
