@@ -109,7 +109,7 @@ using multiclass_pred_t = uint32_t;
 using multilabels_pred_t = std::vector<uint32_t>;
 using prob_density_func_pred_t = std::vector<std::tuple<float, float, float>>;
 using prob_density_func_value_pred_t = std::tuple<float, float>;
-using active_multiclass_pred_t = std::tuple<float, std::vector<uint32_t>>;
+using active_multiclass_pred_t = std::tuple<uint32_t, std::vector<uint32_t>>;
 
 using prediction_t = std::variant<scalar_pred_t, scalars_pred_t, action_scores_pred_t, decision_scores_pred_t,
     multiclass_pred_t, multilabels_pred_t, prob_density_func_pred_t, prob_density_func_value_pred_t,
