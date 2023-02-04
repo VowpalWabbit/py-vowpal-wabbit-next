@@ -17,8 +17,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.napoleon",
-    "nbsphinx",
-    'myst_parser'
+    "myst_nb",
 ]
 
 templates_path = []
@@ -27,7 +26,8 @@ exclude_patterns = []
 # Allows constructors to be documented
 napoleon_include_init_with_doc = True
 
-nbsphinx_allow_errors = False
+# Guides and tutorials must succeed.
+nb_execution_raise_on_error = True
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output

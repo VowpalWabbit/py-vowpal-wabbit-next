@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 import typing
 from vowpal_wabbit_next import _core, Example
 
@@ -8,17 +8,28 @@ import numpy.typing as npt
 PredictionType = _core.PredictionType
 LabelType = _core.LabelType
 
-Prediction = typing.Union[
-    float,
-    typing.List[float],
-    typing.List[typing.Tuple[int, float]],
-    typing.List[typing.List[typing.Tuple[int, float]]],
-    int,
-    typing.List[int],
-    typing.List[typing.Tuple[float, float, float]],
-    typing.Tuple[float, float],
-    typing.Tuple[float, typing.List[int]],
-    None,
+ScalarPrediction = float
+ScalarsPrediction = List[float]
+ActionScoresOrProbsPrediction = List[Tuple[int, float]]
+DecisionScoresPrediction = List[List[Tuple[int, float]]]
+MulticlassPrediction = int
+MultilabelsPrediction = List[int]
+PdfPrediction = List[Tuple[float, float, float]]
+ActionPdfValuePrediction = Tuple[float, float]
+ActiveMulticlassPrediction = Tuple[int, List[int]]
+NoPrediction = type(None)
+
+Prediction = Union[
+    ScalarPrediction,
+    ScalarsPrediction,
+    ActionScoresOrProbsPrediction,
+    DecisionScoresPrediction,
+    MulticlassPrediction,
+    MultilabelsPrediction,
+    PdfPrediction,
+    ActionPdfValuePrediction,
+    ActiveMulticlassPrediction,
+    NoPrediction,
 ]
 
 
@@ -173,8 +184,6 @@ class Workspace:
     def weights(self) -> npt.NDArray[np.float32]:
         """Access to the weights of the model currently.
 
-        This only supports dense weights.
-
         This function returns a view of the weights and any changes to the returned array will be reflected in the model.
 
         There are 3 dimensions:
@@ -182,6 +191,9 @@ class Workspace:
         * The feature index (aka weight index)
         * The index of the interleaved model, which should usually be 0
         * The weight itself and the extra state stored with the weight
+
+        .. attention::
+            Only dense weights are supported.
 
         .. warning::
             This is an experimental feature.
