@@ -14,6 +14,13 @@ They are highly experimental and the API may change significantly. If you'd
 prefer a more stable package then the `existing bindings
 <https://pypi.org/project/vowpalwabbit/>`_ are still available.
 
+Installation
+------------
+
+.. code-block:: bash
+
+   pip install vowpal-wabbit-next
+
 
 .. toctree::
    :caption: How-to guides
