@@ -105,10 +105,31 @@ jobs:
       with:
         path: wheelhouse/*.whl
 
+  check_wheels:
+    name: Check wheels
+    needs: [build_wheels_x64, build_wheels_windows_x64, build_wheels_macos_arm, build_sdist]
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/download-artifact@v3
+      with:
+        name: artifact
+        path: dist
+
+    - uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - name: Install twine
+      run: pip install twine
+
+    - name: Check wheels
+      run: twine check dist/*
+
   deploy_to_test:
     name: Upload if release
     environment: "Test-PyPi"
-    needs: [build_wheels_x64, build_wheels_windows_x64, build_wheels_macos_arm, build_sdist]
+    needs: [check_wheels]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
 
@@ -130,7 +151,7 @@ jobs:
   deploy_to_prod:
     name: Upload if release
     environment: "Prod-PyPi"
-    needs: [build_wheels_x64, build_wheels_windows_x64, build_wheels_macos_arm, build_sdist, deploy_to_test]
+    needs: [deploy_to_test]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
 
