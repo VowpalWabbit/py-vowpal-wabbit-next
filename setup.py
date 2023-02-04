@@ -16,7 +16,7 @@ setup(
     name="vowpal_wabbit_next",
     version="0.1.0",
     description="Experimental python bindings for VowpalWabbit",
-    author="Jack Gerrits",
+    author="VowpalWabbit",
     license="BSD-3-Clause",
     packages=find_packages(where="src"),
     package_dir={"": "src"},

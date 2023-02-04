@@ -173,8 +173,6 @@ class Workspace:
     def weights(self) -> npt.NDArray[np.float32]:
         """Access to the weights of the model currently.
 
-        This only supports dense weights.
-
         This function returns a view of the weights and any changes to the returned array will be reflected in the model.
 
         There are 3 dimensions:
@@ -182,6 +180,9 @@ class Workspace:
         * The feature index (aka weight index)
         * The index of the interleaved model, which should usually be 0
         * The weight itself and the extra state stored with the weight
+
+        .. attention::
+            Only dense weights are supported.
 
         .. warning::
             This is an experimental feature.

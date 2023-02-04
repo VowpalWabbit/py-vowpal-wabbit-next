@@ -17,4 +17,4 @@ dependencies:
     - pandas
     - ipykernel
     - matplotlib
-    - myst-parser
+    - myst-nb
