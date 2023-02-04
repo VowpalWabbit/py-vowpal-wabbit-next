@@ -16,7 +16,7 @@ These are a new set of bindings for VowpalWabbit. Parity with the existing bindi
 Wheels are provided for the following platforms:
 
 - OS+arch: Windows x64, MacOS x64, MacOS arm64, Linux x64
-- Python: 3.8, 3.9, 3.10, 3.11
+- Python: 3.7 (except MacOS arm64), 3.8, 3.9, 3.10, 3.11
 
 ## Development information
 
