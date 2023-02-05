@@ -1,5 +1,6 @@
 # py-vowpal-wabbit-next
 
+[![PyPI version](https://badge.fury.io/py/vowpal-wabbit-next.svg)](https://badge.fury.io/py/vowpal-wabbit-next)
 [![Documentation Status](https://readthedocs.org/projects/vowpal-wabbit-next/badge/?version=latest)](https://vowpal-wabbit-next.readthedocs.io/en/latest/?badge=latest)
 
 
