@@ -1,11 +1,11 @@
-vowpal_wabbit_next
+vowpal-wabbit-next
 ==================
 
 .. important::
    If you are looking for `VowpalWabbit's <https://github.com/VowpalWabbit/vowpal_wabbit>`_
    existing Python bindings go `here <https://pypi.org/project/vowpalwabbit/>`_
 
-`vowpal_wabbit_next` is a new set of Python bindings for VowpalWabbit. Many
+`vowpal-wabbit-next` is a new set of Python bindings for VowpalWabbit. Many
 things have been changed, or rethought, to make using this API easier and safer.
 For example, there is no `finish_example` or `setup_example` in this API. If you
 don't know what that means then don't worry.
