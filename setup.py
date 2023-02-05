@@ -1,4 +1,5 @@
 import sys
+import pathlib
 
 try:
     from skbuild import setup
@@ -12,10 +13,16 @@ except ImportError:
 
 from setuptools import find_packages
 
+with open(pathlib.Path(__file__).parent.resolve() / "README.md", encoding="utf-8") as f:
+    long_description = f.read()
+
+
 setup(
     name="vowpal-wabbit-next",
     version="0.1.0",
     description="Experimental python bindings for VowpalWabbit",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     author="VowpalWabbit",
     license="BSD-3-Clause",
     packages=find_packages(where="src"),
