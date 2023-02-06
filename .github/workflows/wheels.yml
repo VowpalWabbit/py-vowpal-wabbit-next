@@ -101,7 +101,7 @@ jobs:
       env:
         CIBW_BUILD: ${{ matrix.cibw_python }}
         CIBW_ARCHS_MACOS: arm64
-        CIBW_ENVIRONMENT_MACOS: CMAKE_TOOLCHAIN_FILE=${{github.workspace}}/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake VCPKG_DEFAULT_TRIPLET=arm64-osx MACOSX_DEPLOYMENT_TARGET=10.13
+        CIBW_ENVIRONMENT_MACOS: CMAKE_TOOLCHAIN_FILE=${{github.workspace}}/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake SKBUILD_CONFIGURE_OPTIONS='-DVCPKG_TARGET_TRIPLET=arm64-osx' MACOSX_DEPLOYMENT_TARGET=10.13
 
     - uses: actions/upload-artifact@v3
       with:
