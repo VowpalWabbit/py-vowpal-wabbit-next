@@ -28,6 +28,7 @@ napoleon_include_init_with_doc = True
 
 # Guides and tutorials must succeed.
 nb_execution_raise_on_error = True
+nb_execution_timeout = 60
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
