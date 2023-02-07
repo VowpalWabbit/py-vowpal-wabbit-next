@@ -101,7 +101,7 @@ jobs:
     - uses: pypa/cibuildwheel@v2.11.1
       env:
         CIBW_BUILD: ${{ matrix.cibw_python }}
-        CIBW_ARCHS_MACOS: x86_64 arm64
+        CIBW_ARCHS_MACOS: universal2
         CIBW_ENVIRONMENT_MACOS: SKBUILD_CONFIGURE_OPTIONS='-DVENDOR_ALL=ON' MACOSX_DEPLOYMENT_TARGET=10.13
 
     - uses: actions/upload-artifact@v3
