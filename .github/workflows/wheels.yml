@@ -95,13 +95,14 @@ jobs:
     steps:
     - uses: actions/checkout@v3
       with:
-        submodules: true
+        submodules: recursive
 
+    # We use full vendoring for this
     - uses: pypa/cibuildwheel@v2.11.1
       env:
         CIBW_BUILD: ${{ matrix.cibw_python }}
-        CIBW_ARCHS_MACOS: arm64
-        CIBW_ENVIRONMENT_MACOS: CMAKE_TOOLCHAIN_FILE=${{github.workspace}}/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake SKBUILD_CONFIGURE_OPTIONS='-DVCPKG_TARGET_TRIPLET=arm64-osx' MACOSX_DEPLOYMENT_TARGET=10.13
+        CIBW_ARCHS_MACOS: x86_64 arm64
+        CIBW_ENVIRONMENT_MACOS: SKBUILD_CONFIGURE_OPTIONS='-DVENDOR_ALL=ON' MACOSX_DEPLOYMENT_TARGET=10.13
 
     - uses: actions/upload-artifact@v3
       with:
