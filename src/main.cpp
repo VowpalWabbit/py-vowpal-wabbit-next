@@ -642,7 +642,12 @@ PYBIND11_MODULE(_core, m)
             // shared ptr which returns to the pool upon deletion
             return get_example_from_pool();
           }))
-      .def("_is_newline", [](VW::example& ex) -> bool { return ex.is_newline; });
+      .def("_is_newline", [](VW::example& ex) -> bool { return ex.is_newline; })
+      .def("get_cb_label", [](VW::example& ex) -> std::optional<std::tuple<float, float>> // cost, probability
+      {
+        if (ex.l.cb.costs.size() == 0) { return std::nullopt; }
+        return std::make_tuple(ex.l.cb.costs[0].cost, ex.l.cb.costs[0].probability);
+      });
 
   py::class_<workspace_with_logger_contexts>(m, "Workspace")
       .def(py::init(
