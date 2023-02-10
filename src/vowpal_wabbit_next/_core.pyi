@@ -8,6 +8,7 @@ __all__ = [
     "LabelType",
     "ModelDelta",
     "PredictionType",
+    "SimpleLabel",
     "Workspace"
 ]
 
@@ -16,7 +17,9 @@ class DenseParameters():
     pass
 class Example():
     def __init__(self) -> None: ...
+    def _get_label(self, arg0: LabelType) -> typing.Union[SimpleLabel, None]: ...
     def _is_newline(self) -> bool: ...
+    def _set_label(self, arg0: typing.Union[SimpleLabel, None]) -> None: ...
     pass
 class LabelType():
     def __eq__(self, other: object) -> bool: ...
@@ -88,6 +91,33 @@ class PredictionType():
     Scalar: vowpal_wabbit_next._core.PredictionType # value = <PredictionType.Scalar: 0>
     Scalars: vowpal_wabbit_next._core.PredictionType # value = <PredictionType.Scalars: 1>
     __members__: dict # value = {'Scalar': <PredictionType.Scalar: 0>, 'Scalars': <PredictionType.Scalars: 1>, 'ActionScores': <PredictionType.ActionScores: 2>, 'Pdf': <PredictionType.Pdf: 3>, 'ActionProbs': <PredictionType.ActionProbs: 4>, 'Multiclass': <PredictionType.Multiclass: 5>, 'Multilabels': <PredictionType.Multilabels: 6>, 'Prob': <PredictionType.Prob: 7>, 'MulticlassProbs': <PredictionType.MulticlassProbs: 8>, 'DecisionProbs': <PredictionType.DecisionProbs: 9>, 'ActionPdfValue': <PredictionType.ActionPdfValue: 10>, 'ActiveMulticlass': <PredictionType.ActiveMulticlass: 11>, 'NoPred': <PredictionType.NoPred: 12>}
+    pass
+class SimpleLabel():
+    def __init__(self, arg0: float, arg1: float, arg2: float, arg3: float) -> None: ...
+    @property
+    def initial(self) -> float:
+        """
+        :type: float
+        """
+    @initial.setter
+    def initial(self, arg0: float) -> None:
+        pass
+    @property
+    def label(self) -> float:
+        """
+        :type: float
+        """
+    @label.setter
+    def label(self, arg0: float) -> None:
+        pass
+    @property
+    def weight(self) -> float:
+        """
+        :type: float
+        """
+    @weight.setter
+    def weight(self, arg0: float) -> None:
+        pass
     pass
 class Workspace():
     def __init__(self, args: typing.List[str], *, model_data: typing.Optional[bytes] = None) -> None: ...

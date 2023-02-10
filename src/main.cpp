@@ -31,6 +31,7 @@
 #include <iostream>
 #include <memory>
 #include <optional>
+#include <variant>
 
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
@@ -584,6 +585,16 @@ struct dense_weight_holder
   size_t wpp;
   std::shared_ptr<VW::workspace> ws;
 };
+
+// Labels
+
+struct py_simple_label
+{
+  float label;
+  float weight;
+  float initial;
+};
+
 }  // namespace
 
 PYBIND11_MODULE(_core, m)
@@ -635,6 +646,20 @@ PYBIND11_MODULE(_core, m)
       .value("ActiveMulticlass", VW::prediction_type_t::ACTIVE_MULTICLASS)
       .value("NoPred", VW::prediction_type_t::NOPRED);
 
+  py::class_<py_simple_label>(m, "SimpleLabel")
+      .def(py::init(
+          [](float label, float weight, float initial, float prediction)
+          {
+            py_simple_label l;
+            l.label = label;
+            l.weight = weight;
+            l.initial = initial;
+            return l;
+          }))
+      .def_readwrite("label", &py_simple_label::label)
+      .def_readwrite("weight", &py_simple_label::weight)
+      .def_readwrite("initial", &py_simple_label::initial);
+
   py::class_<VW::example, std::shared_ptr<VW::example>>(m, "Example")
       .def(py::init(
           []()
@@ -642,7 +667,35 @@ PYBIND11_MODULE(_core, m)
             // shared ptr which returns to the pool upon deletion
             return get_example_from_pool();
           }))
-      .def("_is_newline", [](VW::example& ex) -> bool { return ex.is_newline; });
+      .def("_is_newline", [](VW::example& ex) -> bool { return ex.is_newline; })
+      .def("_get_label",
+          [](VW::example& ex, VW::label_type_t label_type) -> std::variant<py_simple_label, std::monostate>
+          {
+            switch (label_type)
+            {
+              case VW::label_type_t::SIMPLE:
+              {
+                const auto& simple_red_features = ex.ex_reduction_features.get<VW::simple_label_reduction_features>();
+                return py_simple_label{ex.l.simple.label, simple_red_features.weight, simple_red_features.initial};
+              }
+              case VW::label_type_t::NOLABEL:
+                return std::monostate();
+              default:
+                throw std::runtime_error("Unsupported label type");
+            }
+          })
+      .def("_set_label",
+          [](VW::example& ex, std::variant<py_simple_label*, std::monostate> label) -> void
+          {
+            if (std::holds_alternative<py_simple_label*>(label))
+            {
+              auto simple_label = std::get<py_simple_label*>(label);
+              ex.l.simple.label = simple_label->label;
+              ex.ex_reduction_features.get<VW::simple_label_reduction_features>().weight = simple_label->weight;
+              ex.ex_reduction_features.get<VW::simple_label_reduction_features>().initial = simple_label->initial;
+            }
+            else { throw std::runtime_error("Unsupported label type"); }
+          });
 
   py::class_<workspace_with_logger_contexts>(m, "Workspace")
       .def(py::init(

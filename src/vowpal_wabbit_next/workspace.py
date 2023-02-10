@@ -4,9 +4,9 @@ from vowpal_wabbit_next import _core, Example
 
 import numpy as np
 import numpy.typing as npt
+from vowpal_wabbit_next.labels import LabelType
 
-PredictionType = _core.PredictionType
-LabelType = _core.LabelType
+from vowpal_wabbit_next.prediction_type import PredictionType
 
 ScalarPrediction = float
 ScalarsPrediction = List[float]
@@ -98,10 +98,12 @@ class Workspace:
         Returns:
             Prediction: Prediction produced by this example. The type corresponds to the :py:meth:`vowpal_wabbit_next.Workspace.prediction_type` of the model. See :py:class:`vowpal_wabbit_next.PredictionType` for the mapping to types.
         """
+        # TODO - assert label type matches
+
         if isinstance(example, Example):
-            return self._workspace.predict_one(example)
+            return self._workspace.predict_one(example._example)
         else:
-            return self._workspace.predict_multi_ex_one(example)
+            return self._workspace.predict_multi_ex_one([ex._example for ex in example])
 
     def learn_one(self, example: typing.Union[Example, List[Example]]) -> None:
         """Learn from one single example. Note, passing a list of examples here means the input is a multiline example, and not several individual examples. The label type of the example must match what is returned by :py:meth:`vowpal_wabbit_next.Workspace.label_type`.
@@ -117,10 +119,12 @@ class Workspace:
         Args:
             example (typing.Union[Example, List[Example]]): Example to learn on.
         """
+        # TODO - assert label type matches
+
         if isinstance(example, Example):
-            self._workspace.learn_one(example)
+            self._workspace.learn_one(example._example)
         else:
-            self._workspace.learn_multi_ex_one(example)
+            self._workspace.learn_multi_ex_one([ex._example for ex in example])
 
     def predict_then_learn_one(
         self, example: typing.Union[Example, List[Example]]
@@ -140,10 +144,14 @@ class Workspace:
         Returns:
             Prediction: Prediction produced by this example. The type corresponds to the :py:meth:`vowpal_wabbit_next.Workspace.prediction_type` of the model. See :py:class:`vowpal_wabbit_next.PredictionType` for the mapping to types.
         """
+        # TODO - assert label type matches
+
         if isinstance(example, Example):
-            return self._workspace.predict_then_learn_one(example)
+            return self._workspace.predict_then_learn_one(example._example)
         else:
-            return self._workspace.predict_then_learn_multi_ex_one(example)
+            return self._workspace.predict_then_learn_multi_ex_one(
+                [ex._example for ex in example]
+            )
 
     @property
     def prediction_type(self) -> PredictionType:
