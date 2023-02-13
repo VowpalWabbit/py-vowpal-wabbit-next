@@ -338,8 +338,18 @@ std::vector<std::shared_ptr<VW::example>> parse_dsjson_line(
 
     // Not using the copy_line param as there were parse issues caused. It is possible they are due to the fact the line
     // input does not necessarily have a null terminator.
-    bool result = VW::parsers::json::read_line_decision_service_json<false>(*workspace.workspace_ptr, examples,
-        owned_str.data(), owned_str.size(), false, example_factory, &SHARED_EXAMPLE_POOL, &interaction);
+
+    bool result;
+    if (workspace.workspace_ptr->audit || workspace.workspace_ptr->hash_inv)
+    {
+      result = VW::parsers::json::read_line_decision_service_json<true>(*workspace.workspace_ptr, examples,
+          owned_str.data(), owned_str.size(), false, example_factory, &SHARED_EXAMPLE_POOL, &interaction);
+    }
+    else
+    {
+      result = VW::parsers::json::read_line_decision_service_json<false>(*workspace.workspace_ptr, examples,
+          owned_str.data(), owned_str.size(), false, example_factory, &SHARED_EXAMPLE_POOL, &interaction);
+    }
 
     // Since we are using strict parse any errors should be surfaced via an exception.
     assert(result);
