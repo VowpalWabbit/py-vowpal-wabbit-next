@@ -1,5 +1,5 @@
 from vowpal_wabbit_next import _core
-from vowpal_wabbit_next.labels import LabelType, SimpleLabel
+from vowpal_wabbit_next.labels import LabelType, SimpleLabel, MulticlassLabel, CBLabel
 from typing import Optional, Union
 
 
@@ -27,25 +27,31 @@ class Example:
             self._example = _core.Example()
             self.label_type = LabelType.NoLabel
 
-    def get_label(self) -> Union[SimpleLabel, None]:
+    def get_label(self) -> Union[SimpleLabel, MulticlassLabel, CBLabel, None]:
         """Get the label of the example.
 
         Returns:
-            Union[SimpleLabel, None]: The label of the example
+            Union[SimpleLabel, MulticlassLabel, CBLabel, None]: The label of the example
         """
         return self._example._get_label(self.label_type)
 
-    def set_label(self, label: Union[SimpleLabel, None]) -> None:
+    def set_label(
+        self, label: Union[SimpleLabel, MulticlassLabel, CBLabel, None]
+    ) -> None:
         """Set the label of the example.
 
         Args:
-            label (Union[SimpleLabel, None]): The label to set
+            label (Union[SimpleLabel, MulticlassLabel, CBLabel, None]): The label to set
 
         Raises:
             ValueError: If the label type is not supported.
         """
         if isinstance(label, SimpleLabel):
             self.label_type = LabelType.Simple
+        elif isinstance(label, MulticlassLabel):
+            self.label_type = LabelType.Multiclass
+        elif isinstance(label, CBLabel):
+            self.label_type = LabelType.CB
         elif label is None:
             self.label_type = LabelType.NoLabel
         else:

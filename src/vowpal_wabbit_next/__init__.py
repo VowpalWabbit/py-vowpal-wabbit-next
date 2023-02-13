@@ -7,7 +7,7 @@ from .cache_format import CacheFormatWriter, CacheFormatReader
 from .delta import ModelDelta, calculate_delta, apply_delta, merge_deltas
 from .cli_driver import CLIError, run_cli_driver
 from .prediction_type import PredictionType
-from .labels import LabelType, SimpleLabel
+from .labels import LabelType, SimpleLabel, MulticlassLabel, CBLabel
 
 
 VW_COMMIT: str = _vw_commit
@@ -36,4 +36,6 @@ __all__ = [
     "VW_COMMIT",
     "VW_VERSION",
     "SimpleLabel",
+    "MulticlassLabel",
+    "CBLabel",
 ]

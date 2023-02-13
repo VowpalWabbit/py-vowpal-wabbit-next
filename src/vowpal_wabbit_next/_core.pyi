@@ -3,23 +3,67 @@ import vowpal_wabbit_next._core
 import typing
 
 __all__ = [
+    "CBLabel",
     "DenseParameters",
     "Example",
     "LabelType",
     "ModelDelta",
+    "MulticlassLabel",
     "PredictionType",
     "SimpleLabel",
     "Workspace"
 ]
 
 
+class CBLabel():
+    def __init__(self, *, label: typing.Optional[typing.Union[typing.Tuple[float, float], typing.Tuple[int, float, float]]] = None, weight: float = 1.0, shared: bool = False) -> None: 
+        """
+        A label representing a contextual bandit problem.
+
+        Args:
+          label (Optional[Union[Tuple[float, float], Tuple[int, float, float]]): This is (action, cost, probability). The same rules as VW apply for if the action can be left out of the tuple.
+          weight (float): The weight of the example.
+          shared (bool): Whether the example is shared. This is only used for ADF examples and must be the first example. There can only be one shared example per ADF example list.
+        """
+    @property
+    def label(self) -> typing.Optional[typing.Union[typing.Tuple[float, float], typing.Tuple[int, float, float]]]:
+        """
+            The label for the example. The format of the label is (action, cost, probability).
+
+        :type: typing.Optional[typing.Union[typing.Tuple[float, float], typing.Tuple[int, float, float]]]
+        """
+    @label.setter
+    def label(self, arg1: typing.Optional[typing.Union[typing.Tuple[float, float], typing.Tuple[int, float, float]]]) -> None:
+        """
+        The label for the example. The format of the label is (action, cost, probability).
+        """
+    @property
+    def shared(self) -> bool:
+        """
+            Whether the example is shared. This is only used for ADF examples and must be the first example. There can only be one shared example per ADF example list.
+
+        :type: bool
+        """
+    @property
+    def weight(self) -> float:
+        """
+            The weight of the example.
+
+        :type: float
+        """
+    @weight.setter
+    def weight(self, arg0: float) -> None:
+        """
+        The weight of the example.
+        """
+    pass
 class DenseParameters():
     pass
 class Example():
     def __init__(self) -> None: ...
-    def _get_label(self, arg0: LabelType) -> typing.Union[SimpleLabel, None]: ...
+    def _get_label(self, arg0: LabelType) -> typing.Union[SimpleLabel, MulticlassLabel, CBLabel, None]: ...
     def _is_newline(self) -> bool: ...
-    def _set_label(self, arg0: typing.Union[SimpleLabel, None]) -> None: ...
+    def _set_label(self, arg0: typing.Union[SimpleLabel, MulticlassLabel, CBLabel, None]) -> None: ...
     pass
 class LabelType():
     def __eq__(self, other: object) -> bool: ...
@@ -57,6 +101,40 @@ class ModelDelta():
     def __init__(self, model_data: bytes) -> None: ...
     def serialize(self) -> bytes: ...
     pass
+class MulticlassLabel():
+    def __init__(self, label: int, weight: float = 1.0) -> None: 
+        """
+        A label representing a multiclass classification problem.
+
+        Args:
+          label (int): The label.
+          weight (float): The weight of the example.
+        """
+    @property
+    def label(self) -> int:
+        """
+            The class of this label.
+
+        :type: int
+        """
+    @label.setter
+    def label(self, arg0: int) -> None:
+        """
+        The class of this label.
+        """
+    @property
+    def weight(self) -> float:
+        """
+            The weight of this label.
+
+        :type: float
+        """
+    @weight.setter
+    def weight(self, arg0: float) -> None:
+        """
+        The weight of this label.
+        """
+    pass
 class PredictionType():
     def __eq__(self, other: object) -> bool: ...
     def __getstate__(self) -> int: ...
@@ -93,31 +171,51 @@ class PredictionType():
     __members__: dict # value = {'Scalar': <PredictionType.Scalar: 0>, 'Scalars': <PredictionType.Scalars: 1>, 'ActionScores': <PredictionType.ActionScores: 2>, 'Pdf': <PredictionType.Pdf: 3>, 'ActionProbs': <PredictionType.ActionProbs: 4>, 'Multiclass': <PredictionType.Multiclass: 5>, 'Multilabels': <PredictionType.Multilabels: 6>, 'Prob': <PredictionType.Prob: 7>, 'MulticlassProbs': <PredictionType.MulticlassProbs: 8>, 'DecisionProbs': <PredictionType.DecisionProbs: 9>, 'ActionPdfValue': <PredictionType.ActionPdfValue: 10>, 'ActiveMulticlass': <PredictionType.ActiveMulticlass: 11>, 'NoPred': <PredictionType.NoPred: 12>}
     pass
 class SimpleLabel():
-    def __init__(self, arg0: float, arg1: float, arg2: float, arg3: float) -> None: ...
+    def __init__(self, label: float, weight: float = 1.0, initial: float = 0.0) -> None: 
+        """
+        A label representing a simple regression problem.
+
+        Args:
+          label (float): The label.
+          weight (float): The weight of the example.
+          initial (float): The initial value of the prediction.
+        """
     @property
     def initial(self) -> float:
         """
+            The initial value of the prediction.
+
         :type: float
         """
     @initial.setter
     def initial(self, arg0: float) -> None:
-        pass
+        """
+        The initial value of the prediction.
+        """
     @property
     def label(self) -> float:
         """
+            The label.
+
         :type: float
         """
     @label.setter
     def label(self, arg0: float) -> None:
-        pass
+        """
+        The label.
+        """
     @property
     def weight(self) -> float:
         """
+            The weight of this label.
+
         :type: float
         """
     @weight.setter
     def weight(self, arg0: float) -> None:
-        pass
+        """
+        The weight of this label.
+        """
     pass
 class Workspace():
     def __init__(self, args: typing.List[str], *, model_data: typing.Optional[bytes] = None) -> None: ...
@@ -156,5 +254,5 @@ def _write_cache_example(workspace: Workspace, example: Example, file: object) -
 def _write_cache_header(workspace: Workspace, file: object) -> None:
     pass
 __version__ = '0.0.1'
-_vw_commit = '8a6c027'
+_vw_commit = '8a6c027f6'
 _vw_version = '9.7.0'

@@ -2,6 +2,7 @@
 #include "vw/config/options_cli.h"
 #include "vw/core/array_parameters_dense.h"
 #include "vw/core/cache.h"
+#include "vw/core/cb.h"
 #include "vw/core/constant.h"
 #include "vw/core/example.h"
 #include "vw/core/global_data.h"
@@ -10,6 +11,7 @@
 #include "vw/core/loss_functions.h"
 #include "vw/core/memory.h"
 #include "vw/core/merge.h"
+#include "vw/core/multiclass.h"
 #include "vw/core/object_pool.h"
 #include "vw/core/parse_example.h"
 #include "vw/core/prediction_type.h"
@@ -22,6 +24,7 @@
 #include "vw/json_parser/decision_service_utils.h"
 #include "vw/json_parser/parse_example_json.h"
 
+#include <pybind11/cast.h>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
@@ -35,6 +38,16 @@
 
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
+
+// helper type for the visitor #4
+template <class... Ts>
+struct overloaded : Ts...
+{
+  using Ts::operator()...;
+};
+// explicit deduction guide (not needed as of C++20)
+template <class... Ts>
+overloaded(Ts...) -> overloaded<Ts...>;
 
 namespace py = pybind11;
 namespace
@@ -430,10 +443,6 @@ void update_stats_recursive(VW::workspace& workspace, LearnerT& learner, Example
 
 void py_setup_example(VW::workspace& ws, VW::example& ex)
 {
-#ifndef NDEBUG
-  for (auto& fg : *ae) { assert(fg.validate_extents()); }
-#endif
-
   ex.partial_prediction = 0.;
   ex.num_features = 0;
   ex.reset_total_sum_feat_sq();
@@ -648,17 +657,149 @@ PYBIND11_MODULE(_core, m)
 
   py::class_<py_simple_label>(m, "SimpleLabel")
       .def(py::init(
-          [](float label, float weight, float initial, float prediction)
+               [](float label, float weight, float initial)
+               {
+                 py_simple_label l;
+                 l.label = label;
+                 l.weight = weight;
+                 l.initial = initial;
+                 return l;
+               }),
+          R"docstring(
+    A label representing a simple regression problem.
+
+    Args:
+      label (float): The label.
+      weight (float): The weight of the example.
+      initial (float): The initial value of the prediction.
+)docstring",
+          py::arg("label"), py::arg("weight") = 1.f, py::arg("initial") = 0.f)
+      .def_readwrite("label", &py_simple_label::label, R"docstring(
+    The label.
+)docstring")
+      .def_readwrite("weight", &py_simple_label::weight, R"docstring(
+    The weight of this label.
+)docstring")
+      .def_readwrite("initial", &py_simple_label::initial, R"docstring(
+    The initial value of the prediction.
+)docstring");
+
+  py::class_<VW::multiclass_label>(m, "MulticlassLabel")
+      .def(py::init(
+               [](uint32_t label, float weight)
+               {
+                 VW::multiclass_label l;
+                 l.label = label;
+                 l.weight = weight;
+                 return l;
+               }),
+          R"docstring(
+    A label representing a multiclass classification problem.
+
+    Args:
+      label (int): The label.
+      weight (float): The weight of the example.
+)docstring",
+          py::arg("label"), py::arg("weight") = 1.f)
+      .def_readwrite("label", &VW::multiclass_label::label, R"docstring(
+    The class of this label.
+)docstring")
+      .def_readwrite("weight", &VW::multiclass_label::weight, R"docstring(
+    The weight of this label.
+)docstring");
+
+  py::class_<VW::cb_label>(m, "CBLabel")
+      .def(py::init(
+               [](std::optional<std::variant<std::tuple<float, float>, std::tuple<uint32_t, float, float>>> label_value,
+                   float weight, bool is_shared)
+               {
+                 auto label = std::make_unique<VW::cb_label>();
+                 label->weight = weight;
+                 if (is_shared)
+                 {
+                   if (label_value.has_value())
+                   {
+                     throw std::invalid_argument("Shared examples cannot have action, cost, or probability.");
+                   }
+                   // Shared examples have essentially a sentinel value as prob.
+                   label->costs.emplace_back(VW::cb_class(0.f, 0, -1.f));
+                   return label;
+                 }
+
+                 if (label_value.has_value())
+                 {
+                   std::visit(
+                       overloaded{
+                           [&](std::tuple<float, float> value)
+                           {
+                             auto [cost, probability] = value;
+                             label->costs.emplace_back(VW::cb_class(cost, 0, probability));
+                           },
+                           [&](std::tuple<uint32_t, float, float> value)
+                           {
+                             auto [action, cost, probability] = value;
+                             label->costs.emplace_back(VW::cb_class(cost, action, probability));
+                           },
+                       },
+                       *label_value);
+                 }
+
+                 return label;
+               }),
+          py::kw_only(), py::arg("label") = py::none(), py::arg("weight") = 1.f, py::arg("shared") = false, R"docstring(
+    A label representing a contextual bandit problem.
+
+    Args:
+      label (Optional[Union[Tuple[float, float], Tuple[int, float, float]]): This is (action, cost, probability). The same rules as VW apply for if the action can be left out of the tuple.
+      weight (float): The weight of the example.
+      shared (bool): Whether the example is shared. This is only used for ADF examples and must be the first example. There can only be one shared example per ADF example list.
+)docstring")
+      .def_property_readonly(
+          "shared", [](VW::cb_label& l) -> bool { return l.costs.size() == 1 && l.costs[0].probability == -1.f; },
+          R"docstring(
+    Whether the example is shared. This is only used for ADF examples and must be the first example. There can only be one shared example per ADF example list.
+)docstring")
+      .def_property(
+          "label",
+          [](VW::cb_label& l)
+              -> std::optional<std::variant<std::tuple<float, float>, std::tuple<uint32_t, float, float>>>
           {
-            py_simple_label l;
-            l.label = label;
-            l.weight = weight;
-            l.initial = initial;
-            return l;
-          }))
-      .def_readwrite("label", &py_simple_label::label)
-      .def_readwrite("weight", &py_simple_label::weight)
-      .def_readwrite("initial", &py_simple_label::initial);
+            if (l.costs.size() == 0) { return std::nullopt; }
+            if (l.costs.size() == 1 && l.costs[0].probability == -1.f) { return std::nullopt; }
+            return std::make_tuple(l.costs[0].action, l.costs[0].cost, l.costs[0].probability);
+          },
+          [](VW::cb_label& l,
+              std::optional<std::variant<std::tuple<float, float>, std::tuple<uint32_t, float, float>>> label_value)
+          {
+            if (l.costs.size() == 1 && l.costs[0].probability == -1.f)
+            {
+              throw std::invalid_argument("Shared examples cannot have action, cost, or probability.");
+            }
+            l.costs.clear();
+            if (label_value.has_value())
+            {
+              std::visit(
+                  overloaded{
+                      [&](std::tuple<float, float> value)
+                      {
+                        auto [cost, probability] = value;
+                        l.costs.emplace_back(VW::cb_class(cost, 0, probability));
+                      },
+                      [&](std::tuple<uint32_t, float, float> value)
+                      {
+                        auto [action, cost, probability] = value;
+                        l.costs.emplace_back(VW::cb_class(cost, action, probability));
+                      },
+                  },
+                  *label_value);
+            }
+          },
+          R"docstring(
+    The label for the example. The format of the label is (action, cost, probability).
+)docstring")
+      .def_readwrite("weight", &VW::cb_label::weight, R"docstring(
+    The weight of the example.
+)docstring");
 
   py::class_<VW::example, std::shared_ptr<VW::example>>(m, "Example")
       .def(py::init(
@@ -669,7 +810,8 @@ PYBIND11_MODULE(_core, m)
           }))
       .def("_is_newline", [](VW::example& ex) -> bool { return ex.is_newline; })
       .def("_get_label",
-          [](VW::example& ex, VW::label_type_t label_type) -> std::variant<py_simple_label, std::monostate>
+          [](VW::example& ex, VW::label_type_t label_type)
+              -> std::variant<py_simple_label, VW::multiclass_label, VW::cb_label, std::monostate>
           {
             switch (label_type)
             {
@@ -678,6 +820,10 @@ PYBIND11_MODULE(_core, m)
                 const auto& simple_red_features = ex.ex_reduction_features.get<VW::simple_label_reduction_features>();
                 return py_simple_label{ex.l.simple.label, simple_red_features.weight, simple_red_features.initial};
               }
+              case VW::label_type_t::MULTICLASS:
+                return ex.l.multi;
+              case VW::label_type_t::CB:
+                return ex.l.cb;
               case VW::label_type_t::NOLABEL:
                 return std::monostate();
               default:
@@ -685,16 +831,24 @@ PYBIND11_MODULE(_core, m)
             }
           })
       .def("_set_label",
-          [](VW::example& ex, std::variant<py_simple_label*, std::monostate> label) -> void
+          [](VW::example& ex,
+              const std::variant<py_simple_label*, VW::multiclass_label*, VW::cb_label*, std::monostate>& label) -> void
           {
-            if (std::holds_alternative<py_simple_label*>(label))
-            {
-              auto simple_label = std::get<py_simple_label*>(label);
-              ex.l.simple.label = simple_label->label;
-              ex.ex_reduction_features.get<VW::simple_label_reduction_features>().weight = simple_label->weight;
-              ex.ex_reduction_features.get<VW::simple_label_reduction_features>().initial = simple_label->initial;
-            }
-            else { throw std::runtime_error("Unsupported label type"); }
+            std::visit(
+                overloaded{
+                    // Corresponds to nolabel
+                    [](std::monostate) {},
+                    [&](py_simple_label* simple_label)
+                    {
+                      ex.l.simple.label = simple_label->label;
+                      ex.ex_reduction_features.get<VW::simple_label_reduction_features>().weight = simple_label->weight;
+                      ex.ex_reduction_features.get<VW::simple_label_reduction_features>().initial =
+                          simple_label->initial;
+                    },
+                    [&](VW::multiclass_label* multiclass_label) { ex.l.multi = *multiclass_label; },
+                    [&](VW::cb_label* cb_label) { ex.l.cb = *cb_label; },
+                },
+                label);
           });
 
   py::class_<workspace_with_logger_contexts>(m, "Workspace")
