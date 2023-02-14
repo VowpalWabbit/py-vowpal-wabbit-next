@@ -23,8 +23,7 @@ extensions = [
 templates_path = []
 exclude_patterns = []
 
-# Allows constructors to be documented
-napoleon_include_init_with_doc = True
+autoclass_content = "init"
 
 # Guides and tutorials must succeed.
 nb_execution_raise_on_error = True
