@@ -49,14 +49,22 @@ class CacheFormatReader:
                         yield so_far
                         so_far = []
                 else:
-                    so_far.append(next_example)
+                    so_far.append(
+                        Example(
+                            _existing_example=next_example,
+                            _label_type=self._workspace.label_type,
+                        )
+                    )
                 next_example = self._reader._get_next()
             if len(so_far) != 0:
                 yield so_far
         else:
             next_example = self._reader._get_next()
             while next_example is not None:
-                yield next_example
+                yield Example(
+                    _existing_example=next_example,
+                    _label_type=self._workspace.label_type,
+                )
                 next_example = self._reader._get_next()
 
 
@@ -106,9 +114,13 @@ class CacheFormatWriter:
         """
         if isinstance(example, list):
             for e in example:
-                _core._write_cache_example(self._workspace._workspace, e, self._file)
+                _core._write_cache_example(
+                    self._workspace._workspace, e._example, self._file
+                )
             _core._write_cache_example(
-                self._workspace._workspace, self._newline_example, self._file
+                self._workspace._workspace, self._newline_example._example, self._file
             )
         else:
-            _core._write_cache_example(self._workspace._workspace, example, self._file)
+            _core._write_cache_example(
+                self._workspace._workspace, example._example, self._file
+            )

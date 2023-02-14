@@ -28,7 +28,10 @@ class TextFormatParser:
         Returns:
             Example: Parsed example
         """
-        return _core._parse_line_text(self._workspace._workspace, text)
+        return Example(
+            _existing_example=_core._parse_line_text(self._workspace._workspace, text),
+            _label_type=self._workspace.label_type,
+        )
 
 
 TextFormatReaderT = typing.TypeVar("TextFormatReaderT", bound="TextFormatReader")
@@ -73,7 +76,7 @@ class TextFormatReader:
             # parse until we find a newline example
             for line in self._file:
                 ex = self._parser.parse_line(line)
-                if ex._is_newline():
+                if ex._example._is_newline():
                     if len(so_far) != 0:
                         yield so_far
                         so_far = []

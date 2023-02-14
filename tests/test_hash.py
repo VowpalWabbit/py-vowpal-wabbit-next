@@ -1,7 +1,5 @@
 import vowpal_wabbit_next as vw
 
-# import pytest
-
 
 def test_get_scalar_index() -> None:
     model = vw.Workspace([])

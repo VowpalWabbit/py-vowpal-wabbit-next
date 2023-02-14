@@ -42,7 +42,10 @@ class DSJsonFormatParser:
         Returns:
             typing.List[Example]: List of parsed examples
         '''
-        return _core._parse_line_dsjson(self._workspace._workspace, text)
+        return [
+            Example(_existing_example=ex, _label_type=self._workspace.label_type)
+            for ex in _core._parse_line_dsjson(self._workspace._workspace, text)
+        ]
 
 
 DSJsonFormatReaderT = typing.TypeVar("DSJsonFormatReaderT", bound="DSJsonFormatReader")
