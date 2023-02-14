@@ -11,6 +11,7 @@
 #include "vw/core/loss_functions.h"
 #include "vw/core/memory.h"
 #include "vw/core/merge.h"
+#include "vw/core/metric_sink.h"
 #include "vw/core/multiclass.h"
 #include "vw/core/object_pool.h"
 #include "vw/core/parse_example.h"
@@ -605,6 +606,33 @@ struct dense_weight_holder
   std::shared_ptr<VW::workspace> ws;
 };
 
+struct python_dict_writer : VW::metric_sink_visitor
+{
+  python_dict_writer(py::dict& dest_dict) : _dest_dict(dest_dict) {}
+  void int_metric(const std::string& key, uint64_t value) override { _dest_dict[key.c_str()] = value; }
+  void float_metric(const std::string& key, float value) override { _dest_dict[key.c_str()] = value; }
+  void string_metric(const std::string& key, const std::string& value) override { _dest_dict[key.c_str()] = value; }
+  void bool_metric(const std::string& key, bool value) override { _dest_dict[key.c_str()] = value; }
+  void sink_metric(const std::string& key, const VW::metric_sink& value) override
+  {
+    py::dict nested;
+    auto nested_py = python_dict_writer(nested);
+    value.visit(nested_py);
+    _dest_dict[key.c_str()] = nested;
+  }
+
+private:
+  py::dict& _dest_dict;
+};
+
+py::dict convert_metrics_to_dict(const VW::metric_sink& metrics)
+{
+  py::dict dictionary;
+  python_dict_writer writer(dictionary);
+  metrics.visit(writer);
+  return dictionary;
+}
+
 // Labels
 
 struct py_simple_label
@@ -771,8 +799,7 @@ PYBIND11_MODULE(_core, m)
 )docstring")
       .def_property(
           "label",
-          [](VW::cb_label& l)
-              -> std::optional<std::tuple<uint32_t, float, float>>
+          [](VW::cb_label& l) -> std::optional<std::tuple<uint32_t, float, float>>
           {
             if (l.costs.size() == 0) { return std::nullopt; }
             if (l.costs.size() == 1 && l.costs[0].probability == -1.f) { return std::nullopt; }
@@ -863,9 +890,24 @@ PYBIND11_MODULE(_core, m)
 
   py::class_<workspace_with_logger_contexts>(m, "Workspace")
       .def(py::init(
-               [](const std::vector<std::string>& args, const std::optional<py::bytes>& bytes)
+               [](const std::vector<std::string>& args, const std::optional<py::bytes>& bytes,
+                   bool record_feature_names, bool record_metrics)
                {
                  auto opts = std::make_unique<VW::config::options_cli>(args);
+                 if (record_metrics)
+                 {
+                   // VW enables metrics by passing a file to write the metrics to.
+                   opts->insert("extra_metrics", "THIS_FILE_SHOULD_NOT_EXIST1");
+                 }
+
+                 if (record_feature_names)
+                 {
+                   // We need to ensure hash_inv is enabled during initialize for things to work correctly.
+                   // The only way to do that is via an option. We're using this one
+                   opts->insert("dump_json_weights_experimental", "THIS_FILE_SHOULD_NOT_EXIST2");
+                   opts->insert("dump_json_weights_include_feature_names_experimental", "");
+                 }
+
                  std::unique_ptr<VW::io::reader> model_reader = nullptr;
                  std::string_view bytes_view;
                  if (bytes.has_value())
@@ -912,7 +954,8 @@ PYBIND11_MODULE(_core, m)
 
                  return wrapped_object;
                }),
-          py::arg("args"), py::kw_only(), py::arg("model_data") = std::nullopt)
+          py::arg("args"), py::kw_only(), py::arg("model_data") = std::nullopt, py::arg("record_feature_names") = false,
+          py::arg("record_metrics") = false)
       .def(
           "learn_one",
           [](workspace_with_logger_contexts& workspace, VW::example& example) -> void
@@ -1071,6 +1114,19 @@ PYBIND11_MODULE(_core, m)
           py::arg("examples"), py::kw_only())
       .def("get_is_multiline",
           [](const workspace_with_logger_contexts& workspace) { return workspace.workspace_ptr->l->is_multiline(); })
+      .def("get_metrics",
+          [](const workspace_with_logger_contexts& workspace) -> py::dict
+          {
+            if (!workspace.workspace_ptr->global_metrics.are_metrics_enabled())
+            {
+              throw std::runtime_error(
+                  "Metrics are not enabled. Pass records_metrics=True to Workspace constructor to enable.");
+            }
+            py::dict metrics;
+            auto collected_metrics =
+                workspace.workspace_ptr->global_metrics.collect_metrics(workspace.workspace_ptr->l);
+            return convert_metrics_to_dict(collected_metrics);
+          })
       .def("get_prediction_type",
           [](const workspace_with_logger_contexts& workspace)
           { return workspace.workspace_ptr->l->get_output_prediction_type(); })

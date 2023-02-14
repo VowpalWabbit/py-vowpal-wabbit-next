@@ -16,7 +16,7 @@ __all__ = [
 
 
 class CBLabel():
-    def __init__(self, *, label: typing.Optional[typing.Union[typing.Tuple[float, float], typing.Tuple[int, float, float]]] = None, weight: float = 1.0, shared: bool = False) -> None: 
+    def __init__(self, *, label: typing.Optional[typing.Union[typing.Tuple[float, float], typing.Tuple[int, float, float]]] = None, weight: float = 1.0, shared: bool = False) -> None:
         """
         A label representing a contextual bandit problem.
 
@@ -102,7 +102,7 @@ class ModelDelta():
     def serialize(self) -> bytes: ...
     pass
 class MulticlassLabel():
-    def __init__(self, label: int, weight: float = 1.0) -> None: 
+    def __init__(self, label: int, weight: float = 1.0) -> None:
         """
         A label representing a multiclass classification problem.
 
@@ -171,7 +171,7 @@ class PredictionType():
     __members__: dict # value = {'Scalar': <PredictionType.Scalar: 0>, 'Scalars': <PredictionType.Scalars: 1>, 'ActionScores': <PredictionType.ActionScores: 2>, 'Pdf': <PredictionType.Pdf: 3>, 'ActionProbs': <PredictionType.ActionProbs: 4>, 'Multiclass': <PredictionType.Multiclass: 5>, 'Multilabels': <PredictionType.Multilabels: 6>, 'Prob': <PredictionType.Prob: 7>, 'MulticlassProbs': <PredictionType.MulticlassProbs: 8>, 'DecisionProbs': <PredictionType.DecisionProbs: 9>, 'ActionPdfValue': <PredictionType.ActionPdfValue: 10>, 'ActiveMulticlass': <PredictionType.ActiveMulticlass: 11>, 'NoPred': <PredictionType.NoPred: 12>}
     pass
 class SimpleLabel():
-    def __init__(self, label: float, weight: float = 1.0, initial: float = 0.0) -> None: 
+    def __init__(self, label: float, weight: float = 1.0, initial: float = 0.0) -> None:
         """
         A label representing a simple regression problem.
 
@@ -218,10 +218,11 @@ class SimpleLabel():
         """
     pass
 class Workspace():
-    def __init__(self, args: typing.List[str], *, model_data: typing.Optional[bytes] = None) -> None: ...
+    def __init__(self, args: typing.List[str], *, model_data: typing.Optional[bytes] = None, record_feature_names: bool = False, record_metrics: bool = False) -> None: ...
     def get_index_for_scalar_feature(self, feature_name: str, feature_value: typing.Optional[str] = None, namespace_name: str = ' ') -> int: ...
     def get_is_multiline(self) -> bool: ...
     def get_label_type(self) -> LabelType: ...
+    def get_metrics(self) -> dict: ...
     def get_prediction_type(self) -> PredictionType: ...
     def json_weights(self, *, include_feature_names: bool = False, include_online_state: bool = False) -> str: ...
     def learn_multi_ex_one(self, examples: typing.List[Example]) -> None: ...
