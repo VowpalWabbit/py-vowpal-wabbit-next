@@ -26,16 +26,16 @@ class CBLabel():
           shared (bool): Whether the example is shared. This is only used for ADF examples and must be the first example. There can only be one shared example per ADF example list.
         """
     @property
-    def label(self) -> typing.Optional[typing.Union[typing.Tuple[float, float], typing.Tuple[int, float, float]]]:
+    def label(self) -> typing.Optional[typing.Tuple[int, float, float]]:
         """
-            The label for the example. The format of the label is (action, cost, probability).
+            The label for the example. The format of the label is (action, cost, probability). If the action is not specified, it will be set to 0.
 
-        :type: typing.Optional[typing.Union[typing.Tuple[float, float], typing.Tuple[int, float, float]]]
+        :type: typing.Optional[typing.Tuple[int, float, float]]
         """
     @label.setter
     def label(self, arg1: typing.Optional[typing.Union[typing.Tuple[float, float], typing.Tuple[int, float, float]]]) -> None:
         """
-        The label for the example. The format of the label is (action, cost, probability).
+        The label for the example. The format of the label is (action, cost, probability). If the action is not specified, it will be set to 0.
         """
     @property
     def shared(self) -> bool:

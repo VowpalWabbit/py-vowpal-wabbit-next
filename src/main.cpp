@@ -772,7 +772,7 @@ PYBIND11_MODULE(_core, m)
       .def_property(
           "label",
           [](VW::cb_label& l)
-              -> std::optional<std::variant<std::tuple<float, float>, std::tuple<uint32_t, float, float>>>
+              -> std::optional<std::tuple<uint32_t, float, float>>
           {
             if (l.costs.size() == 0) { return std::nullopt; }
             if (l.costs.size() == 1 && l.costs[0].probability == -1.f) { return std::nullopt; }
@@ -805,7 +805,7 @@ PYBIND11_MODULE(_core, m)
             }
           },
           R"docstring(
-    The label for the example. The format of the label is (action, cost, probability).
+    The label for the example. The format of the label is (action, cost, probability). If the action is not specified, it will be set to 0.
 )docstring")
       .def_readwrite("weight", &VW::cb_label::weight, R"docstring(
     The weight of the example.
