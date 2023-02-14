@@ -30,6 +30,7 @@ Installation
    how_to_guides/save_load_models.ipynb
    how_to_guides/cache_format.ipynb
    how_to_guides/inspect_model_weights.ipynb
+   how_to_guides/cb_estimators.ipynb
 
 .. toctree::
    :caption: Tutorials
