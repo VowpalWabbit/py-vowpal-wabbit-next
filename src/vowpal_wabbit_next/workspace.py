@@ -4,9 +4,9 @@ from vowpal_wabbit_next import _core, Example
 
 import numpy as np
 import numpy.typing as npt
+from vowpal_wabbit_next.labels import LabelType
 
-PredictionType = _core.PredictionType
-LabelType = _core.LabelType
+from vowpal_wabbit_next.prediction_type import PredictionType
 
 ScalarPrediction = float
 ScalarsPrediction = List[float]
@@ -39,7 +39,7 @@ class Workspace:
         args: List[str],
         *,
         model_data: Optional[bytes] = None,
-        _existing_workspace: Optional[_core.Workspace] = None
+        _existing_workspace: Optional[_core.Workspace] = None,
     ):
         """Main object used for making predictions and training a model.
 
@@ -81,6 +81,19 @@ class Workspace:
         else:
             self._workspace = _core.Workspace(args, model_data=model_data)
 
+    def _check_label(self, example: Union[Example, List[Example]]) -> None:
+        if isinstance(example, list):
+            for i, ex in enumerate(example):
+                if self.label_type != ex.label_type:
+                    raise ValueError(
+                        f"Label type mismatch. Expected {self.label_type}, got {ex.label_type} for example {i}"
+                    )
+        else:
+            if self.label_type != example.label_type:
+                raise ValueError(
+                    f"Label type mismatch. Expected {self.label_type}, got {example.label_type}"
+                )
+
     def predict_one(self, example: typing.Union[Example, List[Example]]) -> Prediction:
         """Make a single prediction.
 
@@ -98,10 +111,12 @@ class Workspace:
         Returns:
             Prediction: Prediction produced by this example. The type corresponds to the :py:meth:`vowpal_wabbit_next.Workspace.prediction_type` of the model. See :py:class:`vowpal_wabbit_next.PredictionType` for the mapping to types.
         """
+        self._check_label(example)
+
         if isinstance(example, Example):
-            return self._workspace.predict_one(example)
+            return self._workspace.predict_one(example._example)
         else:
-            return self._workspace.predict_multi_ex_one(example)
+            return self._workspace.predict_multi_ex_one([ex._example for ex in example])
 
     def learn_one(self, example: typing.Union[Example, List[Example]]) -> None:
         """Learn from one single example. Note, passing a list of examples here means the input is a multiline example, and not several individual examples. The label type of the example must match what is returned by :py:meth:`vowpal_wabbit_next.Workspace.label_type`.
@@ -117,10 +132,12 @@ class Workspace:
         Args:
             example (typing.Union[Example, List[Example]]): Example to learn on.
         """
+        self._check_label(example)
+
         if isinstance(example, Example):
-            self._workspace.learn_one(example)
+            self._workspace.learn_one(example._example)
         else:
-            self._workspace.learn_multi_ex_one(example)
+            self._workspace.learn_multi_ex_one([ex._example for ex in example])
 
     def predict_then_learn_one(
         self, example: typing.Union[Example, List[Example]]
@@ -140,10 +157,14 @@ class Workspace:
         Returns:
             Prediction: Prediction produced by this example. The type corresponds to the :py:meth:`vowpal_wabbit_next.Workspace.prediction_type` of the model. See :py:class:`vowpal_wabbit_next.PredictionType` for the mapping to types.
         """
+        self._check_label(example)
+
         if isinstance(example, Example):
-            return self._workspace.predict_then_learn_one(example)
+            return self._workspace.predict_then_learn_one(example._example)
         else:
-            return self._workspace.predict_then_learn_multi_ex_one(example)
+            return self._workspace.predict_then_learn_multi_ex_one(
+                [ex._example for ex in example]
+            )
 
     @property
     def prediction_type(self) -> PredictionType:
@@ -236,9 +257,9 @@ class Workspace:
         feature_name: str,
         *,
         feature_value: Optional[str] = None,
-        namespace_name: str = " "
+        namespace_name: str = " ",
     ) -> int:
-        """Calculate the has for a given feature.
+        """Calculate the model index for a given feature.
 
         The logic is rather complicated to work out an index. This function also takes into account index
         truncation caused by the index multiplier taking the index out of the standard weight space.

@@ -1,5 +1,6 @@
 import io
 import vowpal_wabbit_next as vw
+import pytest
 
 
 def test_single() -> None:
@@ -9,6 +10,14 @@ def test_single() -> None:
     result = parser.parse_json(text_input)
     assert len(result) == 5
     assert isinstance(result, list)
+    assert result[0].get_label().shared == True
+    assert result[0].get_label().label is None
+    assert result[1].get_label().shared == False
+    assert result[1].get_label().label is None
+    assert result[2].get_label().label is None
+    assert result[3].get_label().label is None
+    assert result[4].get_label().label is not None
+    assert result[4].get_label().label == pytest.approx((4, 0.0, 0.05))
 
 
 def test_single_formatted() -> None:
