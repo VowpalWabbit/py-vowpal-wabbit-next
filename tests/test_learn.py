@@ -1,7 +1,5 @@
-import json
 import vowpal_wabbit_next as vw
 import numpy as np
-import pytest
 
 
 def test_learn() -> None:
@@ -51,25 +49,3 @@ def test_predict_then_learn_equivalent() -> None:
     _ = model_predict_and_learn.predict_then_learn_one(parser.parse_line("0.5 | b"))
 
     assert np.allclose(model_learn.weights(), model_predict_and_learn.weights())
-
-
-def test_json_weights() -> None:
-    model = vw.Workspace(["--noconstant"], record_feature_names=True)
-    parser = vw.TextFormatParser(model)
-
-    model.learn_one(parser.parse_line("1 | a b c"))
-
-    json_weights = json.loads(model.json_weights(include_feature_names=True))
-    assert len(json_weights["weights"]) == 3
-    all_names = set()
-    for weight in json_weights["weights"]:
-        assert len(weight["terms"]) == 1
-        all_names.add(weight["terms"][0]["name"])
-
-    assert all_names == {"a", "b", "c"}
-
-
-def test_json_weights_feat_name_without_constructor_enabled() -> None:
-    model = vw.Workspace([])
-    with pytest.raises(RuntimeError):
-        model.json_weights(include_feature_names=True)

@@ -6,6 +6,8 @@
 #include "vw/core/constant.h"
 #include "vw/core/example.h"
 #include "vw/core/global_data.h"
+#include "vw/core/guard.h"
+#include "vw/core/io_buf.h"
 #include "vw/core/label_type.h"
 #include "vw/core/learner.h"
 #include "vw/core/loss_functions.h"
@@ -15,6 +17,7 @@
 #include "vw/core/multiclass.h"
 #include "vw/core/object_pool.h"
 #include "vw/core/parse_example.h"
+#include "vw/core/parse_regressor.h"
 #include "vw/core/prediction_type.h"
 #include "vw/core/scope_exit.h"
 #include "vw/core/simple_label.h"
@@ -1202,7 +1205,31 @@ PYBIND11_MODULE(_core, m)
                 });
             return workspace.workspace_ptr->dump_weights_to_json_experimental();
           },
-          py::kw_only(), py::arg("include_feature_names") = false, py::arg("include_online_state") = false);
+          py::kw_only(), py::arg("include_feature_names") = false, py::arg("include_online_state") = false)
+      .def(
+          "readable_model",
+          [](const workspace_with_logger_contexts& workspace, bool include_feature_names) -> std::string
+          {
+            auto& all = *workspace.workspace_ptr;
+            if (include_feature_names)
+            {
+              if (!all.hash_inv)
+              {
+                THROW(
+                    "record_feature_names must be enabled (from Workspace constructor) to use "
+                    "include_feature_names=True");
+              }
+            }
+
+            auto print_invert_guard = VW::swap_guard(all.print_invert, include_feature_names);
+            VW::io_buf buffer;
+            auto vec_buffer = std::make_shared<std::vector<char>>();
+            buffer.add_file(VW::io::create_vector_writer(vec_buffer));
+            VW::details::dump_regressor(all, buffer, true);
+            buffer.flush();
+            return std::string(vec_buffer->data(), vec_buffer->size());
+          },
+          py::kw_only(), py::arg("include_feature_names") = false);
 
   m.def("_parse_line_text", &::parse_text_line, py::arg("workspace"), py::arg("line"));
   m.def("_parse_line_dsjson", &::parse_dsjson_line, py::arg("workspace"), py::arg("line"));
