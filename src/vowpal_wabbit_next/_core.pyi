@@ -4,6 +4,7 @@ import typing
 
 __all__ = [
     "CBLabel",
+    "CSLabel",
     "DenseParameters",
     "Example",
     "LabelType",
@@ -19,6 +20,9 @@ class CBLabel():
     def __init__(self, *, label: typing.Optional[typing.Union[typing.Tuple[float, float], typing.Tuple[int, float, float]]] = None, weight: float = 1.0, shared: bool = False) -> None: 
         """
         A label representing a contextual bandit problem.
+
+        .. note::
+          Currently the label can only contain 1 or 0 cb costs. There is a mode in vw for CB (non-adf) that allows for multiple cb_classes per example, but it is not currently accessible via direct label access. If creating examples/labels from parsed input it should still work as expected. If you need this feature, please open an issue on the github repo.
 
         Args:
           label (Optional[Union[Tuple[float, float], Tuple[int, float, float]]): This is (action, cost, probability). The same rules as VW apply for if the action can be left out of the tuple.
@@ -57,13 +61,42 @@ class CBLabel():
         The weight of the example.
         """
     pass
+class CSLabel():
+    def __init__(self, *, costs: typing.Optional[typing.List[typing.Tuple[float, float]]] = None, shared: bool = False) -> None: 
+        """
+        A label representing a cost sensitive classification problem.
+
+        Args:
+          costs (Optional[List[Tuple[int, float]]]): List of classes and costs. If there is no label, this should be None.
+          shared (bool): Whether the example represents the shared context
+        """
+    @property
+    def costs(self) -> typing.Optional[typing.List[typing.Tuple[int, float]]]:
+        """
+            The costs for the example. The format of the costs is (class_index, cost).
+
+        :type: typing.Optional[typing.List[typing.Tuple[int, float]]]
+        """
+    @costs.setter
+    def costs(self, arg1: typing.List[typing.Tuple[int, float]]) -> None:
+        """
+        The costs for the example. The format of the costs is (class_index, cost).
+        """
+    @property
+    def shared(self) -> bool:
+        """
+            Whether the example represents the shared context.
+
+        :type: bool
+        """
+    pass
 class DenseParameters():
     pass
 class Example():
     def __init__(self) -> None: ...
-    def _get_label(self, arg0: LabelType) -> typing.Union[SimpleLabel, MulticlassLabel, CBLabel, None]: ...
+    def _get_label(self, arg0: LabelType) -> typing.Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, None]: ...
     def _is_newline(self) -> bool: ...
-    def _set_label(self, arg0: typing.Union[SimpleLabel, MulticlassLabel, CBLabel, None]) -> None: ...
+    def _set_label(self, arg0: typing.Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, None]) -> None: ...
     pass
 class LabelType():
     def __eq__(self, other: object) -> bool: ...
