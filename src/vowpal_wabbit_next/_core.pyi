@@ -4,6 +4,7 @@ import typing
 
 __all__ = [
     "CBLabel",
+    "CSLabel",
     "DenseParameters",
     "Example",
     "LabelType",
@@ -16,9 +17,12 @@ __all__ = [
 
 
 class CBLabel():
-    def __init__(self, *, label: typing.Optional[typing.Union[typing.Tuple[float, float], typing.Tuple[int, float, float]]] = None, weight: float = 1.0, shared: bool = False) -> None: 
+    def __init__(self, *, label: typing.Optional[typing.Union[typing.Tuple[float, float], typing.Tuple[int, float, float]]] = None, weight: float = 1.0, shared: bool = False) -> None:
         """
         A label representing a contextual bandit problem.
+
+        .. note::
+          Currently the label can only contain 1 or 0 cb costs. There is a mode in vw for CB (non-adf) that allows for multiple cb_classes per example, but it is not currently accessible via direct label access. If creating examples/labels from parsed input it should still work as expected. If you need this feature, please open an issue on the github repo.
 
         Args:
           label (Optional[Union[Tuple[float, float], Tuple[int, float, float]]): This is (action, cost, probability). The same rules as VW apply for if the action can be left out of the tuple.
@@ -57,13 +61,35 @@ class CBLabel():
         The weight of the example.
         """
     pass
+class CSLabel():
+    def __init__(self, *, costs: typing.Optional[typing.List[typing.Tuple[float, float]]] = None, shared: bool = False) -> None: ...
+    @property
+    def costs(self) -> typing.Optional[typing.List[typing.Tuple[int, float]]]:
+        """
+            The label for the example. The format of the label is (action, cost, probability). If the action is not specified, it will be set to 0.
+
+        :type: typing.Optional[typing.List[typing.Tuple[int, float]]]
+        """
+    @costs.setter
+    def costs(self, arg1: typing.List[typing.Tuple[int, float]]) -> None:
+        """
+        The label for the example. The format of the label is (action, cost, probability). If the action is not specified, it will be set to 0.
+        """
+    @property
+    def shared(self) -> bool:
+        """
+            Whether the example is shared. This is only used for ADF examples and must be the first example. There can only be one shared example per ADF example list.
+
+        :type: bool
+        """
+    pass
 class DenseParameters():
     pass
 class Example():
     def __init__(self) -> None: ...
-    def _get_label(self, arg0: LabelType) -> typing.Union[SimpleLabel, MulticlassLabel, CBLabel, None]: ...
+    def _get_label(self, arg0: LabelType) -> typing.Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, None]: ...
     def _is_newline(self) -> bool: ...
-    def _set_label(self, arg0: typing.Union[SimpleLabel, MulticlassLabel, CBLabel, None]) -> None: ...
+    def _set_label(self, arg0: typing.Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, None]) -> None: ...
     pass
 class LabelType():
     def __eq__(self, other: object) -> bool: ...
@@ -102,7 +128,7 @@ class ModelDelta():
     def serialize(self) -> bytes: ...
     pass
 class MulticlassLabel():
-    def __init__(self, label: int, weight: float = 1.0) -> None: 
+    def __init__(self, label: int, weight: float = 1.0) -> None:
         """
         A label representing a multiclass classification problem.
 
@@ -171,7 +197,7 @@ class PredictionType():
     __members__: dict # value = {'Scalar': <PredictionType.Scalar: 0>, 'Scalars': <PredictionType.Scalars: 1>, 'ActionScores': <PredictionType.ActionScores: 2>, 'Pdf': <PredictionType.Pdf: 3>, 'ActionProbs': <PredictionType.ActionProbs: 4>, 'Multiclass': <PredictionType.Multiclass: 5>, 'Multilabels': <PredictionType.Multilabels: 6>, 'Prob': <PredictionType.Prob: 7>, 'MulticlassProbs': <PredictionType.MulticlassProbs: 8>, 'DecisionProbs': <PredictionType.DecisionProbs: 9>, 'ActionPdfValue': <PredictionType.ActionPdfValue: 10>, 'ActiveMulticlass': <PredictionType.ActiveMulticlass: 11>, 'NoPred': <PredictionType.NoPred: 12>}
     pass
 class SimpleLabel():
-    def __init__(self, label: float, weight: float = 1.0, initial: float = 0.0) -> None: 
+    def __init__(self, label: float, weight: float = 1.0, initial: float = 0.0) -> None:
         """
         A label representing a simple regression problem.
 
@@ -256,5 +282,5 @@ def _write_cache_example(workspace: Workspace, example: Example, file: object) -
 def _write_cache_header(workspace: Workspace, file: object) -> None:
     pass
 __version__ = '0.0.1'
-_vw_commit = '8a6c027'
+_vw_commit = '8a6c027f6'
 _vw_version = '9.7.0'
