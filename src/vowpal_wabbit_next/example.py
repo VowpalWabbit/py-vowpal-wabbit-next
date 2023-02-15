@@ -1,5 +1,11 @@
 from vowpal_wabbit_next import _core
-from vowpal_wabbit_next.labels import LabelType, SimpleLabel, MulticlassLabel, CBLabel
+from vowpal_wabbit_next.labels import (
+    LabelType,
+    SimpleLabel,
+    MulticlassLabel,
+    CBLabel,
+    CSLabel,
+)
 from typing import Optional, Union
 
 
@@ -27,7 +33,7 @@ class Example:
             self._example = _core.Example()
             self.label_type = LabelType.NoLabel
 
-    def get_label(self) -> Union[SimpleLabel, MulticlassLabel, CBLabel, None]:
+    def get_label(self) -> Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, None]:
         """Get the label of the example.
 
         Returns:
@@ -36,7 +42,7 @@ class Example:
         return self._example._get_label(self.label_type)
 
     def set_label(
-        self, label: Union[SimpleLabel, MulticlassLabel, CBLabel, None]
+        self, label: Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, None]
     ) -> None:
         """Set the label of the example.
 
@@ -52,6 +58,8 @@ class Example:
             self.label_type = LabelType.Multiclass
         elif isinstance(label, CBLabel):
             self.label_type = LabelType.CB
+        elif isinstance(label, CSLabel):
+            self.label_type = LabelType.CS
         elif label is None:
             self.label_type = LabelType.NoLabel
         else:

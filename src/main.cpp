@@ -4,6 +4,7 @@
 #include "vw/core/cache.h"
 #include "vw/core/cb.h"
 #include "vw/core/constant.h"
+#include "vw/core/cost_sensitive.h"
 #include "vw/core/example.h"
 #include "vw/core/global_data.h"
 #include "vw/core/guard.h"
@@ -645,6 +646,15 @@ struct py_simple_label
   float initial;
 };
 
+bool is_shared(const VW::cs_label& label)
+{
+  const auto& costs = label.costs;
+  if (costs.size() != 1) { return false; }
+  if (costs[0].class_index != 0) { return false; }
+  if (costs[0].x != -FLT_MAX) { return false; }
+  return true;
+}
+
 }  // namespace
 
 PYBIND11_MODULE(_core, m)
@@ -790,6 +800,9 @@ PYBIND11_MODULE(_core, m)
           py::kw_only(), py::arg("label") = py::none(), py::arg("weight") = 1.f, py::arg("shared") = false, R"docstring(
     A label representing a contextual bandit problem.
 
+    .. note::
+      Currently the label can only contain 1 or 0 cb costs. There is a mode in vw for CB (non-adf) that allows for multiple cb_classes per example, but it is not currently accessible via direct label access. If creating examples/labels from parsed input it should still work as expected. If you need this feature, please open an issue on the github repo.
+
     Args:
       label (Optional[Union[Tuple[float, float], Tuple[int, float, float]]): This is (action, cost, probability). The same rules as VW apply for if the action can be left out of the tuple.
       weight (float): The weight of the example.
@@ -841,6 +854,63 @@ PYBIND11_MODULE(_core, m)
     The weight of the example.
 )docstring");
 
+  py::class_<VW::cs_label>(m, "CSLabel")
+      .def(py::init(
+               [](std::optional<std::vector<std::tuple<float, float>>> costs, bool is_shared)
+               {
+                 auto label = std::make_unique<VW::cs_label>();
+                 if (is_shared)
+                 {
+                   if (costs.has_value())
+                   {
+                     throw std::invalid_argument("Shared examples cannot have action, cost, or probability.");
+                   }
+
+                   label->costs.emplace_back(-FLT_MAX, 0, 0.f, 0.f);
+                   return label;
+                 }
+
+                 if (costs.has_value())
+                 {
+                   for (auto& [class_index, cost] : *costs) { label->costs.emplace_back(cost, class_index, 0.f, 0.f); }
+                 }
+
+                 return label;
+               }),
+          py::kw_only(), py::arg("costs") = py::none(), py::arg("shared") = false, R"docstring(
+    A label representing a cost sensitive classification problem.
+
+    Args:
+      costs (Optional[List[Tuple[int, float]]]): List of classes and costs. If there is no label, this should be None.
+      shared (bool): Whether the example represents the shared context
+)docstring")
+      .def_property_readonly(
+          "shared", [](VW::cs_label& l) -> bool { return is_shared(l); },
+          R"docstring(
+    Whether the example represents the shared context.
+)docstring")
+      .def_property(
+          "costs",
+          [](VW::cs_label& l) -> std::optional<std::vector<std::tuple<uint32_t, float>>>
+          {
+            if (is_shared(l)) { return std::nullopt; }
+
+            std::vector<std::tuple<uint32_t, float>> costs;
+            costs.reserve(l.costs.size());
+            for (auto& cost : l.costs) { costs.emplace_back(cost.class_index, cost.x); }
+            return costs;
+          },
+          [](VW::cs_label& l, const std::vector<std::tuple<uint32_t, float>>& label)
+          {
+            if (is_shared(l)) { throw std::invalid_argument("Shared examples cannot have costs."); }
+
+            l.costs.clear();
+            for (auto& [class_index, cost] : label) { l.costs.emplace_back(cost, class_index, 0.f, 0.f); }
+          },
+          R"docstring(
+    The costs for the example. The format of the costs is (class_index, cost).
+)docstring");
+
   py::class_<VW::example, std::shared_ptr<VW::example>>(m, "Example")
       .def(py::init(
           []()
@@ -851,7 +921,7 @@ PYBIND11_MODULE(_core, m)
       .def("_is_newline", [](VW::example& ex) -> bool { return ex.is_newline; })
       .def("_get_label",
           [](VW::example& ex, VW::label_type_t label_type)
-              -> std::variant<py_simple_label, VW::multiclass_label, VW::cb_label, std::monostate>
+              -> std::variant<py_simple_label, VW::multiclass_label, VW::cb_label, VW::cs_label, std::monostate>
           {
             switch (label_type)
             {
@@ -864,6 +934,8 @@ PYBIND11_MODULE(_core, m)
                 return ex.l.multi;
               case VW::label_type_t::CB:
                 return ex.l.cb;
+              case VW::label_type_t::CS:
+                return ex.l.cs;
               case VW::label_type_t::NOLABEL:
                 return std::monostate();
               default:
@@ -872,7 +944,7 @@ PYBIND11_MODULE(_core, m)
           })
       .def("_set_label",
           [](VW::example& ex,
-              const std::variant<py_simple_label*, VW::multiclass_label*, VW::cb_label*, std::monostate>& label) -> void
+              const std::variant<py_simple_label*, VW::multiclass_label*, VW::cb_label*, VW::cs_label*, std::monostate>& label) -> void
           {
             std::visit(
                 overloaded{
@@ -887,6 +959,7 @@ PYBIND11_MODULE(_core, m)
                     },
                     [&](VW::multiclass_label* multiclass_label) { ex.l.multi = *multiclass_label; },
                     [&](VW::cb_label* cb_label) { ex.l.cb = *cb_label; },
+                    [&](VW::cs_label* cs_label) { ex.l.cs = *cs_label; },
                 },
                 label);
           });
