@@ -17,7 +17,7 @@ __all__ = [
 
 
 class CBLabel():
-    def __init__(self, *, label: typing.Optional[typing.Union[typing.Tuple[float, float], typing.Tuple[int, float, float]]] = None, weight: float = 1.0, shared: bool = False) -> None:
+    def __init__(self, *, label: typing.Optional[typing.Union[typing.Tuple[float, float], typing.Tuple[int, float, float]]] = None, weight: float = 1.0, shared: bool = False) -> None: 
         """
         A label representing a contextual bandit problem.
 
@@ -62,23 +62,30 @@ class CBLabel():
         """
     pass
 class CSLabel():
-    def __init__(self, *, costs: typing.Optional[typing.List[typing.Tuple[float, float]]] = None, shared: bool = False) -> None: ...
+    def __init__(self, *, costs: typing.Optional[typing.List[typing.Tuple[float, float]]] = None, shared: bool = False) -> None: 
+        """
+        A label representing a cost sensitive classification problem.
+
+        Args:
+          costs (Optional[List[Tuple[int, float]]]): List of classes and costs. If there is no label, this should be None.
+          shared (bool): Whether the example represents the shared context
+        """
     @property
     def costs(self) -> typing.Optional[typing.List[typing.Tuple[int, float]]]:
         """
-            The label for the example. The format of the label is (action, cost, probability). If the action is not specified, it will be set to 0.
+            The costs for the example. The format of the costs is (class_index, cost).
 
         :type: typing.Optional[typing.List[typing.Tuple[int, float]]]
         """
     @costs.setter
     def costs(self, arg1: typing.List[typing.Tuple[int, float]]) -> None:
         """
-        The label for the example. The format of the label is (action, cost, probability). If the action is not specified, it will be set to 0.
+        The costs for the example. The format of the costs is (class_index, cost).
         """
     @property
     def shared(self) -> bool:
         """
-            Whether the example is shared. This is only used for ADF examples and must be the first example. There can only be one shared example per ADF example list.
+            Whether the example represents the shared context.
 
         :type: bool
         """
@@ -128,7 +135,7 @@ class ModelDelta():
     def serialize(self) -> bytes: ...
     pass
 class MulticlassLabel():
-    def __init__(self, label: int, weight: float = 1.0) -> None:
+    def __init__(self, label: int, weight: float = 1.0) -> None: 
         """
         A label representing a multiclass classification problem.
 
@@ -197,7 +204,7 @@ class PredictionType():
     __members__: dict # value = {'Scalar': <PredictionType.Scalar: 0>, 'Scalars': <PredictionType.Scalars: 1>, 'ActionScores': <PredictionType.ActionScores: 2>, 'Pdf': <PredictionType.Pdf: 3>, 'ActionProbs': <PredictionType.ActionProbs: 4>, 'Multiclass': <PredictionType.Multiclass: 5>, 'Multilabels': <PredictionType.Multilabels: 6>, 'Prob': <PredictionType.Prob: 7>, 'MulticlassProbs': <PredictionType.MulticlassProbs: 8>, 'DecisionProbs': <PredictionType.DecisionProbs: 9>, 'ActionPdfValue': <PredictionType.ActionPdfValue: 10>, 'ActiveMulticlass': <PredictionType.ActiveMulticlass: 11>, 'NoPred': <PredictionType.NoPred: 12>}
     pass
 class SimpleLabel():
-    def __init__(self, label: float, weight: float = 1.0, initial: float = 0.0) -> None:
+    def __init__(self, label: float, weight: float = 1.0, initial: float = 0.0) -> None: 
         """
         A label representing a simple regression problem.
 
