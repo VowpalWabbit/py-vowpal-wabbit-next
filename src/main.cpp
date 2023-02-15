@@ -1136,6 +1136,12 @@ PYBIND11_MODULE(_core, m)
       .def("get_label_type",
           [](const workspace_with_logger_contexts& workspace) -> VW::label_type_t
           { return workspace.workspace_ptr->l->get_input_label_type(); })
+      .def("get_sum_loss",
+          [](const workspace_with_logger_contexts& workspace) -> float
+          { return workspace.workspace_ptr->sd->sum_loss; })
+      .def("get_weighted_labeled_examples",
+          [](const workspace_with_logger_contexts& workspace) -> float
+          { return workspace.workspace_ptr->sd->weighted_labeled_examples; })
       .def("serialize",
           [](const workspace_with_logger_contexts& workspace) -> py::bytes
           {

@@ -217,6 +217,43 @@ class Workspace:
         """
         return typing.cast(MetricsDict, self._workspace.get_metrics())
 
+    @property
+    def sum_loss(self) -> float:
+        """The sum of the loss of all labeled examples that were learned on so far. This is VW's loss calculation that is implemented per reduction.
+
+        .. warning::
+            If doing multiple passes over the data this value should *not* be used as it accumulates for every labeled example learned on. In that case, loss calculation should be done manually.
+
+        Returns:
+            float: Sum of loss
+        """
+        return self._workspace.get_sum_loss()
+
+    @property
+    def weighted_labeled_examples(self) -> float:
+        """The sum of the weight of all labeled examples that were learned on so far.
+
+        Returns:
+            float: Sum of weights
+        """
+        return self._workspace.get_weighted_labeled_examples()
+
+    @property
+    def average_loss(self) -> Optional[float]:
+        """The average loss of all labeled examples that were learned on so far. This is VW's loss calculation that is implemented per reduction.
+
+        .. warning::
+            If doing multiple passes over the data this value should *not* be used as it accumulates for every labeled example learned on. In that case, loss calculation should be done manually.
+
+        Returns:
+            float: Average loss, or None if no labeled examples were learned on yet
+        """
+        return (
+            self.sum_loss / self.weighted_labeled_examples
+            if self.weighted_labeled_examples > 0
+            else None
+        )
+
     def serialize(self) -> bytes:
         """Serialize the current workspace as a VW model that can be loaded by the Workspace constructor, or command line tool.
 

@@ -8,8 +8,16 @@ def test_learn() -> None:
 
     pred = model.predict_one(parser.parse_line("| a"))
     assert pred == 0.0
+    assert model.average_loss is None
+    assert model.weighted_labeled_examples == 0
+    assert model.sum_loss == 0
+
     model.learn_one(parser.parse_line("1 | a b c"))
     pred = model.predict_one(parser.parse_line("| a"))
+
+    assert model.average_loss > 0
+    assert model.weighted_labeled_examples == 1
+    assert model.sum_loss > 0
 
     # Learn should result in a non-zero prediction.
     assert pred != 0
