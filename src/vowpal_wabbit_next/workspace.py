@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 import typing
 from vowpal_wabbit_next import _core, Example
 
@@ -274,6 +274,22 @@ class Workspace:
         return self._workspace.json_weights(
             include_feature_names=include_feature_names,
             include_online_state=include_online_state,
+        )
+
+    def readable_model(self, *, include_feature_names: bool = False) -> str:
+        """Equivalent to the `--readable_model` command line option. If `include_feature_names` is True, then the equivalent of `--invert_hash`.
+
+        Args:
+            include_feature_names (bool, optional): Includes the feature names and interaction terms in the output. This requires the workspace to be configured to support it by passing `record_feature_names=True` to the constructor of :py:class:`vowpal_wabbit_next.Workspace`. Defaults to False.
+
+        Returns:
+            str: JSON string representing model
+
+        Raises:
+            ValueError: If the workspace is not configured to record feature names and include_feature_names is True
+        """
+        return self._workspace.readable_model(
+            include_feature_names=include_feature_names
         )
 
     def get_index_for_scalar_feature(
