@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 import typing
 from vowpal_wabbit_next import _core, Example
 
@@ -32,6 +32,8 @@ Prediction = Union[
     NoPrediction,
 ]
 
+MetricsDict = Dict[str, Union[int, float, str, bool, "MetricsDict"]]
+
 
 class Workspace:
     def __init__(
@@ -39,6 +41,8 @@ class Workspace:
         args: List[str],
         *,
         model_data: Optional[bytes] = None,
+        record_feature_names: bool = False,
+        record_metrics: bool = False,
         _existing_workspace: Optional[_core.Workspace] = None,
     ):
         """Main object used for making predictions and training a model.
@@ -71,15 +75,22 @@ class Workspace:
             >>> workspace = Workspace([])
 
         Args:
-            args (List[str]): VowpalWabbit command line options for configuring the model. An overall list can be found `here <https://vowpalwabbit.org/docs/vowpal_wabbit/python/latest/command_line_args.html>`_. Some options are unsupported which are:
-                `--sort_features`, `--ngram`, `--feature_limit`, `--ignore`.
-            model_data (Optional[bytes], optional): Bytes of a VW model to be loadeed.
+            args (List[str]): VowpalWabbit command line options for configuring the model. An overall list can be found `here <https://vowpalwabbit.org/docs/vowpal_wabbit/python/latest/command_line_args.html>`_. Options which affect the driver are not supported. For example:
+                `--sort_features`, `--ngram`, `--feature_limit`, `--ignore`, `--extra_metrics`, `--dump_json_weights_experimental`
+            model_data (Optional[bytes], optional): Bytes of a VW model to be loaded.
+            record_invert_hash (bool, optional): If true, the invert hash will be recorded for each example. This is required to use :py:meth:`vowpal_wabbit_next.Workspace.json_weights`. This will slow down parsing and learn/predict.
+            record_metrics (bool, optional): If true, reduction metrics will be enabled and can be fetched with :py:attr:`vowpal_wabbit_next.Workspace.metrics`
             _existing_workspace (Optional[_core.Workspace], optional): This is for internal usage and should not be set by a user.
         """
         if _existing_workspace is not None:
             self._workspace = _existing_workspace
         else:
-            self._workspace = _core.Workspace(args, model_data=model_data)
+            self._workspace = _core.Workspace(
+                args,
+                model_data=model_data,
+                record_feature_names=record_feature_names,
+                record_metrics=record_metrics,
+            )
 
     def _check_label(self, example: Union[Example, List[Example]]) -> None:
         if isinstance(example, list):
@@ -194,6 +205,18 @@ class Workspace:
         """
         return self._workspace.get_is_multiline()
 
+    @property
+    def metrics(self) -> MetricsDict:
+        """Metrics is a dictionary of names to values recorded internally by VW. There may be nested mappings. This is completely dependent on the command line parameters used to setup VW and the reductions enabled.
+
+        Returns:
+            MetricsDict: Dictionary of metrics
+
+        Raises:
+            ValueError: If the workspace is not configured to record metrics
+        """
+        return typing.cast(MetricsDict, self._workspace.get_metrics())
+
     def serialize(self) -> bytes:
         """Serialize the current workspace as a VW model that can be loaded by the Workspace constructor, or command line tool.
 
@@ -239,13 +262,14 @@ class Workspace:
             This is an experimental feature.
 
         Args:
-            include_feature_names (bool, optional): Includes the feature names and interaction terms in the output. This requires the workspace to be configured to support it. This is not well exposed to Python currently but the way to do it is:
-                `--dump_json_weights_experimental=unused --dump_json_weights_include_feature_names_experimental`
-            include_online_state (bool, optional): Includes extra save_resume state in the output.This requires the workspace to be configured to support it. This is not well exposed to Python currently but the way to do it is:
-                `--dump_json_weights_experimental=unused --dump_json_weights_include_extra_online_state_experimental`
+            include_feature_names (bool, optional): Includes the feature names and interaction terms in the output. This requires the workspace to be configured to support it by passing `record_feature_names=True` to the constructor of :py:class:`vowpal_wabbit_next.Workspace`. Defaults to False.
+            include_online_state (bool, optional): Includes extra save_resume state in the output.
 
         Returns:
             str: JSON string representing model weights
+
+        Raises:
+            ValueError: If the workspace is not configured to record feature names and include_feature_names is True
         """
         return self._workspace.json_weights(
             include_feature_names=include_feature_names,
