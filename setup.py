@@ -16,10 +16,13 @@ from setuptools import find_packages
 with open(pathlib.Path(__file__).parent.resolve() / "README.md", encoding="utf-8") as f:
     long_description = f.read()
 
+with open(pathlib.Path(__file__).parent.resolve() / "version.txt", "r", encoding="utf-8") as version_file:
+    version = version_file.read().strip()
+
 
 setup(
     name="vowpal-wabbit-next",
-    version="0.1.1",
+    version=version,
     description="Experimental python bindings for VowpalWabbit",
     long_description=long_description,
     long_description_content_type="text/markdown",
