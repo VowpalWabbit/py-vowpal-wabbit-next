@@ -503,10 +503,45 @@ void py_setup_example(VW::workspace& ws, std::vector<VW::example*>& ex)
 
 void py_unsetup_example(VW::workspace& ws, VW::example& ex)
 {
-  // Reset these to avoid reuse issues.
+  // Reset these to avoid reuse issues, but make sure keep the label that was passed in.
   // This is wasteful from a memory perspective but important for correctness at
   // the moment.
-  ex.l = VW::polylabel{};
+  VW::polylabel replacement{};
+  switch (ws.l->get_input_label_type())
+  {
+    case VW::label_type_t::SIMPLE:
+      replacement.simple = std::move(ex.l.simple);
+      break;
+    case VW::label_type_t::CB:
+      replacement.cb = std::move(ex.l.cb);
+      break;
+    case VW::label_type_t::CB_EVAL:
+      replacement.cb_eval = std::move(ex.l.cb_eval);
+      break;
+    case VW::label_type_t::CS:
+      replacement.cs = std::move(ex.l.cs);
+      break;
+    case VW::label_type_t::MULTILABEL:
+      replacement.multilabels = std::move(ex.l.multilabels);
+      break;
+    case VW::label_type_t::MULTICLASS:
+      replacement.multi = std::move(ex.l.multi);
+      break;
+    case VW::label_type_t::CCB:
+      replacement.conditional_contextual_bandit = std::move(ex.l.conditional_contextual_bandit);
+      break;
+    case VW::label_type_t::SLATES:
+      replacement.slates = std::move(ex.l.slates);
+      break;
+    case VW::label_type_t::NOLABEL:
+      break;
+    case VW::label_type_t::CONTINUOUS:
+      replacement.cb_cont = std::move(ex.l.cb_cont);
+      break;
+    default:
+      THROW("Unknown label type encountered in py_unsetup_example");
+  }
+  ex.l = std::move(replacement);
   ex.pred = VW::polyprediction{};
 
   if (ws.add_constant)
@@ -944,7 +979,8 @@ PYBIND11_MODULE(_core, m)
           })
       .def("_set_label",
           [](VW::example& ex,
-              const std::variant<py_simple_label*, VW::multiclass_label*, VW::cb_label*, VW::cs_label*, std::monostate>& label) -> void
+              const std::variant<py_simple_label*, VW::multiclass_label*, VW::cb_label*, VW::cs_label*, std::monostate>&
+                  label) -> void
           {
             std::visit(
                 overloaded{

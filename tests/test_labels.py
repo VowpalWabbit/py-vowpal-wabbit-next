@@ -15,6 +15,18 @@ def test_simple_label() -> None:
     assert example.get_label().label == 2
 
 
+def test_simple_label_still_there_after_learn() -> None:
+    model = vw.Workspace([])
+    parser = vw.TextFormatParser(model)
+
+    example = parser.parse_line("1 | a b c")
+    assert example.get_label().label == 1
+    assert isinstance(example.get_label(), vw.SimpleLabel)
+    model.learn_one(example)
+    assert example.get_label().label == 1
+    assert isinstance(example.get_label(), vw.SimpleLabel)
+
+
 def test_multiclass_label() -> None:
     example = vw.Example()
     assert example.get_label() is None
