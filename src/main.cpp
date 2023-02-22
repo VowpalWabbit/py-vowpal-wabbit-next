@@ -998,7 +998,8 @@ PYBIND11_MODULE(_core, m)
                     [&](VW::cs_label* cs_label) { ex.l.cs = *cs_label; },
                 },
                 label);
-          });
+          })
+        .def("_get_tag", [](VW::example& ex) -> std::string { return std::string(ex.tag.data(), ex.tag.size()); });
 
   py::class_<workspace_with_logger_contexts>(m, "Workspace")
       .def(py::init(
