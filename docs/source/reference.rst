@@ -5,7 +5,7 @@ API Reference
    :members:
    :undoc-members:
    :member-order: bysource
-   :exclude-members: PredictionType
+   :exclude-members: PredictionType, LabelType
 
    .. autoclass:: PredictionType
 
@@ -58,3 +58,59 @@ API Reference
 
       .. autoattribute:: NoPred
          :annotation: = None
+
+
+   .. autoclass:: LabelType
+
+      Enum where each variant corresponds to Python types for the different label types.
+
+      .. autoattribute:: Simple
+         :annotation:
+
+         Type: :class:`~vowpal_wabbit_next.SimpleLabel`
+
+      .. autoattribute:: CB
+         :annotation:
+
+         Type: :class:`~vowpal_wabbit_next.CBLabel`
+
+      .. autoattribute:: CBEval
+         :annotation:
+
+         Type: *NotImplemented*
+
+      .. autoattribute:: CS
+         :annotation:
+
+         Type: :class:`~vowpal_wabbit_next.CSLabel`
+
+      .. autoattribute:: CCB
+         :annotation:
+
+         Type: *NotImplemented*
+
+      .. autoattribute:: Continuous
+         :annotation:
+
+         Type: *NotImplemented*
+
+      .. autoattribute:: Multiclass
+         :annotation:
+
+         Type: :class:`~vowpal_wabbit_next.MulticlassLabel`
+
+      .. autoattribute:: Multilabel
+         :annotation:
+
+         Type: *NotImplemented*
+
+      .. autoattribute:: NoLabel
+         :annotation:
+
+         Type: ``None``
+
+      .. autoattribute:: Slates
+         :annotation:
+
+         Type: *NotImplemented*
+

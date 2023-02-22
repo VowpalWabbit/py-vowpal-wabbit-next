@@ -37,7 +37,7 @@ class Example:
         """Get the label of the example.
 
         Returns:
-            Union[SimpleLabel, MulticlassLabel, CBLabel, None]: The label of the example
+            Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, None]: The label of the example
         """
         return self._example._get_label(self.label_type)
 
@@ -47,7 +47,7 @@ class Example:
         """Set the label of the example.
 
         Args:
-            label (Union[SimpleLabel, MulticlassLabel, CBLabel, None]): The label to set
+            label (Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, None]): The label to set
 
         Raises:
             ValueError: If the label type is not supported.
