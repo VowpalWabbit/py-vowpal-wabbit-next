@@ -35,6 +35,10 @@ jobs:
       run: |
         "SKBUILD_CONFIGURE_OPTIONS=-DVCPKG_TARGET_TRIPLET=x64-windows-static -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded" >> $env:GITHUB_ENV
 
+    - name: Install pkg-config on MacOS
+      if: ${{ matrix.platform == 'macos-latest' }}
+      run: brew install pkg-config
+
     - name: Build and install
       run: pip install --verbose .
       env:
