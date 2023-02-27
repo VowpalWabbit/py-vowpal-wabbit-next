@@ -3,7 +3,7 @@ import numpy as np
 
 
 def test_learn() -> None:
-    model = vw.Workspace([])
+    model = vw.Workspace()
     parser = vw.TextFormatParser(model)
 
     pred = model.predict_one(parser.parse_line("| a"))
@@ -20,7 +20,7 @@ def test_learn() -> None:
 
 
 def test_predict_then_learn() -> None:
-    model = vw.Workspace([])
+    model = vw.Workspace()
     parser = vw.TextFormatParser(model)
 
     pred = model.predict_then_learn_one(parser.parse_line("1 | a b c"))
@@ -36,8 +36,8 @@ def test_predict_then_learn() -> None:
 
 
 def test_predict_then_learn_equivalent() -> None:
-    model_learn = vw.Workspace([])
-    model_predict_and_learn = vw.Workspace([])
+    model_learn = vw.Workspace()
+    model_predict_and_learn = vw.Workspace()
     parser = vw.TextFormatParser(model_learn)
 
     model_learn.learn_one(parser.parse_line("1 | a b c"))
