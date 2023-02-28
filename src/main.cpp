@@ -101,6 +101,9 @@ void clean_example(VW::example& ec)
 {
   for (auto& fs : ec) { fs.clear(); }
 
+  ec.pred = VW::polyprediction{};
+  ec.l = VW::polylabel{};
+  ec.ex_reduction_features.clear();
   ec.indices.clear();
   ec.tag.clear();
   ec.sorted = false;
@@ -112,7 +115,7 @@ void clean_example(VW::example& ec)
 
 std::shared_ptr<VW::example> get_example_from_pool()
 {
-  return std::shared_ptr<VW::example>(SHARED_EXAMPLE_POOL.get_object(),
+  return std::shared_ptr<VW::example>(SHARED_EXAMPLE_POOL.get_object().release(),
       [](VW::example* ptr)
       {
         clean_example(*ptr);
@@ -325,13 +328,9 @@ std::vector<std::shared_ptr<VW::example>> parse_dsjson_line(
   auto ex = get_example_from_pool();
 
   VW::multi_ex examples;
-  examples.push_back(SHARED_EXAMPLE_POOL.get_object());
+  examples.push_back(SHARED_EXAMPLE_POOL.get_object().release());
 
-  auto example_factory = [](void* context) -> VW::example&
-  {
-    auto* pool = static_cast<VW::object_pool<VW::example>*>(context);
-    return *pool->get_object();
-  };
+  auto example_factory = []() -> VW::example& { return *SHARED_EXAMPLE_POOL.get_object().release(); };
 
   VW::parsers::json::decision_service_interaction interaction;
   try
@@ -347,13 +346,13 @@ std::vector<std::shared_ptr<VW::example>> parse_dsjson_line(
     bool result;
     if (workspace.workspace_ptr->audit || workspace.workspace_ptr->hash_inv)
     {
-      result = VW::parsers::json::read_line_decision_service_json<true>(*workspace.workspace_ptr, examples,
-          owned_str.data(), owned_str.size(), false, example_factory, &SHARED_EXAMPLE_POOL, &interaction);
+      result = VW::parsers::json::read_line_decision_service_json<true>(
+          *workspace.workspace_ptr, examples, owned_str.data(), owned_str.size(), false, example_factory, &interaction);
     }
     else
     {
-      result = VW::parsers::json::read_line_decision_service_json<false>(*workspace.workspace_ptr, examples,
-          owned_str.data(), owned_str.size(), false, example_factory, &SHARED_EXAMPLE_POOL, &interaction);
+      result = VW::parsers::json::read_line_decision_service_json<false>(
+          *workspace.workspace_ptr, examples, owned_str.data(), owned_str.size(), false, example_factory, &interaction);
     }
 
     // Since we are using strict parse any errors should be surfaced via an exception.
@@ -443,15 +442,14 @@ void update_stats_recursive(VW::workspace& workspace, LearnerT& learner, Example
 
   // Finish example used to utilize the copy forwarding semantics.
   // Traverse until first hit to mimic this but with greater type safety.
-  auto* base = learner.get_learn_base();
+  auto* base = learner.get_base_learner();
   if (base != nullptr)
   {
     if (learner.is_multiline() != base->is_multiline())
     {
       THROW("Cannot forward update_stats call across multiline/singleline boundary.");
     }
-    if (base->is_multiline()) { as_multiline(base)->finish_example(workspace, (VW::multi_ex&)example); }
-    else { as_singleline(base)->finish_example(workspace, (VW::example&)example); }
+    base->finish_example(workspace, example);
   }
   else { THROW("No update_stats functions were registered in the stack."); }
 }
@@ -999,7 +997,7 @@ PYBIND11_MODULE(_core, m)
                 },
                 label);
           })
-        .def("_get_tag", [](VW::example& ex) -> std::string { return std::string(ex.tag.data(), ex.tag.size()); });
+      .def("_get_tag", [](VW::example& ex) -> std::string { return std::string(ex.tag.data(), ex.tag.size()); });
 
   py::class_<workspace_with_logger_contexts>(m, "Workspace")
       .def(py::init(
@@ -1079,12 +1077,12 @@ PYBIND11_MODULE(_core, m)
             // Learner is used directly as VW makes decisions about training and
             // learn returns prediction in the workspace API and ends up calling
             // potentially the wrong thing.
-            auto* learner = VW::LEARNER::as_singleline(workspace.workspace_ptr->l);
+            auto* learner = VW::LEARNER::require_singleline(workspace.workspace_ptr->l.get());
+            assert(learner != nullptr);
             learner->learn(example);
 
             // TODO - when updating VW submodule if learn calls update stats then remove this to avoid a double call.
-            update_stats_recursive(
-                *workspace.workspace_ptr, *VW::LEARNER::as_singleline(workspace.workspace_ptr->l), example);
+            update_stats_recursive(*workspace.workspace_ptr, *learner, example);
           },
           py::arg("examples"), py::kw_only())
       .def(
@@ -1098,12 +1096,12 @@ PYBIND11_MODULE(_core, m)
             // Learner is used directly as VW makes decisions about training and
             // learn returns prediction in the workspace API and ends up calling
             // potentially the wrong thing.
-            auto* learner = VW::LEARNER::as_multiline(workspace.workspace_ptr->l);
+            auto* learner = VW::LEARNER::require_multiline(workspace.workspace_ptr->l.get());
+            assert(learner != nullptr);
             learner->learn(example);
 
             // TODO - when updating VW submodule if learn calls update stats then remove this to avoid a double call.
-            update_stats_recursive(
-                *workspace.workspace_ptr, *VW::LEARNER::as_multiline(workspace.workspace_ptr->l), example);
+            update_stats_recursive(*workspace.workspace_ptr, *learner, example);
           },
           py::arg("examples"), py::kw_only())
       .def(
@@ -1118,12 +1116,11 @@ PYBIND11_MODULE(_core, m)
             // Learner is used directly as VW makes decisions about training and
             // learn returns prediction in the workspace API and ends up calling
             // potentially the wrong thing.
-            auto* learner = VW::LEARNER::as_singleline(workspace.workspace_ptr->l);
+            auto* learner = VW::LEARNER::require_singleline(workspace.workspace_ptr->l.get());
             learner->predict(example);
 
             // TODO - when updating VW submodule if learn calls update stats then remove this to avoid a double call.
-            update_stats_recursive(
-                *workspace.workspace_ptr, *VW::LEARNER::as_singleline(workspace.workspace_ptr->l), example);
+            update_stats_recursive(*workspace.workspace_ptr, *learner, example);
             example.test_only = test_only;
             return to_prediction(example.pred, workspace.workspace_ptr->l->get_output_prediction_type());
           },
@@ -1143,12 +1140,11 @@ PYBIND11_MODULE(_core, m)
             // Learner is used directly as VW makes decisions about training and
             // learn returns prediction in the workspace API and ends up calling
             // potentially the wrong thing.
-            auto* learner = VW::LEARNER::as_multiline(workspace.workspace_ptr->l);
+            auto* learner = VW::LEARNER::require_multiline(workspace.workspace_ptr->l.get());
             learner->predict(example);
 
             // TODO - when updating VW submodule if learn calls update stats then remove this to avoid a double call.
-            update_stats_recursive(
-                *workspace.workspace_ptr, *VW::LEARNER::as_multiline(workspace.workspace_ptr->l), example);
+            update_stats_recursive(*workspace.workspace_ptr, *learner, example);
             for (size_t i = 0; i < example.size(); i++) { example[i]->test_only = test_onlys[i]; }
             return to_prediction(example[0]->pred, workspace.workspace_ptr->l->get_output_prediction_type());
           },
@@ -1160,12 +1156,12 @@ PYBIND11_MODULE(_core, m)
             py_setup_example(*workspace.workspace_ptr, example);
             auto on_exit = VW::scope_exit([&]() { py_unsetup_example(*workspace.workspace_ptr, example); });
 
+            auto* learner = VW::LEARNER::require_singleline(workspace.workspace_ptr->l.get());
             if (workspace.workspace_ptr->l->learn_returns_prediction)
             {
               // Learner is used directly as VW makes decisions about training and
               // learn returns prediction in the workspace API and ends up calling
               // potentially the wrong thing.
-              auto* learner = VW::LEARNER::as_singleline(workspace.workspace_ptr->l);
               learner->learn(example);
             }
             else
@@ -1173,7 +1169,6 @@ PYBIND11_MODULE(_core, m)
               // Learner is used directly as VW makes decisions about training and
               // learn returns prediction in the workspace API and ends up calling
               // potentially the wrong thing.
-              auto* learner = VW::LEARNER::as_singleline(workspace.workspace_ptr->l);
               // We must save and restore test_only because the library sets this values and does not undo it.
               bool test_only = example.test_only;
               learner->predict(example);
@@ -1183,8 +1178,7 @@ PYBIND11_MODULE(_core, m)
             }
 
             // TODO - when updating VW submodule if learn calls update stats then remove this to avoid a double call.
-            update_stats_recursive(
-                *workspace.workspace_ptr, *VW::LEARNER::as_singleline(workspace.workspace_ptr->l), example);
+            update_stats_recursive(*workspace.workspace_ptr, *learner, example);
             return to_prediction(example.pred, workspace.workspace_ptr->l->get_output_prediction_type());
           },
           py::arg("examples"), py::kw_only())
@@ -1194,13 +1188,12 @@ PYBIND11_MODULE(_core, m)
           {
             py_setup_example(*workspace.workspace_ptr, example);
             auto on_exit = VW::scope_exit([&]() { py_unsetup_example(*workspace.workspace_ptr, example); });
-
+            auto* learner = VW::LEARNER::require_multiline(workspace.workspace_ptr->l.get());
             if (workspace.workspace_ptr->l->learn_returns_prediction)
             {
               // Learner is used directly as VW makes decisions about training and
               // learn returns prediction in the workspace API and ends up calling
               // potentially the wrong thing.
-              auto* learner = VW::LEARNER::as_multiline(workspace.workspace_ptr->l);
               learner->learn(example);
             }
             else
@@ -1208,7 +1201,6 @@ PYBIND11_MODULE(_core, m)
               // Learner is used directly as VW makes decisions about training and
               // learn returns prediction in the workspace API and ends up calling
               // potentially the wrong thing.
-              auto* learner = VW::LEARNER::as_multiline(workspace.workspace_ptr->l);
               // We must save and restore test_only because the library sets this values and does not undo it.
               std::vector<bool> test_onlys;
               test_onlys.reserve(example.size());
@@ -1220,8 +1212,7 @@ PYBIND11_MODULE(_core, m)
             }
 
             // TODO - when updating VW submodule if learn calls update stats then remove this to avoid a double call.
-            update_stats_recursive(
-                *workspace.workspace_ptr, *VW::LEARNER::as_multiline(workspace.workspace_ptr->l), example);
+            update_stats_recursive(*workspace.workspace_ptr, *learner, example);
             return to_prediction(example[0]->pred, workspace.workspace_ptr->l->get_output_prediction_type());
           },
           py::arg("examples"), py::kw_only())
@@ -1237,7 +1228,7 @@ PYBIND11_MODULE(_core, m)
             }
             py::dict metrics;
             auto collected_metrics =
-                workspace.workspace_ptr->global_metrics.collect_metrics(workspace.workspace_ptr->l);
+                workspace.workspace_ptr->global_metrics.collect_metrics(workspace.workspace_ptr->l.get());
             return convert_metrics_to_dict(collected_metrics);
           })
       .def("get_prediction_type",

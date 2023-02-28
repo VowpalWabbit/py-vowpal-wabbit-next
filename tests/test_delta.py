@@ -1,5 +1,6 @@
 import vowpal_wabbit_next as vw
 import pytest
+import numpy as np
 
 
 def test_equivalent_models() -> None:
@@ -23,3 +24,79 @@ def test_equivalent_models() -> None:
             parser.parse_line(test_example)
         )
     )
+
+
+def test_delta_aggregate_check_single():
+    model_a = vw.Workspace([])
+    text_parser = vw.TextFormatParser(model_a)
+
+    line = "1 | a:1.1 b:0.3 c:-0.4"
+    model_a.learn_one(text_parser.parse_line(line))
+    weight_a = model_a.weights()[model_a.get_index_for_scalar_feature("a")][0][0]
+    adaptive_a = model_a.weights()[model_a.get_index_for_scalar_feature("a")][0][1]
+
+    model_b = vw.Workspace([])
+
+    line = "1 | a:-1.7 b:0.9 c:1.3"
+    model_b.learn_one(text_parser.parse_line(line))
+    weight_b = model_b.weights()[model_b.get_index_for_scalar_feature("a")][0][0]
+    adaptive_b = model_b.weights()[model_b.get_index_for_scalar_feature("a")][0][1]
+
+    delta = vw.calculate_delta(vw.Workspace([]), model_a)
+    another_delta = vw.calculate_delta(vw.Workspace([]), model_b)
+    sum_deltas = vw.merge_deltas([delta, another_delta])
+    new_model = vw.apply_delta(vw.Workspace([]), sum_deltas)
+
+    ab_weight = new_model.weights()[new_model.get_index_for_scalar_feature("a")][0][0]
+    ab_adaptive = new_model.weights()[new_model.get_index_for_scalar_feature("a")][0][1]
+
+    adaptive_total = adaptive_a + adaptive_b
+    assert ab_adaptive == pytest.approx(
+        adaptive_a * adaptive_a / adaptive_total
+        + adaptive_b * adaptive_b / adaptive_total
+    )
+    assert ab_weight == pytest.approx(
+        weight_a * adaptive_a / adaptive_total + weight_b * adaptive_b / adaptive_total
+    )
+
+
+# Ignore the 0/0 that occurs when aggregating weights
+@pytest.mark.filterwarnings("ignore::RuntimeWarning")
+def test_delta_aggregate_check_all():
+    model_a = vw.Workspace([])
+    text_parser = vw.TextFormatParser(model_a)
+
+    line = "1 | a:1.1 b:0.3 c:-0.4"
+    model_a.learn_one(text_parser.parse_line(line))
+
+    model_b = vw.Workspace([])
+
+    line = "1 | a:-1.7 b:0.9 c:1.3"
+    model_b.learn_one(text_parser.parse_line(line))
+
+    delta = vw.calculate_delta(vw.Workspace([]), model_a)
+    another_delta = vw.calculate_delta(vw.Workspace([]), model_b)
+    sum_deltas = vw.merge_deltas([delta, another_delta])
+    new_model = vw.apply_delta(vw.Workspace([]), sum_deltas)
+
+    model_a_weights = model_a.weights()[:, :, 0]
+    model_a_adaptives = model_a.weights()[:, :, 1]
+
+    model_b_weights = model_b.weights()[:, :, 0]
+    model_b_adaptives = model_b.weights()[:, :, 1]
+
+    adaptive_sums = model_a_adaptives + model_b_adaptives
+    reweighted_weights = (
+        model_a_weights * model_a_adaptives / adaptive_sums
+        + model_b_weights * model_b_adaptives / adaptive_sums
+    )
+    reweighted_adaptives = (
+        model_a_adaptives * model_a_adaptives / adaptive_sums
+        + model_b_adaptives * model_b_adaptives / adaptive_sums
+    )
+    # replace any nans with zero
+    reweighted_weights = np.nan_to_num(reweighted_weights)
+    reweighted_adaptives = np.nan_to_num(reweighted_adaptives)
+
+    assert np.allclose(new_model.weights()[:, :, 0], reweighted_weights)
+    assert np.allclose(new_model.weights()[:, :, 1], reweighted_adaptives)
