@@ -58,7 +58,7 @@ class DSJsonFormatReader:
 
         Examples:
             >>> from vowpal_wabbit_next import Workspace, DSJsonFormatReader
-            >>> workspace = Workspace([])
+            >>> workspace = Workspace()
             >>> with open("data.txt", "r") as f:
             ...     with DSJsonFormatReader(workspace, f) as reader:
             ...         for example in reader:

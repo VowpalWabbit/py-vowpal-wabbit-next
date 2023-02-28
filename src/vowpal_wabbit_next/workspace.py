@@ -38,7 +38,7 @@ MetricsDict = Dict[str, Union[int, float, str, bool, "MetricsDict"]]
 class Workspace:
     def __init__(
         self,
-        args: List[str],
+        args: List[str] = [],
         *,
         model_data: Optional[bytes] = None,
         record_feature_names: bool = False,
@@ -59,7 +59,7 @@ class Workspace:
             >>> from vowpal_wabbit_next import Workspace
             >>> with open("model.bin", "rb") as f:
             ...     model_data = f.read()
-            >>> workspace = Workspace([], model_data=model_data)
+            >>> workspace = Workspace(model_data=model_data)
 
             Create a workspace for training a contextual bandit with action dependent features model:
 
@@ -72,7 +72,7 @@ class Workspace:
             >>> import logging
             >>> logging.basicConfig(level=logging.INFO)
             >>> logging.getLogger("vowpal_wabbit_next.log").setLevel("INFO")
-            >>> workspace = Workspace([])
+            >>> workspace = Workspace()
 
         Args:
             args (List[str]): VowpalWabbit command line options for configuring the model. An overall list can be found `here <https://vowpalwabbit.org/docs/vowpal_wabbit/python/latest/command_line_args.html>`_. Options which affect the driver are not supported. For example:
@@ -110,7 +110,7 @@ class Workspace:
 
         Examples:
             >>> from vowpal_wabbit_next import Workspace, TextFormatParser
-            >>> workspace = Workspace([])
+            >>> workspace = Workspace()
             >>> parser = TextFormatParser(workspace)
             >>> workspace.learn_one(parser.parse_line("1.0 | price:.18 sqft:.15 age:.35 1976"))
             >>> workspace.predict_one(parser.parse_line("| price:.53 sqft:.32 age:.87 1924"))
@@ -134,7 +134,7 @@ class Workspace:
 
         Examples:
             >>> from vowpal_wabbit_next import Workspace, TextFormatParser
-            >>> workspace = Workspace([])
+            >>> workspace = Workspace()
             >>> parser = TextFormatParser(workspace)
             >>> workspace.learn_one(parser.parse_line("1.0 | price:.18 sqft:.15 age:.35 1976"))
             >>> workspace.predict_one(parser.parse_line("| price:.53 sqft:.32 age:.87 1924"))
@@ -157,7 +157,7 @@ class Workspace:
 
         Examples:
             >>> from vowpal_wabbit_next import Workspace, TextFormatParser
-            >>> workspace = Workspace([])
+            >>> workspace = Workspace()
             >>> parser = TextFormatParser(workspace)
             >>> workspace.predict_then_learn_one(parser.parse_line("1.0 | price:.18 sqft:.15 age:.35 1976"))
             0.0
@@ -244,7 +244,7 @@ class Workspace:
 
         Examples:
             >>> from vowpal_wabbit_next import Workspace
-            >>> model = Workspace([])
+            >>> model = Workspace()
             >>> print(model.weights().shape)
             (262144, 1, 4)
 
@@ -309,7 +309,7 @@ class Workspace:
 
         Examples:
             >>> from vowpal_wabbit_next import Workspace
-            >>> model = Workspace([])
+            >>> model = Workspace()
             >>> # Feature which looks like "|test thing" in text format
             >>> model.get_index_for_scalar_feature("thing", namespace_name="test")
             148099

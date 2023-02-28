@@ -14,7 +14,7 @@ def test_write_and_read_cache() -> None:
 
     cache_buffer = io.BytesIO()
     read_buffer = io.BytesIO()
-    workspace = vw.Workspace([])
+    workspace = vw.Workspace()
     write_counter = 0
     with vw.TextFormatReader(workspace, text_input) as reader:
         with vw.CacheFormatWriter(workspace, cache_buffer) as writer:

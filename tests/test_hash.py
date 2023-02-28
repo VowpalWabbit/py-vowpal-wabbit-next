@@ -2,7 +2,7 @@ import vowpal_wabbit_next as vw
 
 
 def test_get_scalar_index() -> None:
-    model = vw.Workspace([])
+    model = vw.Workspace()
 
     assert 69985 == model.get_index_for_scalar_feature(
         "val", feature_value="test", namespace_name="another"
@@ -76,7 +76,7 @@ def test_get_weight_interleaved_models() -> None:
 # TODO: uncomment when implemented
 # @pytest.mark.skip("Not yet implemented")
 # def test_get_interacted_index() -> None:
-#     model = vw.Workspace([])
+#     model = vw.Workspace()
 
 #     assert 2692 == model.get_index_for_interacted_feature(
 #         [("a", None, " "), ("a", None, " ")]
