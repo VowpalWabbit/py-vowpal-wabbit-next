@@ -11,7 +11,7 @@ def test_simple_input() -> None:
     """
         )
     )
-    workspace = vw.Workspace([])
+    workspace = vw.Workspace()
     counter = 0
     with vw.TextFormatReader(workspace, text_input) as reader:
         for example in reader:

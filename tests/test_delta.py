@@ -9,7 +9,7 @@ def test_equivalent_models() -> None:
 
     model.learn_one(parser.parse_line("1 | a b c"))
 
-    model_after_1_learn = vw.Workspace([], model_data=model.serialize())
+    model_after_1_learn = vw.Workspace(model_data=model.serialize())
 
     model.learn_one(parser.parse_line("1 | d e f"))
 

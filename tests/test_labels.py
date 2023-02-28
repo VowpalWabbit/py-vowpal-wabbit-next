@@ -16,7 +16,7 @@ def test_simple_label() -> None:
 
 
 def test_simple_label_still_there_after_learn() -> None:
-    model = vw.Workspace([])
+    model = vw.Workspace()
     parser = vw.TextFormatParser(model)
 
     example = parser.parse_line("1 | a b c")

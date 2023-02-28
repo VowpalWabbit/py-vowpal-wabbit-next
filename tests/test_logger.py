@@ -9,6 +9,6 @@ def test_logger_capture() -> None:
     driver_logger.setLevel("INFO")
     stream_handler = logging.StreamHandler(stream=log_stream)
     driver_logger.addHandler(stream_handler)
-    _ = vw.Workspace([])
+    _ = vw.Workspace()
     driver_logger.removeHandler(stream_handler)
     assert log_stream.getvalue() != ""

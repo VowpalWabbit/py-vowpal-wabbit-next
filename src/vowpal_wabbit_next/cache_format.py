@@ -12,7 +12,7 @@ class CacheFormatReader:
 
         Examples:
             >>> from vowpal_wabbit_next import Workspace, TextFormatParser, CacheFormatWriter
-            >>> workspace = Workspace([])
+            >>> workspace = Workspace()
             >>> with open("data.cache", "rb") as f:
             ...     with CacheFormatReader(workspace, f) as reader:
             ...         for example in reader:
@@ -77,7 +77,7 @@ class CacheFormatWriter:
 
         Examples:
             >>> from vowpal_wabbit_next import Workspace, TextFormatParser, CacheFormatWriter
-            >>> workspace = Workspace([])
+            >>> workspace = Workspace()
             >>> parser = TextFormatParser(workspace)
             >>> with open("data.cache", "wb") as f:
             ...     with CacheFormatWriter(workspace, f) as writer:

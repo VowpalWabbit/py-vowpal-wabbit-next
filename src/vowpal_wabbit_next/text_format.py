@@ -18,7 +18,7 @@ class TextFormatParser:
 
         Examples:
             >>> from vowpal_wabbit_next import Workspace, TextFormatParser
-            >>> workspace = Workspace([])
+            >>> workspace = Workspace()
             >>> parser = TextFormatParser(workspace)
             >>> example = parser.parse_line("1.0 | price:.18 sqft:.15 age:.35 1976")
 
@@ -44,7 +44,7 @@ class TextFormatReader:
 
         Examples:
             >>> from vowpal_wabbit_next import Workspace, TextFormatReader
-            >>> workspace = Workspace([])
+            >>> workspace = Workspace()
             >>> with open("data.txt", "r") as f:
             ...     with TextFormatReader(workspace, f) as reader:
             ...         for example in reader:
