@@ -60,8 +60,6 @@ def test_delta_aggregate_check_single():
     )
 
 
-# Ignore the 0/0 that occurs when aggregating weights
-@pytest.mark.filterwarnings("ignore::RuntimeWarning")
 def test_delta_aggregate_check_all():
     model_a = vw.Workspace([])
     text_parser = vw.TextFormatParser(model_a)
@@ -86,17 +84,25 @@ def test_delta_aggregate_check_all():
     model_b_adaptives = model_b.weights()[:, :, 1]
 
     adaptive_sums = model_a_adaptives + model_b_adaptives
+    # Use a masked_array to avoid divide by zero warnings for features with no data
+    adaptive_sums = np.ma.masked_values(adaptive_sums, 0)
+
+    # Ensure that corresponding indices are nonzero
+    assert (
+        np.ma.getmask(np.ma.masked_values(model_a_weights + model_b_weights, 0))
+        == np.ma.getmask(adaptive_sums)
+    ).all()
+
+    # Bring back the zero values for masked away features
     reweighted_weights = (
         model_a_weights * model_a_adaptives / adaptive_sums
         + model_b_weights * model_b_adaptives / adaptive_sums
-    )
+    ).filled(0)
+
     reweighted_adaptives = (
         model_a_adaptives * model_a_adaptives / adaptive_sums
         + model_b_adaptives * model_b_adaptives / adaptive_sums
-    )
-    # replace any nans with zero
-    reweighted_weights = np.nan_to_num(reweighted_weights)
-    reweighted_adaptives = np.nan_to_num(reweighted_adaptives)
+    ).filled(0)
 
     assert np.allclose(new_model.weights()[:, :, 0], reweighted_weights)
     assert np.allclose(new_model.weights()[:, :, 1], reweighted_adaptives)
