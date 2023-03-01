@@ -18,7 +18,7 @@ class DSJsonFormatParser:
 
         Examples:
             >>> from vowpal_wabbit_next import Workspace, DSJsonFormatParser
-            >>> workspace = Workspace(["--cb_explore_adf])
+            >>> workspace = Workspace(["--cb_explore_adf"])
             >>> parser = DSJsonFormatParser(workspace)
             >>> json_str = """
             ... {
