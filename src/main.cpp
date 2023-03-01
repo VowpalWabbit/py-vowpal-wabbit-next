@@ -383,6 +383,61 @@ std::vector<std::shared_ptr<VW::example>> parse_dsjson_line(
   return result;
 }
 
+std::vector<std::shared_ptr<VW::example>> parse_json_line(
+    workspace_with_logger_contexts& workspace, std::string_view line)
+{
+  auto ex = get_example_from_pool();
+
+  VW::multi_ex examples;
+  examples.push_back(SHARED_EXAMPLE_POOL.get_object().release());
+
+  auto example_factory = []() -> VW::example& { return *SHARED_EXAMPLE_POOL.get_object().release(); };
+
+  VW::parsers::json::decision_service_interaction interaction;
+  try
+  {
+    // Must copy as the input is destructively parsed.
+    std::vector<char> owned_str;
+    owned_str.resize(line.size() + 1);
+    std::memcpy(owned_str.data(), line.data(), line.size());
+    owned_str[line.size()] = '\0';
+
+    if (workspace.workspace_ptr->audit || workspace.workspace_ptr->hash_inv)
+    {
+      VW::parsers::json::template read_line_json<true>(
+          *workspace.workspace_ptr, examples, owned_str.data(), owned_str.size(), example_factory);
+    }
+    else
+    {
+      VW::parsers::json::template read_line_json<false>(
+          *workspace.workspace_ptr, examples, owned_str.data(), owned_str.size(), example_factory);
+    }
+  }
+  catch (const VW::vw_exception& ex)
+  {
+    for (auto* ex : examples)
+    {
+      clean_example(*ex);
+      SHARED_EXAMPLE_POOL.return_object(ex);
+    }
+    throw;
+  }
+
+  std::vector<std::shared_ptr<VW::example>> result;
+  result.reserve(examples.size());
+  for (auto* ex : examples)
+  {
+    result.emplace_back(ex,
+        [](VW::example* ex)
+        {
+          clean_example(*ex);
+          SHARED_EXAMPLE_POOL.return_object(ex);
+        });
+  }
+
+  return result;
+}
+
 // Impl from VW
 void write_cache_header(workspace_with_logger_contexts& workspace, py::object file)
 {
@@ -1334,6 +1389,7 @@ PYBIND11_MODULE(_core, m)
 
   m.def("_parse_line_text", &::parse_text_line, py::arg("workspace"), py::arg("line"));
   m.def("_parse_line_dsjson", &::parse_dsjson_line, py::arg("workspace"), py::arg("line"));
+  m.def("_parse_line_json", &::parse_json_line, py::arg("workspace"), py::arg("line"));
   m.def("_write_cache_header", &::write_cache_header, py::arg("workspace"), py::arg("file"));
   m.def("_write_cache_example", &::write_cache_example, py::arg("workspace"), py::arg("example"), py::arg("file"));
   m.def("_run_cli_driver", &::run_cli_driver, py::arg("args"), py::kw_only(), py::arg("onethread") = false);
