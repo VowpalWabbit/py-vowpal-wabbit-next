@@ -34,3 +34,9 @@ nb_execution_timeout = 60
 
 html_theme = "furo"
 html_static_path = []
+
+html_theme_options = {
+    "source_repository": "https://github.com/VowpalWabbit/py-vowpal-wabbit-next",
+    "source_branch": "main",
+    "source_directory": "docs/source/",
+}
