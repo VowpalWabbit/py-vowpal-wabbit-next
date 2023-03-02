@@ -568,6 +568,9 @@ void py_unsetup_example(VW::workspace& ws, VW::example& ex)
     case VW::label_type_t::CB:
       replacement.cb = std::move(ex.l.cb);
       break;
+    case VW::label_type_t::CB_WITH_OBSERVATIONS:
+      replacement.cb_with_observations = std::move(ex.l.cb_with_observations);
+      break;
     case VW::label_type_t::CB_EVAL:
       replacement.cb_eval = std::move(ex.l.cb_eval);
       break;
@@ -777,7 +780,8 @@ PYBIND11_MODULE(_core, m)
       .value("CCB", VW::label_type_t::CCB)
       .value("Slates", VW::label_type_t::SLATES)
       .value("NoLabel", VW::label_type_t::NOLABEL)
-      .value("Continuous", VW::label_type_t::CONTINUOUS);
+      .value("Continuous", VW::label_type_t::CONTINUOUS)
+      .value("CBWithObservations", VW::label_type_t::CB_WITH_OBSERVATIONS);
 
   py::enum_<VW::prediction_type_t>(m, "PredictionType")
       .value("Scalar", VW::prediction_type_t::SCALAR)
