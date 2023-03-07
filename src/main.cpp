@@ -495,8 +495,19 @@ void update_stats_recursive(VW::workspace& workspace, LearnerT& learner, Example
   const auto has_at_least_one_new_style_func = learner.has_update_stats() || learner.has_output_example_prediction() ||
       learner.has_print_update() || learner.has_cleanup_example();
 
-  // Finish example used to utilize the copy forwarding semantics.
-  // Traverse until first hit to mimic this but with greater type safety.
+  // If we hit this point, there was no update stats but other funcs were
+  // defined so we should not forward. We log an error since this is probably an
+  // issue.
+  if (has_at_least_one_new_style_func)
+  {
+    workspace.logger.error(
+        "No update_stats function was registered for a reduction but other finalization functions were. This is likely "
+        "an issue with the reduction: '{}'. Please report this issue to the VW team.",
+        learner.get_name());
+    return;
+  }
+
+  // Recurse until we find a reduction with an update_stats function.
   auto* base = learner.get_base_learner();
   if (base != nullptr)
   {
@@ -504,7 +515,8 @@ void update_stats_recursive(VW::workspace& workspace, LearnerT& learner, Example
     {
       THROW("Cannot forward update_stats call across multiline/singleline boundary.");
     }
-    base->finish_example(workspace, example);
+
+    update_stats_recursive(workspace, *base, example);
   }
   else { THROW("No update_stats functions were registered in the stack."); }
 }
