@@ -3,9 +3,11 @@ import typing
 from vowpal_wabbit_next import _core, Workspace, Example
 from types import TracebackType
 
+T = typing.TypeVar("T")
+
 
 class DSJsonFormatParser:
-    def __init__(self, workspace: Workspace):
+    def __init__(self, workspace: Workspace[T]):
         """Parse VW DSJson format examples.
 
         Args:
@@ -53,7 +55,7 @@ DSJsonFormatReaderT = typing.TypeVar("DSJsonFormatReaderT", bound="DSJsonFormatR
 
 # takes a file and uses a context manager to generate based on the contents of the file
 class DSJsonFormatReader:
-    def __init__(self, workspace: Workspace, file: typing.TextIO):
+    def __init__(self, workspace: Workspace[T], file: typing.TextIO):
         """Read VW DSJson format examples from the given text file. This reader always produces lists of examples.
 
         Examples:

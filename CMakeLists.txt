@@ -38,7 +38,13 @@ endif()
 
 add_subdirectory(ext_libs/vowpal_wabbit EXCLUDE_FROM_ALL)
 
-pybind11_add_module(_core MODULE src/main.cpp)
+pybind11_add_module(_core MODULE
+    src/cpp/main.cpp
+    src/cpp/label.cc
+    src/cpp/prediction.cc
+    src/cpp/debug_reduction.cc
+)
+
 target_compile_definitions(_core PRIVATE VERSION_INFO=${PROJECT_VERSION})
 target_link_libraries(_core PRIVATE vw_core)
 install(TARGETS _core DESTINATION .)

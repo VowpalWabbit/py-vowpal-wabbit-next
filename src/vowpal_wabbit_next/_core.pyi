@@ -5,6 +5,7 @@ import typing
 __all__ = [
     "CBLabel",
     "CSLabel",
+    "DebugNode",
     "DenseParameters",
     "Example",
     "LabelType",
@@ -29,6 +30,7 @@ class CBLabel():
           weight (float): The weight of the example.
           shared (bool): Whether the example is shared. This is only used for ADF examples and must be the first example. There can only be one shared example per ADF example list.
         """
+    def __repr__(self) -> str: ...
     @property
     def label(self) -> typing.Optional[typing.Tuple[int, float, float]]:
         """
@@ -70,6 +72,7 @@ class CSLabel():
           costs (Optional[List[Tuple[int, float]]]): List of classes and costs. If there is no label, this should be None.
           shared (bool): Whether the example represents the shared context
         """
+    def __repr__(self) -> str: ...
     @property
     def costs(self) -> typing.Optional[typing.List[typing.Tuple[int, float]]]:
         """
@@ -88,6 +91,109 @@ class CSLabel():
             Whether the example represents the shared context.
 
         :type: bool
+        """
+    pass
+class DebugNode():
+    """
+    A node in the computation tree of a single learn/predict call. This represents the state of the example as it is entering a given reduction.
+    """
+    @property
+    def children(self) -> typing.List[DebugNode]:
+        """
+        The child computations that this node processed. This represents traversal of the stack.
+
+        :type: typing.List[DebugNode]
+        """
+    @property
+    def function(self) -> str:
+        """
+        The function that was called on this reduction. Either 'learn' or 'predict'.
+
+        :type: str
+        """
+    @property
+    def input_labels(self) -> typing.Union[typing.Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, None], typing.List[typing.Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, None]]]:
+        """
+        The label that was passed into this reduction. Or, list of labels if this reduction is a multi-example reduction.
+
+        :type: typing.Union[typing.Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, None], typing.List[typing.Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, None]]]
+        """
+    @property
+    def interactions(self) -> typing.Union[typing.List[str], typing.List[typing.List[str]]]:
+        """
+        The interactions that were used to generate the features for this reduction. Or, list of interactions if this reduction is a multi-example reduction.
+
+        :type: typing.Union[typing.List[str], typing.List[typing.List[str]]]
+        """
+    @property
+    def is_multiline(self) -> bool:
+        """
+        Whether this reduction is a multi-example reduction.
+
+        :type: bool
+        """
+    @property
+    def name(self) -> str:
+        """
+        Name of the reduction being called.
+
+        :type: str
+        """
+    @property
+    def num_examples(self) -> int:
+        """
+        The number of examples that were processed by this reduction. This is always 1 for single example reductions.
+
+        :type: int
+        """
+    @property
+    def offset(self) -> typing.Union[int, typing.List[int]]:
+        """
+        The offset of the example. Or, list of offsets if this reduction is a multi-example reduction. This also includes the stride of the bottom learner.
+
+        :type: typing.Union[int, typing.List[int]]
+        """
+    @property
+    def output_prediction(self) -> typing.Union[float, typing.List[float], typing.List[typing.Tuple[int, float]], typing.List[typing.List[typing.Tuple[int, float]]], int, typing.List[int], typing.List[typing.Tuple[float, float, float]], typing.Tuple[float, float], typing.Tuple[int, typing.List[int]], None]:
+        """
+        The prediction that this reduction produced.
+
+        :type: typing.Union[float, typing.List[float], typing.List[typing.Tuple[int, float]], typing.List[typing.List[typing.Tuple[int, float]]], int, typing.List[int], typing.List[typing.Tuple[float, float, float]], typing.Tuple[float, float], typing.Tuple[int, typing.List[int]], None]
+        """
+    @property
+    def partial_prediction(self) -> typing.Union[float, typing.List[float]]:
+        """
+        The partial prediction on the example after this reduction ran. Or, list of partial predictions if this reduction is a multi-example reduction. This is generally only set by the bottom of the stack.
+
+        :type: typing.Union[float, typing.List[float]]
+        """
+    @property
+    def self_duration_incl_debug_ns(self) -> int:
+        """
+        The duration of this reduction in nanoseconds, including time spent in extra code to facilitate this debug capture. It does not include time it takes to call children.
+
+        :type: int
+        """
+    @property
+    def self_duration_ns(self) -> int:
+        """
+        The duration of this reduction in nanoseconds. It does not include time it takes to call children.
+
+        :type: int
+        """
+    @property
+    def updated_prediction(self) -> typing.Union[float, typing.List[float]]:
+        """
+        The partial prediction on the example after this reduction ran. Or, list of partial predictions if this reduction is a multi-example reduction. This is generally only set by the bottom of the stack.
+
+        :type: typing.Union[float, typing.List[float]]
+        """
+    @property
+    def weight(self) -> typing.Union[float, typing.List[float]]:
+        """
+        The weight of the example. Or, list of weights if this reduction is a multi-example reduction.
+
+        :type: typing.Union[float, typing.List[float]]
         """
     pass
 class DenseParameters():
@@ -214,6 +320,7 @@ class SimpleLabel():
           weight (float): The weight of the example.
           initial (float): The initial value of the prediction.
         """
+    def __repr__(self) -> str: ...
     @property
     def initial(self) -> float:
         """
@@ -252,19 +359,19 @@ class SimpleLabel():
         """
     pass
 class Workspace():
-    def __init__(self, args: typing.List[str], *, model_data: typing.Optional[bytes] = None, record_feature_names: bool = False, record_metrics: bool = False) -> None: ...
+    def __init__(self, args: typing.List[str], *, model_data: typing.Optional[bytes] = None, record_feature_names: bool = False, record_metrics: bool = False, debug: bool = False) -> None: ...
     def get_index_for_scalar_feature(self, feature_name: str, feature_value: typing.Optional[str] = None, namespace_name: str = ' ') -> int: ...
     def get_is_multiline(self) -> bool: ...
     def get_label_type(self) -> LabelType: ...
     def get_metrics(self) -> dict: ...
     def get_prediction_type(self) -> PredictionType: ...
     def json_weights(self, *, include_feature_names: bool = False, include_online_state: bool = False) -> str: ...
-    def learn_multi_ex_one(self, examples: typing.List[Example]) -> None: ...
-    def learn_one(self, examples: Example) -> None: ...
-    def predict_multi_ex_one(self, examples: typing.List[Example]) -> typing.Union[float, typing.List[float], typing.List[typing.Tuple[int, float]], typing.List[typing.List[typing.Tuple[int, float]]], int, typing.List[int], typing.List[typing.Tuple[float, float, float]], typing.Tuple[float, float], typing.Tuple[int, typing.List[int]], None]: ...
-    def predict_one(self, examples: Example) -> typing.Union[float, typing.List[float], typing.List[typing.Tuple[int, float]], typing.List[typing.List[typing.Tuple[int, float]]], int, typing.List[int], typing.List[typing.Tuple[float, float, float]], typing.Tuple[float, float], typing.Tuple[int, typing.List[int]], None]: ...
-    def predict_then_learn_multi_ex_one(self, examples: typing.List[Example]) -> typing.Union[float, typing.List[float], typing.List[typing.Tuple[int, float]], typing.List[typing.List[typing.Tuple[int, float]]], int, typing.List[int], typing.List[typing.Tuple[float, float, float]], typing.Tuple[float, float], typing.Tuple[int, typing.List[int]], None]: ...
-    def predict_then_learn_one(self, examples: Example) -> typing.Union[float, typing.List[float], typing.List[typing.Tuple[int, float]], typing.List[typing.List[typing.Tuple[int, float]]], int, typing.List[int], typing.List[typing.Tuple[float, float, float]], typing.Tuple[float, float], typing.Tuple[int, typing.List[int]], None]: ...
+    def learn_multi_ex_one(self, examples: typing.List[Example]) -> typing.Union[None, DebugNode]: ...
+    def learn_one(self, examples: Example) -> typing.Union[None, DebugNode]: ...
+    def predict_multi_ex_one(self, examples: typing.List[Example]) -> typing.Union[typing.Union[float, typing.List[float], typing.List[typing.Tuple[int, float]], typing.List[typing.List[typing.Tuple[int, float]]], int, typing.List[int], typing.List[typing.Tuple[float, float, float]], typing.Tuple[float, float], typing.Tuple[int, typing.List[int]], None], typing.Tuple[typing.Union[float, typing.List[float], typing.List[typing.Tuple[int, float]], typing.List[typing.List[typing.Tuple[int, float]]], int, typing.List[int], typing.List[typing.Tuple[float, float, float]], typing.Tuple[float, float], typing.Tuple[int, typing.List[int]], None], DebugNode]]: ...
+    def predict_one(self, examples: Example) -> typing.Union[typing.Union[float, typing.List[float], typing.List[typing.Tuple[int, float]], typing.List[typing.List[typing.Tuple[int, float]]], int, typing.List[int], typing.List[typing.Tuple[float, float, float]], typing.Tuple[float, float], typing.Tuple[int, typing.List[int]], None], typing.Tuple[typing.Union[float, typing.List[float], typing.List[typing.Tuple[int, float]], typing.List[typing.List[typing.Tuple[int, float]]], int, typing.List[int], typing.List[typing.Tuple[float, float, float]], typing.Tuple[float, float], typing.Tuple[int, typing.List[int]], None], DebugNode]]: ...
+    def predict_then_learn_multi_ex_one(self, examples: typing.List[Example]) -> typing.Union[typing.Union[float, typing.List[float], typing.List[typing.Tuple[int, float]], typing.List[typing.List[typing.Tuple[int, float]]], int, typing.List[int], typing.List[typing.Tuple[float, float, float]], typing.Tuple[float, float], typing.Tuple[int, typing.List[int]], None], typing.Tuple[typing.Union[float, typing.List[float], typing.List[typing.Tuple[int, float]], typing.List[typing.List[typing.Tuple[int, float]]], int, typing.List[int], typing.List[typing.Tuple[float, float, float]], typing.Tuple[float, float], typing.Tuple[int, typing.List[int]], None], DebugNode]]: ...
+    def predict_then_learn_one(self, examples: Example) -> typing.Union[typing.Union[float, typing.List[float], typing.List[typing.Tuple[int, float]], typing.List[typing.List[typing.Tuple[int, float]]], int, typing.List[int], typing.List[typing.Tuple[float, float, float]], typing.Tuple[float, float], typing.Tuple[int, typing.List[int]], None], typing.Tuple[typing.Union[float, typing.List[float], typing.List[typing.Tuple[int, float]], typing.List[typing.List[typing.Tuple[int, float]]], int, typing.List[int], typing.List[typing.Tuple[float, float, float]], typing.Tuple[float, float], typing.Tuple[int, typing.List[int]], None], DebugNode]]: ...
     def readable_model(self, *, include_feature_names: bool = False) -> str: ...
     def serialize(self) -> bytes: ...
     def weights(self) -> DenseParameters: ...

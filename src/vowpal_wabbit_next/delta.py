@@ -1,4 +1,5 @@
-from typing import List, Optional
+from typing import List, Optional, TypeVar, Literal
+
 from vowpal_wabbit_next import _core, Workspace
 
 
@@ -28,7 +29,12 @@ class ModelDelta:
         return self._model_delta.serialize()
 
 
-def calculate_delta(base_model: Workspace, derived_model: Workspace) -> ModelDelta:
+T = TypeVar("T")
+
+
+def calculate_delta(
+    base_model: Workspace[T], derived_model: Workspace[T]
+) -> ModelDelta:
     """Produce a delta between two existing models.
 
     Args:
@@ -46,7 +52,9 @@ def calculate_delta(base_model: Workspace, derived_model: Workspace) -> ModelDel
     )
 
 
-def apply_delta(model: Workspace, delta: ModelDelta) -> Workspace:
+def apply_delta(
+    model: Workspace[Literal[False]], delta: ModelDelta
+) -> Workspace[Literal[False]]:
     """Apply the delta to the model.
 
     Args:
@@ -57,7 +65,7 @@ def apply_delta(model: Workspace, delta: ModelDelta) -> Workspace:
         Workspace: The new model
     """
     return Workspace(
-        [], _existing_workspace=_core._apply_delta(model._workspace, delta._model_delta)
+        _existing_workspace=_core._apply_delta(model._workspace, delta._model_delta)
     )
 
 

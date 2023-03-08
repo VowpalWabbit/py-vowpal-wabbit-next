@@ -5,9 +5,11 @@ from types import TracebackType
 
 CacheFormatReaderT = typing.TypeVar("CacheFormatReaderT", bound="CacheFormatReader")
 
+T = typing.TypeVar("T")
+
 
 class CacheFormatReader:
-    def __init__(self, workspace: Workspace, file: typing.BinaryIO):
+    def __init__(self, workspace: Workspace[T], file: typing.BinaryIO):
         """Read VW examples in cache format from the given file.
 
         Examples:
@@ -72,7 +74,7 @@ CacheFormatWriterT = typing.TypeVar("CacheFormatWriterT", bound="CacheFormatWrit
 
 
 class CacheFormatWriter:
-    def __init__(self, workspace: Workspace, file: typing.BinaryIO):
+    def __init__(self, workspace: Workspace[T], file: typing.BinaryIO):
         """Creates a VW cache file.
 
         Examples:

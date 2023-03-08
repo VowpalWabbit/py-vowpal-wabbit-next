@@ -3,9 +3,11 @@ import typing
 from vowpal_wabbit_next import _core, Workspace, Example
 from types import TracebackType
 
+T = typing.TypeVar("T")
+
 
 class TextFormatParser:
-    def __init__(self, workspace: Workspace):
+    def __init__(self, workspace: Workspace[T]):
         """Parse VW text format examples.
 
         Args:
@@ -39,7 +41,7 @@ TextFormatReaderT = typing.TypeVar("TextFormatReaderT", bound="TextFormatReader"
 
 # takes a file and uses a context manager to generate based on the contents of the file
 class TextFormatReader:
-    def __init__(self, workspace: Workspace, file: typing.TextIO):
+    def __init__(self, workspace: Workspace[T], file: typing.TextIO):
         """Read VW text format examples from the given text file. This reader produces either single Examples or List[Example] based on if the given workspace is multiline or not.
 
         Examples:

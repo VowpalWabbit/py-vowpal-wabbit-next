@@ -1,3 +1,6 @@
+#include "debug_reduction.h"
+#include "label.h"
+#include "prediction.h"
 #include "vw/common/text_utils.h"
 #include "vw/config/options_cli.h"
 #include "vw/core/array_parameters_dense.h"
@@ -5,6 +8,7 @@
 #include "vw/core/cb.h"
 #include "vw/core/constant.h"
 #include "vw/core/cost_sensitive.h"
+#include "vw/core/debug_print.h"
 #include "vw/core/example.h"
 #include "vw/core/global_data.h"
 #include "vw/core/guard.h"
@@ -20,6 +24,7 @@
 #include "vw/core/parse_example.h"
 #include "vw/core/parse_regressor.h"
 #include "vw/core/prediction_type.h"
+#include "vw/core/reduction_stack.h"
 #include "vw/core/scope_exit.h"
 #include "vw/core/simple_label.h"
 #include "vw/core/version.h"
@@ -36,6 +41,7 @@
 #include <pybind11/stl.h>
 #include <sys/types.h>
 
+#include <chrono>
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -123,77 +129,6 @@ std::shared_ptr<VW::example> get_example_from_pool()
       });
 }
 
-using scalar_pred_t = float;
-using scalars_pred_t = std::vector<float>;
-using action_scores_pred_t = std::vector<std::tuple<uint32_t, float>>;
-using decision_scores_pred_t = std::vector<std::vector<std::tuple<uint32_t, float>>>;
-using multiclass_pred_t = uint32_t;
-using multilabels_pred_t = std::vector<uint32_t>;
-using prob_density_func_pred_t = std::vector<std::tuple<float, float, float>>;
-using prob_density_func_value_pred_t = std::tuple<float, float>;
-using active_multiclass_pred_t = std::tuple<uint32_t, std::vector<uint32_t>>;
-
-using prediction_t = std::variant<scalar_pred_t, scalars_pred_t, action_scores_pred_t, decision_scores_pred_t,
-    multiclass_pred_t, multilabels_pred_t, prob_density_func_pred_t, prob_density_func_value_pred_t,
-    active_multiclass_pred_t, py::none>;
-
-// TODO: consider a more efficient way of exposing these values
-prediction_t to_prediction(const VW::polyprediction& polypred, VW::prediction_type_t type)
-{
-  assert(type != VW::prediction_type_t::MULTICLASS_PROBS && "MULTICLASS_PROBS exists but is not in use.");
-  switch (type)
-  {
-    case VW::prediction_type_t::SCALAR:
-      return polypred.scalar;
-    case VW::prediction_type_t::SCALARS:
-      return std::vector<float>(polypred.scalars.begin(), polypred.scalars.end());
-    case VW::prediction_type_t::ACTION_SCORES:
-    case VW::prediction_type_t::ACTION_PROBS:
-    {
-      std::vector<std::tuple<uint32_t, float>> result;
-      for (const auto& action_score : polypred.a_s) { result.emplace_back(action_score.action, action_score.score); }
-      return result;
-    }
-    case VW::prediction_type_t::PDF:
-    {
-      std::vector<std::tuple<float, float, float>> result;
-      for (const auto& pdf : polypred.pdf) { result.emplace_back(pdf.left, pdf.right, pdf.pdf_value); }
-      return result;
-    }
-    case VW::prediction_type_t::MULTICLASS:
-      return polypred.multiclass;
-    case VW::prediction_type_t::MULTILABELS:
-      return std::vector<uint32_t>(polypred.multilabels.label_v.begin(), polypred.multilabels.label_v.end());
-    case VW::prediction_type_t::PROB:
-      return polypred.prob;
-    case VW::prediction_type_t::DECISION_PROBS:
-    {
-      std::vector<std::vector<std::tuple<uint32_t, float>>> result;
-      result.reserve(polypred.decision_scores.size());
-      for (const auto& decision_scores : polypred.decision_scores)
-      {
-        std::vector<std::tuple<uint32_t, float>> decision_scores_result;
-        decision_scores_result.reserve(decision_scores.size());
-        for (const auto& action_score : decision_scores)
-        {
-          decision_scores_result.emplace_back(action_score.action, action_score.score);
-        }
-        result.emplace_back(decision_scores_result);
-      }
-      return result;
-    }
-    case VW::prediction_type_t::ACTION_PDF_VALUE:
-      return std::tuple<float, float>(polypred.pdf_value.action, polypred.pdf_value.pdf_value);
-    case VW::prediction_type_t::ACTIVE_MULTICLASS:
-      return std::make_tuple(polypred.active_multiclass.predicted_class,
-          std::vector<uint32_t>(polypred.active_multiclass.more_info_required_for_classes.begin(),
-              polypred.active_multiclass.more_info_required_for_classes.end()));
-    case VW::prediction_type_t::NOPRED:
-    default:
-      return py::none();
-  }
-}
-
 struct cache_reader
 {
   cache_reader(std::shared_ptr<VW::workspace> workspace, py::object file) : _workspace(workspace), _file(file)
@@ -274,6 +209,7 @@ struct workspace_with_logger_contexts
 {
   std::unique_ptr<logger_context> logger_context_ptr;
   std::shared_ptr<VW::workspace> workspace_ptr;
+  bool debug;
 };
 
 // TODO capture audit logs and send to their own log stream
@@ -483,6 +419,16 @@ std::unique_ptr<workspace_with_logger_contexts> apply_delta(
           std::shared_ptr<VW::workspace>(std::move(applied))});
 }
 
+std::shared_ptr<vwpy::debug_node> get_and_clear_debug_info(workspace_with_logger_contexts& workspace)
+{
+  assert(workspace.debug);
+  auto debug_info = dynamic_cast<vwpy::debug_data_stash*>(workspace.workspace_ptr->custom_parser.get());
+  auto root = debug_info->shared_debug_state->root;
+  debug_info->shared_debug_state->active = std::stack<std::shared_ptr<vwpy::debug_node>>{};
+  debug_info->shared_debug_state->root = nullptr;
+  return root;
+}
+
 template <typename LearnerT, typename ExampleT>
 void update_stats_recursive(VW::workspace& workspace, LearnerT& learner, ExampleT& example)
 {
@@ -495,8 +441,19 @@ void update_stats_recursive(VW::workspace& workspace, LearnerT& learner, Example
   const auto has_at_least_one_new_style_func = learner.has_update_stats() || learner.has_output_example_prediction() ||
       learner.has_print_update() || learner.has_cleanup_example();
 
-  // Finish example used to utilize the copy forwarding semantics.
-  // Traverse until first hit to mimic this but with greater type safety.
+  // If we hit this point, there was no update stats but other funcs were
+  // defined so we should not forward. We log an error since this is probably an
+  // issue.
+  if (has_at_least_one_new_style_func)
+  {
+    workspace.logger.error(
+        "No update_stats function was registered for a reduction but other finalization functions were. This is likely "
+        "an issue with the reduction: '{}'. Please report this issue to the VW team.",
+        learner.get_name());
+    return;
+  }
+
+  // Recurse until we find a reduction with an update_stats function.
   auto* base = learner.get_base_learner();
   if (base != nullptr)
   {
@@ -504,7 +461,8 @@ void update_stats_recursive(VW::workspace& workspace, LearnerT& learner, Example
     {
       THROW("Cannot forward update_stats call across multiline/singleline boundary.");
     }
-    base->finish_example(workspace, example);
+
+    update_stats_recursive(workspace, *base, example);
   }
   else { THROW("No update_stats functions were registered in the stack."); }
 }
@@ -659,7 +617,7 @@ std::tuple<std::optional<std::string>, std::string, std::vector<std::string>> ru
 
   try
   {
-    auto all = VW::initialize(std::move(options), nullptr, driver_logger, &driver_log, &logger);
+    auto all = VW::initialize_experimental(std::move(options), nullptr, driver_logger, &driver_log, &logger);
     all->vw_is_main = true;
 
     if (onethread) { VW::LEARNER::generic_driver_onethread(*all); }
@@ -727,13 +685,6 @@ py::dict convert_metrics_to_dict(const VW::metric_sink& metrics)
 
 // Labels
 
-struct py_simple_label
-{
-  float label;
-  float weight;
-  float initial;
-};
-
 bool is_shared(const VW::cs_label& label)
 {
   const auto& costs = label.costs;
@@ -794,11 +745,11 @@ PYBIND11_MODULE(_core, m)
       .value("ActiveMulticlass", VW::prediction_type_t::ACTIVE_MULTICLASS)
       .value("NoPred", VW::prediction_type_t::NOPRED);
 
-  py::class_<py_simple_label>(m, "SimpleLabel")
+  py::class_<vwpy::py_simple_label>(m, "SimpleLabel")
       .def(py::init(
                [](float label, float weight, float initial)
                {
-                 py_simple_label l;
+                 vwpy::py_simple_label l;
                  l.label = label;
                  l.weight = weight;
                  l.initial = initial;
@@ -813,15 +764,22 @@ PYBIND11_MODULE(_core, m)
       initial (float): The initial value of the prediction.
 )docstring",
           py::arg("label"), py::arg("weight") = 1.f, py::arg("initial") = 0.f)
-      .def_readwrite("label", &py_simple_label::label, R"docstring(
+      .def_readwrite("label", &vwpy::py_simple_label::label, R"docstring(
     The label.
 )docstring")
-      .def_readwrite("weight", &py_simple_label::weight, R"docstring(
+      .def_readwrite("weight", &vwpy::py_simple_label::weight, R"docstring(
     The weight of this label.
 )docstring")
-      .def_readwrite("initial", &py_simple_label::initial, R"docstring(
+      .def_readwrite("initial", &vwpy::py_simple_label::initial, R"docstring(
     The initial value of the prediction.
-)docstring");
+)docstring")
+      .def("__repr__",
+          [](const vwpy::py_simple_label& l)
+          {
+            std::stringstream ss;
+            ss << "SimpleLabel(label=" << l.label << ", weight=" << l.weight << ", initial=" << l.initial << ")";
+            return ss.str();
+          });
 
   py::class_<VW::multiclass_label>(m, "MulticlassLabel")
       .def(py::init(
@@ -940,7 +898,25 @@ PYBIND11_MODULE(_core, m)
 )docstring")
       .def_readwrite("weight", &VW::cb_label::weight, R"docstring(
     The weight of the example.
-)docstring");
+)docstring")
+      .def("__repr__",
+          [](VW::cb_label& l)
+          {
+            std::stringstream ss;
+            ss << "CBLabel(";
+            if (l.costs.size() == 1 && l.costs[0].probability == -1.f) { ss << "shared=True"; }
+            else
+            {
+              if (l.costs.size() == 0) { ss << "label=None"; }
+              else
+              {
+                ss << "label=(" << l.costs[0].action << ", " << l.costs[0].cost << ", " << l.costs[0].probability
+                   << ")";
+              }
+            }
+            ss << ", weight=" << l.weight << ")";
+            return ss.str();
+          });
 
   py::class_<VW::cs_label>(m, "CSLabel")
       .def(py::init(
@@ -997,7 +973,94 @@ PYBIND11_MODULE(_core, m)
           },
           R"docstring(
     The costs for the example. The format of the costs is (class_index, cost).
-)docstring");
+)docstring")
+      .def("__repr__",
+          [](VW::cs_label& l)
+          {
+            std::stringstream ss;
+            ss << "CSLabel(";
+            if (is_shared(l)) { ss << "shared=True"; }
+            else
+            {
+              ss << "costs=[";
+              for (size_t i = 0; i < l.costs.size(); i++)
+              {
+                if (i != 0) { ss << ", "; }
+                ss << "(" << l.costs[i].class_index << ", " << l.costs[i].x << ")";
+              }
+              ss << "]";
+            }
+            ss << ")";
+            return ss.str();
+          });
+
+  py::class_<vwpy::debug_node, std::shared_ptr<vwpy::debug_node>>(m, "DebugNode", R"docstring(
+    A node in the computation tree of a single learn/predict call. This represents the state of the example as it is entering a given reduction.
+
+    .. warning::
+      This is a highly experimental feature.
+
+)docstring")
+      .def_property_readonly(
+          "children",
+          [](const vwpy::debug_node& d) -> std::vector<std::shared_ptr<vwpy::debug_node>> { return d.children; },
+          "The child computations that this node processed. This represents traversal of the stack.")
+      .def_property_readonly(
+          "name", [](const vwpy::debug_node& d) -> std::string { return d.name; },
+          "Name of the reduction being called.")
+      .def_property_readonly(
+          "output_prediction", [](const vwpy::debug_node& d) -> vwpy::prediction_t { return d.output_prediction; },
+          "The prediction that this reduction produced.")
+      .def_property_readonly(
+          "input_labels",
+          [](const vwpy::debug_node& d) -> std::variant<vwpy::label_variant_t, std::vector<vwpy::label_variant_t>>
+          { return d.input_labels; },
+          "The label that was passed into this reduction. Or, list of labels if this reduction is a multi-example "
+          "reduction.")
+      .def_property_readonly(
+          "interactions",
+          [](const vwpy::debug_node& d) -> std::variant<std::vector<std::string>, std::vector<std::vector<std::string>>>
+          { return d.interactions; },
+          "The interactions that were used to generate the features for this reduction. Or, list of interactions if "
+          "this reduction is a multi-example reduction.")
+      .def_property_readonly(
+          "function", [](const vwpy::debug_node& d) -> std::string { return d.function; },
+          "The function that was called on this reduction. Either 'learn' or 'predict'.")
+      .def_property_readonly(
+          "is_multiline", [](const vwpy::debug_node& d) -> bool { return d.is_multiline; },
+          "Whether this reduction is a multi-example reduction.")
+      .def_property_readonly(
+          "num_examples", [](const vwpy::debug_node& d) -> size_t { return d.num_examples; },
+          "The number of examples that were processed by this reduction. This is always 1 for single example "
+          "reductions.")
+      .def_property_readonly(
+          "weight", [](const vwpy::debug_node& d) -> std::variant<float, std::vector<float>> { return d.weight; },
+          "The weight of the example. Or, list of weights if this reduction is a multi-example reduction.")
+      .def_property_readonly(
+          "updated_prediction",
+          [](const vwpy::debug_node& d) -> std::variant<float, std::vector<float>> { return d.partial_prediction; },
+          "The partial prediction on the example after this reduction ran. Or, list of partial predictions if this "
+          "reduction is a multi-example reduction. This is generally only set by the bottom of the stack.")
+      .def_property_readonly(
+          "partial_prediction",
+          [](const vwpy::debug_node& d) -> std::variant<float, std::vector<float>> { return d.updated_prediction; },
+          "The partial prediction on the example after this reduction ran. Or, list of partial predictions if this "
+          "reduction is a multi-example reduction. This is generally only set by the bottom of the stack.")
+      .def_property_readonly(
+          "offset", [](const vwpy::debug_node& d) -> std::variant<uint64_t, std::vector<uint64_t>> { return d.offset; },
+          "The offset of the example. Or, list of offsets if this reduction is a multi-example reduction. This also "
+          "includes the stride of the bottom learner.")
+      .def_property_readonly(
+          "self_duration_ns",
+          [](const vwpy::debug_node& d) -> size_t
+          { return std::chrono::duration_cast<std::chrono::nanoseconds>(d.calc_self_time()).count(); },
+          "The duration of this reduction in nanoseconds. It does not include time it takes to call children.")
+      .def_property_readonly(
+          "self_duration_incl_debug_ns",
+          [](const vwpy::debug_node& d) -> size_t
+          { return std::chrono::duration_cast<std::chrono::nanoseconds>(d.calc_self_time_incl_debug()).count(); },
+          "The duration of this reduction in nanoseconds, including time spent in extra code to facilitate this debug "
+          "capture. It does not include time it takes to call children.");
 
   py::class_<VW::example, std::shared_ptr<VW::example>>(m, "Example")
       .def(py::init(
@@ -1008,38 +1071,18 @@ PYBIND11_MODULE(_core, m)
           }))
       .def("_is_newline", [](VW::example& ex) -> bool { return ex.is_newline; })
       .def("_get_label",
-          [](VW::example& ex, VW::label_type_t label_type)
-              -> std::variant<py_simple_label, VW::multiclass_label, VW::cb_label, VW::cs_label, std::monostate>
-          {
-            switch (label_type)
-            {
-              case VW::label_type_t::SIMPLE:
-              {
-                const auto& simple_red_features = ex.ex_reduction_features.get<VW::simple_label_reduction_features>();
-                return py_simple_label{ex.l.simple.label, simple_red_features.weight, simple_red_features.initial};
-              }
-              case VW::label_type_t::MULTICLASS:
-                return ex.l.multi;
-              case VW::label_type_t::CB:
-                return ex.l.cb;
-              case VW::label_type_t::CS:
-                return ex.l.cs;
-              case VW::label_type_t::NOLABEL:
-                return std::monostate();
-              default:
-                throw std::runtime_error("Unsupported label type");
-            }
-          })
+          [](VW::example& ex, VW::label_type_t label_type) -> vwpy::label_variant_t
+          { return vwpy::to_label_variant(ex, label_type); })
       .def("_set_label",
           [](VW::example& ex,
-              const std::variant<py_simple_label*, VW::multiclass_label*, VW::cb_label*, VW::cs_label*, std::monostate>&
-                  label) -> void
+              const std::variant<vwpy::py_simple_label*, VW::multiclass_label*, VW::cb_label*, VW::cs_label*,
+                  std::monostate>& label) -> void
           {
             std::visit(
                 overloaded{
                     // Corresponds to nolabel
                     [](std::monostate) {},
-                    [&](py_simple_label* simple_label)
+                    [&](vwpy::py_simple_label* simple_label)
                     {
                       ex.l.simple.label = simple_label->label;
                       ex.ex_reduction_features.get<VW::simple_label_reduction_features>().weight = simple_label->weight;
@@ -1057,7 +1100,7 @@ PYBIND11_MODULE(_core, m)
   py::class_<workspace_with_logger_contexts>(m, "Workspace")
       .def(py::init(
                [](const std::vector<std::string>& args, const std::optional<py::bytes>& bytes,
-                   bool record_feature_names, bool record_metrics)
+                   bool record_feature_names, bool record_metrics, bool debug)
                {
                  auto opts = std::make_unique<VW::config::options_cli>(args);
                  if (record_metrics)
@@ -1088,9 +1131,16 @@ PYBIND11_MODULE(_core, m)
                  wrapped_object->logger_context_ptr->driver_logger = get_logger("vowpal_wabbit_next.driver");
                  wrapped_object->logger_context_ptr->log_logger = get_logger("vowpal_wabbit_next.log");
                  auto logger = VW::io::create_custom_sink_logger(wrapped_object->logger_context_ptr.get(), log_log);
-                 wrapped_object->workspace_ptr =
-                     std::shared_ptr<VW::workspace>(VW::initialize_experimental(std::move(opts),
-                         std::move(model_reader), driver_log, wrapped_object->logger_context_ptr.get(), &logger));
+
+                 std::unique_ptr<vwpy::debug_stack_builder> stack = nullptr;
+                 if (debug)
+                 {
+                   wrapped_object->debug = true;
+                   stack = std::make_unique<vwpy::debug_stack_builder>();
+                 }
+                 wrapped_object->workspace_ptr = std::shared_ptr<VW::workspace>(
+                     VW::initialize_experimental(std::move(opts), std::move(model_reader), driver_log,
+                         wrapped_object->logger_context_ptr.get(), &logger, std::move(stack)));
                  // This should cause parsing failures to be thrown instead of just logged.
                  wrapped_object->workspace_ptr->example_parser->strict_parse = true;
 
@@ -1121,10 +1171,11 @@ PYBIND11_MODULE(_core, m)
                  return wrapped_object;
                }),
           py::arg("args"), py::kw_only(), py::arg("model_data") = std::nullopt, py::arg("record_feature_names") = false,
-          py::arg("record_metrics") = false)
+          py::arg("record_metrics") = false, py::arg("debug") = false)
       .def(
           "learn_one",
-          [](workspace_with_logger_contexts& workspace, VW::example& example) -> void
+          [](workspace_with_logger_contexts& workspace,
+              VW::example& example) -> std::variant<std::monostate, std::shared_ptr<vwpy::debug_node>>
           {
             py_setup_example(*workspace.workspace_ptr, example);
             auto on_exit = VW::scope_exit([&]() { py_unsetup_example(*workspace.workspace_ptr, example); });
@@ -1138,11 +1189,14 @@ PYBIND11_MODULE(_core, m)
 
             // TODO - when updating VW submodule if learn calls update stats then remove this to avoid a double call.
             update_stats_recursive(*workspace.workspace_ptr, *learner, example);
+            if (workspace.debug) { return ::get_and_clear_debug_info(workspace); }
+            return std::monostate{};
           },
           py::arg("examples"), py::kw_only())
       .def(
           "learn_multi_ex_one",
-          [](workspace_with_logger_contexts& workspace, std::vector<VW::example*>& example) -> void
+          [](workspace_with_logger_contexts& workspace,
+              std::vector<VW::example*>& example) -> std::variant<std::monostate, std::shared_ptr<vwpy::debug_node>>
           {
             assert(!example.empty());
             py_setup_example(*workspace.workspace_ptr, example);
@@ -1157,11 +1211,14 @@ PYBIND11_MODULE(_core, m)
 
             // TODO - when updating VW submodule if learn calls update stats then remove this to avoid a double call.
             update_stats_recursive(*workspace.workspace_ptr, *learner, example);
+            if (workspace.debug) { return {get_and_clear_debug_info(workspace)}; }
+            return std::monostate{};
           },
           py::arg("examples"), py::kw_only())
       .def(
           "predict_one",
-          [](workspace_with_logger_contexts& workspace, VW::example& example) -> prediction_t
+          [](workspace_with_logger_contexts& workspace, VW::example& example)
+              -> std::variant<vwpy::prediction_t, std::tuple<vwpy::prediction_t, std::shared_ptr<vwpy::debug_node>>>
           {
             py_setup_example(*workspace.workspace_ptr, example);
             auto on_exit = VW::scope_exit([&]() { py_unsetup_example(*workspace.workspace_ptr, example); });
@@ -1177,12 +1234,20 @@ PYBIND11_MODULE(_core, m)
             // TODO - when updating VW submodule if learn calls update stats then remove this to avoid a double call.
             update_stats_recursive(*workspace.workspace_ptr, *learner, example);
             example.test_only = test_only;
-            return to_prediction(example.pred, workspace.workspace_ptr->l->get_output_prediction_type());
+            auto prediction =
+                vwpy::to_prediction(example.pred, workspace.workspace_ptr->l->get_output_prediction_type());
+            if (workspace.debug)
+            {
+              auto debug_info = get_and_clear_debug_info(workspace);
+              return std::make_tuple(prediction, debug_info);
+            }
+            return prediction;
           },
           py::arg("examples"), py::kw_only())
       .def(
           "predict_multi_ex_one",
-          [](workspace_with_logger_contexts& workspace, std::vector<VW::example*>& example) -> prediction_t
+          [](workspace_with_logger_contexts& workspace, std::vector<VW::example*>& example)
+              -> std::variant<vwpy::prediction_t, std::tuple<vwpy::prediction_t, std::shared_ptr<vwpy::debug_node>>>
           {
             assert(!example.empty());
             py_setup_example(*workspace.workspace_ptr, example);
@@ -1201,12 +1266,21 @@ PYBIND11_MODULE(_core, m)
             // TODO - when updating VW submodule if learn calls update stats then remove this to avoid a double call.
             update_stats_recursive(*workspace.workspace_ptr, *learner, example);
             for (size_t i = 0; i < example.size(); i++) { example[i]->test_only = test_onlys[i]; }
-            return to_prediction(example[0]->pred, workspace.workspace_ptr->l->get_output_prediction_type());
+
+            auto prediction =
+                vwpy::to_prediction(example[0]->pred, workspace.workspace_ptr->l->get_output_prediction_type());
+            if (workspace.debug)
+            {
+              auto debug_info = get_and_clear_debug_info(workspace);
+              return std::make_tuple(prediction, debug_info);
+            }
+            return prediction;
           },
           py::arg("examples"), py::kw_only())
       .def(
           "predict_then_learn_one",
-          [](workspace_with_logger_contexts& workspace, VW::example& example) -> prediction_t
+          [](workspace_with_logger_contexts& workspace, VW::example& example)
+              -> std::variant<vwpy::prediction_t, std::tuple<vwpy::prediction_t, std::shared_ptr<vwpy::debug_node>>>
           {
             py_setup_example(*workspace.workspace_ptr, example);
             auto on_exit = VW::scope_exit([&]() { py_unsetup_example(*workspace.workspace_ptr, example); });
@@ -1234,12 +1308,20 @@ PYBIND11_MODULE(_core, m)
 
             // TODO - when updating VW submodule if learn calls update stats then remove this to avoid a double call.
             update_stats_recursive(*workspace.workspace_ptr, *learner, example);
-            return to_prediction(example.pred, workspace.workspace_ptr->l->get_output_prediction_type());
+            auto prediction =
+                vwpy::to_prediction(example.pred, workspace.workspace_ptr->l->get_output_prediction_type());
+            if (workspace.debug)
+            {
+              auto debug_info = get_and_clear_debug_info(workspace);
+              return std::make_tuple(prediction, debug_info);
+            }
+            return prediction;
           },
           py::arg("examples"), py::kw_only())
       .def(
           "predict_then_learn_multi_ex_one",
-          [](workspace_with_logger_contexts& workspace, std::vector<VW::example*>& example) -> prediction_t
+          [](workspace_with_logger_contexts& workspace, std::vector<VW::example*>& example)
+              -> std::variant<vwpy::prediction_t, std::tuple<vwpy::prediction_t, std::shared_ptr<vwpy::debug_node>>>
           {
             py_setup_example(*workspace.workspace_ptr, example);
             auto on_exit = VW::scope_exit([&]() { py_unsetup_example(*workspace.workspace_ptr, example); });
@@ -1268,7 +1350,14 @@ PYBIND11_MODULE(_core, m)
 
             // TODO - when updating VW submodule if learn calls update stats then remove this to avoid a double call.
             update_stats_recursive(*workspace.workspace_ptr, *learner, example);
-            return to_prediction(example[0]->pred, workspace.workspace_ptr->l->get_output_prediction_type());
+            auto prediction =
+                vwpy::to_prediction(example[0]->pred, workspace.workspace_ptr->l->get_output_prediction_type());
+            if (workspace.debug)
+            {
+              auto debug_info = get_and_clear_debug_info(workspace);
+              return std::make_tuple(prediction, debug_info);
+            }
+            return prediction;
           },
           py::arg("examples"), py::kw_only())
       .def("get_is_multiline",
