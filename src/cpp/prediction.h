@@ -6,6 +6,7 @@
 #include <pybind11/pytypes.h>
 
 #include <vector>
+#include <variant>
 
 namespace py = pybind11;
 
