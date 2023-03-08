@@ -1,4 +1,9 @@
-from typing import List, Optional, TypeVar, Literal
+from typing import List, Optional, TypeVar
+
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal
 
 from vowpal_wabbit_next import _core, Workspace
 

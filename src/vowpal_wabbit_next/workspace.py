@@ -1,7 +1,13 @@
 from __future__ import annotations
 
-from typing import Dict, List, Literal, Optional, Tuple, Union, overload
+from typing import Dict, List, Optional, Tuple, Union, overload
 import typing
+
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal
+
 from vowpal_wabbit_next import _core, Example
 
 import numpy as np

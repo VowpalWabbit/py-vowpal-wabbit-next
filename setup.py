@@ -32,6 +32,6 @@ setup(
     package_dir={"": "src"},
     package_data={"vowpal_wabbit_next": ["py.typed", "_core.pyi"]},
     cmake_install_dir="src/vowpal_wabbit_next",
-    install_requires=["numpy"],
+    install_requires=["numpy", "typing_extensions; python_version=='3.7'", ],
     python_requires=">=3.7",
 )
