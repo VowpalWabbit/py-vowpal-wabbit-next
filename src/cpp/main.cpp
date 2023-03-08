@@ -6,6 +6,8 @@
 #include "vw/core/array_parameters_dense.h"
 #include "vw/core/cache.h"
 #include "vw/core/cb.h"
+#include "vw/core/ccb_label.h"
+#include "vw/core/ccb_reduction_features.h"
 #include "vw/core/constant.h"
 #include "vw/core/cost_sensitive.h"
 #include "vw/core/debug_print.h"
@@ -50,19 +52,18 @@
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
 
-// helper type for the visitor #4
+namespace py = pybind11;
+namespace
+{
+
 template <class... Ts>
 struct overloaded : Ts...
 {
   using Ts::operator()...;
 };
-// explicit deduction guide (not needed as of C++20)
+
 template <class... Ts>
 overloaded(Ts...) -> overloaded<Ts...>;
-
-namespace py = pybind11;
-namespace
-{
 
 class python_reader : public VW::io::reader
 {
@@ -745,6 +746,12 @@ PYBIND11_MODULE(_core, m)
       .value("ActiveMulticlass", VW::prediction_type_t::ACTIVE_MULTICLASS)
       .value("NoPred", VW::prediction_type_t::NOPRED);
 
+  py::enum_<VW::ccb_example_type>(m, "CCBExampleType")
+      .value("Unset", VW::ccb_example_type::UNSET)
+      .value("Shared", VW::ccb_example_type::SHARED)
+      .value("Action", VW::ccb_example_type::ACTION)
+      .value("Slot", VW::ccb_example_type::SLOT);
+
   py::class_<vwpy::py_simple_label>(m, "SimpleLabel")
       .def(py::init(
                [](float label, float weight, float initial)
@@ -994,6 +1001,141 @@ PYBIND11_MODULE(_core, m)
             return ss.str();
           });
 
+  py::class_<VW::ccb_label>(m, "CCBLabel")
+      .def(
+          py::init(
+              [](VW::ccb_example_type type,
+                  const std::optional<std::tuple<float, std::vector<std::tuple<uint32_t, float>>>>& outcome,
+                  const std::optional<std::vector<uint32_t>>& explicit_included_actions)
+              {
+                auto label = std::make_unique<VW::ccb_label>();
+                label->type = type;
+                if (type == VW::ccb_example_type::UNSET) { throw std::invalid_argument("CCBLabel must have a type."); }
+
+                if (type == VW::ccb_example_type::SHARED)
+                {
+                  if (outcome.has_value() || explicit_included_actions.has_value())
+                  {
+                    throw std::invalid_argument("Shared examples cannot have an outcome or explicit_included_actions.");
+                  }
+                  return label;
+                }
+
+                if (type == VW::ccb_example_type::ACTION)
+                {
+                  if (outcome.has_value() || explicit_included_actions.has_value())
+                  {
+                    throw std::invalid_argument("Action examples cannot have an outcome or explicit_included_actions.");
+                  }
+                  return label;
+                }
+
+                assert(type == VW::ccb_example_type::SLOT);
+
+                if (explicit_included_actions.has_value())
+                {
+                  const auto& actions = *explicit_included_actions;
+                  label->explicit_included_actions.reserve(actions.size());
+                  for (auto action : actions) { label->explicit_included_actions.push_back(action); }
+                }
+
+                if (outcome.has_value())
+                {
+                  const auto& [cost, action_probs] = *outcome;
+                  label->outcome = new VW::ccb_outcome();
+                  label->outcome->cost = cost;
+                  label->outcome->probabilities.reserve(action_probs.size());
+                  for (auto& [action, probability] : action_probs)
+                  {
+                    label->outcome->probabilities.push_back({action, probability});
+                  }
+                }
+
+                return label;
+              }),
+          py::arg("type"), py::kw_only(), py::arg("outcome") = py::none(),
+          py::arg("explicit_included_actions") = py::none(), R"docstring(
+    A label representing a conditional contextual bandit problem.
+
+    Args:
+      type (CCBExampleType): The type of the example. Unset is invalid.
+      outcome (Optional[Tuple[float, List[Tuple[int, float]]]]): The outcome of the example. The format of the outcome is (cost, [(action, probability)]).
+      explicit_included_actions (Optional[List[int]]): The list of actions explicitly included from the slot.
+)docstring")
+      .def_property_readonly(
+          "example_type", [](VW::ccb_label& l) -> VW::ccb_example_type { return l.type; },
+          R"docstring(
+    Whether the example represents the shared context.
+)docstring")
+      .def_property_readonly(
+          "outcome",
+          [](VW::ccb_label& l) -> std::optional<std::tuple<float, std::vector<std::tuple<uint32_t, float>>>>
+          {
+            if (l.type != VW::ccb_example_type::SLOT) { return std::nullopt; }
+
+            if (l.outcome == nullptr) { return std::nullopt; }
+
+            std::vector<std::tuple<uint32_t, float>> action_probs;
+            action_probs.reserve(l.outcome->probabilities.size());
+            for (auto& action_prob : l.outcome->probabilities)
+            {
+              action_probs.emplace_back(action_prob.action, action_prob.score);
+            }
+            return std::make_tuple(l.outcome->cost, action_probs);
+          },
+          R"docstring(
+    The outcome of the example. The format of the outcome is (cost, [(action, probability)]).
+)docstring")
+      .def_property_readonly("explicit_included_actions",
+          [](VW::ccb_label& l) -> std::optional<std::vector<uint32_t>>
+          {
+            if (l.type != VW::ccb_example_type::SLOT) { return std::nullopt; }
+
+            if (l.explicit_included_actions.empty()) { return std::nullopt; }
+
+            std::vector<uint32_t> actions;
+            actions.reserve(l.explicit_included_actions.size());
+            for (auto action : l.explicit_included_actions) { actions.push_back(action); }
+            return actions;
+          }, R"docstring(
+    The list of actions explicitly excluded from the slot.
+)docstring"
+          )
+      .def("__repr__",
+          [](VW::ccb_label& l)
+          {
+            std::stringstream ss;
+            ss << "CCBLabel(";
+            if (l.type == VW::ccb_example_type::SHARED) { ss << "type=CCBExampleType.SHARED"; }
+            else if (l.type == VW::ccb_example_type::ACTION) { ss << "type=CCBExampleType.ACTION"; }
+            else
+            {
+              ss << "type=CCBExampleType.SLOT";
+              if (l.outcome != nullptr)
+              {
+                ss << ", outcome=(" << l.outcome->cost << ", [";
+                for (size_t i = 0; i < l.outcome->probabilities.size(); i++)
+                {
+                  if (i != 0) { ss << ", "; }
+                  ss << "(" << l.outcome->probabilities[i].action << ", " << l.outcome->probabilities[i].score << ")";
+                }
+                ss << "])";
+              }
+              if (!l.explicit_included_actions.empty())
+              {
+                ss << ", explicit_included_actions=[";
+                for (size_t i = 0; i < l.explicit_included_actions.size(); i++)
+                {
+                  if (i != 0) { ss << ", "; }
+                  ss << l.explicit_included_actions[i];
+                }
+                ss << "]";
+              }
+            }
+            ss << ")";
+            return ss.str();
+          });
+
   py::class_<vwpy::debug_node, std::shared_ptr<vwpy::debug_node>>(m, "DebugNode", R"docstring(
     A node in the computation tree of a single learn/predict call. This represents the state of the example as it is entering a given reduction.
 
@@ -1073,27 +1215,7 @@ PYBIND11_MODULE(_core, m)
           [](VW::example& ex, VW::label_type_t label_type) -> vwpy::label_variant_t
           { return vwpy::to_label_variant(ex, label_type); })
       .def("_set_label",
-          [](VW::example& ex,
-              const std::variant<vwpy::py_simple_label*, VW::multiclass_label*, VW::cb_label*, VW::cs_label*,
-                  std::monostate>& label) -> void
-          {
-            std::visit(
-                overloaded{
-                    // Corresponds to nolabel
-                    [](std::monostate) {},
-                    [&](vwpy::py_simple_label* simple_label)
-                    {
-                      ex.l.simple.label = simple_label->label;
-                      ex.ex_reduction_features.get<VW::simple_label_reduction_features>().weight = simple_label->weight;
-                      ex.ex_reduction_features.get<VW::simple_label_reduction_features>().initial =
-                          simple_label->initial;
-                    },
-                    [&](VW::multiclass_label* multiclass_label) { ex.l.multi = *multiclass_label; },
-                    [&](VW::cb_label* cb_label) { ex.l.cb = *cb_label; },
-                    [&](VW::cs_label* cs_label) { ex.l.cs = *cs_label; },
-                },
-                label);
-          })
+          [](VW::example& ex, const vwpy::label_variant_ptrs_t& label) -> void { vwpy::from_label_variant(ex, label); })
       .def("_get_tag", [](VW::example& ex) -> std::string { return std::string(ex.tag.data(), ex.tag.size()); });
 
   py::class_<workspace_with_logger_contexts>(m, "Workspace")

@@ -91,3 +91,54 @@ def test_cs_label_parsed() -> None:
     assert len(labeled_ex.get_label().costs) == 1
     assert labeled_ex.get_label().costs[0] == pytest.approx((1, 0.5))
     assert labeled_ex.get_label().shared == False
+
+
+def test_ccb_label() -> None:
+    example = vw.Example()
+    assert example.get_label() is None
+    example.set_label(vw.CCBLabel(vw.CCBExampleType.Shared))
+    assert isinstance(example.get_label(), vw.CCBLabel)
+    assert example.get_label().example_type == vw.CCBExampleType.Shared
+
+    with pytest.raises(ValueError):
+        vw.CCBLabel(vw.CCBExampleType.Shared, outcome=(1.0, [(1, 0.8)]))
+
+    with pytest.raises(ValueError):
+        vw.CCBLabel(vw.CCBExampleType.Action, outcome=(1.0, [(1, 0.8)]))
+
+    label = vw.CCBLabel(vw.CCBExampleType.Slot, outcome=(1.0, [(1, 0.8)]))
+    assert label.outcome[0] == 1.0
+    assert label.outcome[1][0] == pytest.approx((1, 0.8))
+
+    label = vw.CCBLabel(vw.CCBExampleType.Slot, explicit_included_actions=[1, 2])
+    assert label.explicit_included_actions == [1, 2]
+
+
+def test_ccb_label_parsed() -> None:
+    workspace = vw.Workspace(["--ccb_explore_adf"])
+    parser = vw.TextFormatParser(workspace)
+    shared_ex = parser.parse_line("ccb shared | a b c")
+    assert isinstance(shared_ex.get_label(), vw.CCBLabel)
+    assert shared_ex.get_label().example_type == vw.CCBExampleType.Shared
+    assert shared_ex.get_label().outcome is None
+
+    action_ex = parser.parse_line("ccb action | a b c")
+    assert isinstance(action_ex.get_label(), vw.CCBLabel)
+    assert action_ex.get_label().example_type == vw.CCBExampleType.Action
+    assert action_ex.get_label().outcome is None
+
+    slot_ex = parser.parse_line("ccb slot | a b c")
+    assert isinstance(slot_ex.get_label(), vw.CCBLabel)
+    assert slot_ex.get_label().example_type == vw.CCBExampleType.Slot
+    assert slot_ex.get_label().outcome is None
+    assert slot_ex.get_label().explicit_included_actions is None
+
+    slot_ex = parser.parse_line("ccb slot 1:0.5:0.8,2:0.2 1,2,3 | a b c")
+    assert slot_ex.get_label().example_type == vw.CCBExampleType.Slot
+    assert slot_ex.get_label().outcome is not None
+    cost, action_probs = slot_ex.get_label().outcome
+    assert cost == pytest.approx(0.5)
+    assert len(action_probs) == 2
+    assert action_probs[0] == pytest.approx((1, 0.8))
+    assert action_probs[1] == pytest.approx((2, 0.2))
+    assert slot_ex.get_label().explicit_included_actions == [1, 2, 3]
