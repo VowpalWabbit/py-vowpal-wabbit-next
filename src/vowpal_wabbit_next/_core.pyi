@@ -96,6 +96,9 @@ class CSLabel():
 class DebugNode():
     """
     A node in the computation tree of a single learn/predict call. This represents the state of the example as it is entering a given reduction.
+
+    .. warning::
+      This is a highly experimental feature.
     """
     @property
     def children(self) -> typing.List[DebugNode]:

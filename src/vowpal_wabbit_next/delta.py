@@ -1,8 +1,9 @@
+import sys
 from typing import List, Optional, TypeVar
 
-try:
+if sys.version_info >= (3, 8):
     from typing import Literal
-except ImportError:
+else:
     from typing_extensions import Literal
 
 from vowpal_wabbit_next import _core, Workspace
