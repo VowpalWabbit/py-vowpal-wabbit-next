@@ -26,11 +26,12 @@ Installation
    :caption: How-to guides
    :hidden:
 
-   how_to_guides/dataset_readers.ipynb
-   how_to_guides/save_load_models.ipynb
-   how_to_guides/cache_format.ipynb
-   how_to_guides/inspect_model_weights.ipynb
    how_to_guides/cb_estimators.ipynb
+   how_to_guides/using_debug_tree.ipynb
+   how_to_guides/save_load_models.ipynb
+   how_to_guides/inspect_model_weights.ipynb
+   how_to_guides/dataset_readers.ipynb
+   how_to_guides/cache_format.ipynb
 
 .. toctree::
    :caption: Tutorials

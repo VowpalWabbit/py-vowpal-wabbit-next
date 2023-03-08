@@ -44,4 +44,6 @@ convention = "google"
 # Choosing to ignore module level docs, class level docs (document __init__
 # instead), magic functions (__enter__), ignore blank line requirement between
 # summary and content
-add_ignore = "D100,D101,D104,D105,D205"
+# D107 has to be skipped since there is a false positive when using @overload
+# https://github.com/PyCQA/pydocstyle/issues/525
+add_ignore = "D100,D101,D104,D105,D107,D205"
