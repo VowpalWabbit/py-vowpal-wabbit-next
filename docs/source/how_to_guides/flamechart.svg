@@ -422,7 +422,7 @@
 ]]>
 </script>
 <rect x="0.0" y="0" width="1200.0" height="182.0" fill="url(#background)"  />
-<text id="title" x="600.00" y="24" >Flame Graph</text>
+<text id="title" x="600.00" y="24" >Flame Chart</text>
 <text id="details" x="10.00" y="165" > </text>
 <text id="unzoom" x="10.00" y="24" class="hide">Reset Zoom</text>
 <text id="search" x="1090.00" y="24" >Search</text>
@@ -430,44 +430,76 @@
 <text id="matched" x="1090.00" y="165" > </text>
 <g id="frames">
 <g >
-<title>gd(predict) (875 samples, 7.61%)</title><rect x="1100.2" y="37" width="89.8" height="15.0" fill="rgb(234,170,44)" rx="2" ry="2" />
-<text  x="1103.23" y="47.5" >gd(predict)</text>
+<title>scorer-identity(predict) (125 samples, 1.19%)</title><rect x="793.6" y="53" width="14.0" height="15.0" fill="rgb(211,55,36)" rx="2" ry="2" />
+<text  x="796.61" y="63.5" ></text>
 </g>
 <g >
-<title>scorer-identity(predict) (1,375 samples, 11.96%)</title><rect x="1048.9" y="53" width="141.1" height="15.0" fill="rgb(246,172,0)" rx="2" ry="2" />
-<text  x="1051.93" y="63.5" >scorer-identity(p..</text>
+<title>csoaa_ldf-rank(learn) (3,416 samples, 32.41%)</title><rect x="807.6" y="69" width="382.4" height="15.0" fill="rgb(239,206,19)" rx="2" ry="2" />
+<text  x="810.60" y="79.5" >csoaa_ldf-rank(learn)</text>
 </g>
 <g >
-<title>csoaa_ldf-rank(learn) (3,583 samples, 31.15%)</title><rect x="497.5" y="69" width="367.6" height="15.0" fill="rgb(253,90,21)" rx="2" ry="2" />
-<text  x="500.45" y="79.5" >csoaa_ldf-rank(learn)</text>
+<title>csoaa_ldf-rank(predict) (2,708 samples, 25.69%)</title><rect x="504.5" y="69" width="303.1" height="15.0" fill="rgb(222,202,29)" rx="2" ry="2" />
+<text  x="507.46" y="79.5" >csoaa_ldf-rank(predict)</text>
 </g>
 <g >
-<title>all (11,501 samples, 100%)</title><rect x="10.0" y="133" width="1180.0" height="15.0" fill="rgb(243,198,19)" rx="2" ry="2" />
+<title>gd(predict) (42 samples, 0.40%)</title><rect x="788.9" y="37" width="4.7" height="15.0" fill="rgb(239,159,52)" rx="2" ry="2" />
+<text  x="791.91" y="47.5" ></text>
+</g>
+<g >
+<title>scorer-identity(predict) (749 samples, 7.11%)</title><rect x="695.8" y="53" width="83.8" height="15.0" fill="rgb(244,95,42)" rx="2" ry="2" />
+<text  x="698.77" y="63.5" >scorer-id..</text>
+</g>
+<g >
+<title>scorer-identity(learn) (2,416 samples, 22.92%)</title><rect x="896.3" y="53" width="270.4" height="15.0" fill="rgb(251,200,0)" rx="2" ry="2" />
+<text  x="899.26" y="63.5" >scorer-identity(learn)</text>
+</g>
+<g >
+<title>gd(learn) (42 samples, 0.40%)</title><rect x="1185.3" y="37" width="4.7" height="15.0" fill="rgb(246,216,18)" rx="2" ry="2" />
+<text  x="1188.30" y="47.5" ></text>
+</g>
+<g >
+<title>all (10,541 samples, 100%)</title><rect x="10.0" y="133" width="1180.0" height="15.0" fill="rgb(211,34,25)" rx="2" ry="2" />
 <text  x="13.00" y="143.5" ></text>
 </g>
 <g >
-<title>cb_adf(learn) (9,167 samples, 79.71%)</title><rect x="249.5" y="85" width="940.5" height="15.0" fill="rgb(247,41,43)" rx="2" ry="2" />
-<text  x="252.47" y="95.5" >cb_adf(learn)</text>
+<title>cb_explore_adf_greedy(learn) (9,166 samples, 86.96%)</title><rect x="163.9" y="101" width="1026.1" height="15.0" fill="rgb(224,50,39)" rx="2" ry="2" />
+<text  x="166.92" y="111.5" >cb_explore_adf_greedy(learn)</text>
 </g>
 <g >
-<title>scorer-identity(learn) (2,665 samples, 23.17%)</title><rect x="591.6" y="53" width="273.5" height="15.0" fill="rgb(216,108,0)" rx="2" ry="2" />
-<text  x="594.64" y="63.5" >scorer-identity(learn)</text>
+<title>gd(learn) (83 samples, 0.79%)</title><rect x="1176.0" y="37" width="9.3" height="15.0" fill="rgb(206,222,29)" rx="2" ry="2" />
+<text  x="1179.01" y="47.5" ></text>
 </g>
 <g >
-<title>shared_feature_merger(learn) (11,501 samples, 100.00%)</title><rect x="10.0" y="117" width="1180.0" height="15.0" fill="rgb(236,186,2)" rx="2" ry="2" />
+<title>cb_adf(learn) (8,374 samples, 79.44%)</title><rect x="252.6" y="85" width="937.4" height="15.0" fill="rgb(224,152,32)" rx="2" ry="2" />
+<text  x="255.58" y="95.5" >cb_adf(learn)</text>
+</g>
+<g >
+<title>gd(learn) (2,042 samples, 19.37%)</title><rect x="938.1" y="37" width="228.6" height="15.0" fill="rgb(232,137,15)" rx="2" ry="2" />
+<text  x="941.13" y="47.5" >gd(learn)</text>
+</g>
+<g >
+<title>scorer-identity(learn) (166 samples, 1.57%)</title><rect x="1166.7" y="53" width="18.6" height="15.0" fill="rgb(239,224,0)" rx="2" ry="2" />
+<text  x="1169.72" y="63.5" ></text>
+</g>
+<g >
+<title>shared_feature_merger(learn) (10,541 samples, 100.00%)</title><rect x="10.0" y="117" width="1180.0" height="15.0" fill="rgb(246,170,36)" rx="2" ry="2" />
 <text  x="13.00" y="127.5" >shared_feature_merger(learn)</text>
 </g>
 <g >
-<title>gd(learn) (2,041 samples, 17.75%)</title><rect x="655.7" y="37" width="209.4" height="15.0" fill="rgb(238,74,9)" rx="2" ry="2" />
-<text  x="658.66" y="47.5" >gd(learn)</text>
+<title>gd(predict) (541 samples, 5.13%)</title><rect x="719.1" y="37" width="60.5" height="15.0" fill="rgb(229,185,43)" rx="2" ry="2" />
+<text  x="722.05" y="47.5" >gd(pre..</text>
 </g>
 <g >
-<title>csoaa_ldf-rank(predict) (3,167 samples, 27.54%)</title><rect x="865.1" y="69" width="324.9" height="15.0" fill="rgb(216,168,9)" rx="2" ry="2" />
-<text  x="868.07" y="79.5" >csoaa_ldf-rank(predict)</text>
+<title>scorer-identity(predict) (125 samples, 1.19%)</title><rect x="779.6" y="53" width="14.0" height="15.0" fill="rgb(251,126,9)" rx="2" ry="2" />
+<text  x="782.61" y="63.5" ></text>
 </g>
 <g >
-<title>cb_explore_adf_greedy(learn) (10,125 samples, 88.04%)</title><rect x="151.2" y="101" width="1038.8" height="15.0" fill="rgb(243,178,29)" rx="2" ry="2" />
-<text  x="154.18" y="111.5" >cb_explore_adf_greedy(learn)</text>
+<title>scorer-identity(learn) (42 samples, 0.40%)</title><rect x="1185.3" y="53" width="4.7" height="15.0" fill="rgb(227,51,27)" rx="2" ry="2" />
+<text  x="1188.30" y="63.5" ></text>
+</g>
+<g >
+<title>gd(predict) (42 samples, 0.40%)</title><rect x="802.9" y="37" width="4.7" height="15.0" fill="rgb(254,12,36)" rx="2" ry="2" />
+<text  x="805.90" y="47.5" ></text>
 </g>
 </g>
 </svg>
