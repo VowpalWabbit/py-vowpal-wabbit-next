@@ -1056,11 +1056,10 @@ PYBIND11_MODULE(_core, m)
           { return std::chrono::duration_cast<std::chrono::nanoseconds>(d.calc_self_time()).count(); },
           "The duration of this reduction in nanoseconds. It does not include time it takes to call children.")
       .def_property_readonly(
-          "self_duration_incl_debug_ns",
+          "total_duration_ns",
           [](const vwpy::debug_node& d) -> size_t
-          { return std::chrono::duration_cast<std::chrono::nanoseconds>(d.calc_self_time_incl_debug()).count(); },
-          "The duration of this reduction in nanoseconds, including time spent in extra code to facilitate this debug "
-          "capture. It does not include time it takes to call children.");
+          { return std::chrono::duration_cast<std::chrono::nanoseconds>(d.calc_overall_time()).count(); },
+          "The duration of this reduction and all children in nanoseconds.");
 
   py::class_<VW::example, std::shared_ptr<VW::example>>(m, "Example")
       .def(py::init(

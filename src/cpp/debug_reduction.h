@@ -46,11 +46,17 @@ struct debug_node
     return self_time;
   }
 
-  std::chrono::high_resolution_clock::duration calc_self_time_incl_debug() const
+  std::chrono::high_resolution_clock::duration calc_overall_time() const
   {
-    std::chrono::high_resolution_clock::duration self_time = overall_end_time - overall_start_time;
-    for (const auto& child : children) { self_time -= (child->overall_end_time - child->overall_start_time); }
-    return self_time;
+    return (overall_end_time - overall_start_time) - calc_debug_time_recursive();
+  }
+
+  std::chrono::high_resolution_clock::duration calc_debug_time_recursive() const
+  {
+    std::chrono::high_resolution_clock::duration self_time = end_time - start_time;
+    std::chrono::high_resolution_clock::duration debug_time = (overall_end_time - overall_start_time) - self_time;
+    for (const auto& child : children) { self_time += child->calc_debug_time_recursive(); }
+    return debug_time;
   }
 
   std::vector<std::shared_ptr<debug_node>> children;

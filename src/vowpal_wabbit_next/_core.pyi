@@ -171,16 +171,16 @@ class DebugNode():
         :type: typing.Union[float, typing.List[float]]
         """
     @property
-    def self_duration_incl_debug_ns(self) -> int:
+    def self_duration_ns(self) -> int:
         """
-        The duration of this reduction in nanoseconds, including time spent in extra code to facilitate this debug capture. It does not include time it takes to call children.
+        The duration of this reduction in nanoseconds. It does not include time it takes to call children.
 
         :type: int
         """
     @property
-    def self_duration_ns(self) -> int:
+    def total_duration_ns(self) -> int:
         """
-        The duration of this reduction in nanoseconds. It does not include time it takes to call children.
+        The duration of this reduction and all children in nanoseconds.
 
         :type: int
         """
