@@ -235,7 +235,7 @@ class Workspace(Generic[IsDebugT]):
     @overload
     def predict_then_learn_one(
         self: Workspace[Literal[True]], example: Union[Example, List[Example]]
-    ) -> Tuple[Prediction, DebugNode]:
+    ) -> Tuple[Prediction, List[DebugNode]]:
         ...
 
     @overload
@@ -246,7 +246,7 @@ class Workspace(Generic[IsDebugT]):
 
     def predict_then_learn_one(
         self: Workspace[Literal[True]], example: Union[Example, List[Example]]
-    ) -> Union[Prediction, Tuple[Prediction, DebugNode]]:
+    ) -> Union[Prediction, Tuple[Prediction, List[DebugNode]]]:
         """Make a prediction then learn from the example. This is potentially more efficient than a predict_one call followed by a learn_one call as the implementation is able to avoid duplicated work as long as the prediction is guaranteed to be from before learning.
 
         Examples:
