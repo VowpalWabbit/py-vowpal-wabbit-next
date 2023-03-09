@@ -430,44 +430,44 @@
 <text id="matched" x="1090.00" y="165" > </text>
 <g id="frames">
 <g >
-<title>csoaa_ldf-rank(learn) (25,541 samples, 12.28%)</title><rect x="905.6" y="69" width="144.9" height="15.0" fill="rgb(229,28,2)" rx="2" ry="2" />
-<text  x="908.59" y="79.5" >csoaa_ldf-rank(lea..</text>
+<title>gd(predict) (875 samples, 7.61%)</title><rect x="1100.2" y="37" width="89.8" height="15.0" fill="rgb(234,170,44)" rx="2" ry="2" />
+<text  x="1103.23" y="47.5" >gd(predict)</text>
 </g>
 <g >
-<title>all (207,958 samples, 100%)</title><rect x="10.0" y="133" width="1180.0" height="15.0" fill="rgb(233,85,27)" rx="2" ry="2" />
+<title>scorer-identity(predict) (1,375 samples, 11.96%)</title><rect x="1048.9" y="53" width="141.1" height="15.0" fill="rgb(246,172,0)" rx="2" ry="2" />
+<text  x="1051.93" y="63.5" >scorer-identity(p..</text>
+</g>
+<g >
+<title>csoaa_ldf-rank(learn) (3,583 samples, 31.15%)</title><rect x="497.5" y="69" width="367.6" height="15.0" fill="rgb(253,90,21)" rx="2" ry="2" />
+<text  x="500.45" y="79.5" >csoaa_ldf-rank(learn)</text>
+</g>
+<g >
+<title>all (11,501 samples, 100%)</title><rect x="10.0" y="133" width="1180.0" height="15.0" fill="rgb(243,198,19)" rx="2" ry="2" />
 <text  x="13.00" y="143.5" ></text>
 </g>
 <g >
-<title>cb_adf(learn) (95,083 samples, 45.72%)</title><rect x="650.5" y="85" width="539.5" height="15.0" fill="rgb(240,39,24)" rx="2" ry="2" />
-<text  x="653.48" y="95.5" >cb_adf(learn)</text>
+<title>cb_adf(learn) (9,167 samples, 79.71%)</title><rect x="249.5" y="85" width="940.5" height="15.0" fill="rgb(247,41,43)" rx="2" ry="2" />
+<text  x="252.47" y="95.5" >cb_adf(learn)</text>
 </g>
 <g >
-<title>scorer-identity(learn) (14,041 samples, 6.75%)</title><rect x="970.8" y="53" width="79.7" height="15.0" fill="rgb(237,211,13)" rx="2" ry="2" />
-<text  x="973.84" y="63.5" >scorer-id..</text>
+<title>scorer-identity(learn) (2,665 samples, 23.17%)</title><rect x="591.6" y="53" width="273.5" height="15.0" fill="rgb(216,108,0)" rx="2" ry="2" />
+<text  x="594.64" y="63.5" >scorer-identity(learn)</text>
 </g>
 <g >
-<title>gd(predict) (4,958 samples, 2.38%)</title><rect x="1161.9" y="37" width="28.1" height="15.0" fill="rgb(226,43,39)" rx="2" ry="2" />
-<text  x="1164.87" y="47.5" >g..</text>
-</g>
-<g >
-<title>gd(learn) (6,166 samples, 2.97%)</title><rect x="1015.5" y="37" width="35.0" height="15.0" fill="rgb(232,41,15)" rx="2" ry="2" />
-<text  x="1018.52" y="47.5" >gd..</text>
-</g>
-<g >
-<title>scorer-identity(predict) (11,833 samples, 5.69%)</title><rect x="1122.9" y="53" width="67.1" height="15.0" fill="rgb(236,15,42)" rx="2" ry="2" />
-<text  x="1125.86" y="63.5" >scorer-..</text>
-</g>
-<g >
-<title>cb_explore_adf_greedy(learn) (147,000 samples, 70.69%)</title><rect x="355.9" y="101" width="834.1" height="15.0" fill="rgb(250,229,23)" rx="2" ry="2" />
-<text  x="358.89" y="111.5" >cb_explore_adf_greedy(learn)</text>
-</g>
-<g >
-<title>shared_feature_merger(learn) (207,958 samples, 100.00%)</title><rect x="10.0" y="117" width="1180.0" height="15.0" fill="rgb(220,58,14)" rx="2" ry="2" />
+<title>shared_feature_merger(learn) (11,501 samples, 100.00%)</title><rect x="10.0" y="117" width="1180.0" height="15.0" fill="rgb(236,186,2)" rx="2" ry="2" />
 <text  x="13.00" y="127.5" >shared_feature_merger(learn)</text>
 </g>
 <g >
-<title>csoaa_ldf-rank(predict) (24,583 samples, 11.82%)</title><rect x="1050.5" y="69" width="139.5" height="15.0" fill="rgb(248,85,9)" rx="2" ry="2" />
-<text  x="1053.51" y="79.5" >csoaa_ldf-rank(pr..</text>
+<title>gd(learn) (2,041 samples, 17.75%)</title><rect x="655.7" y="37" width="209.4" height="15.0" fill="rgb(238,74,9)" rx="2" ry="2" />
+<text  x="658.66" y="47.5" >gd(learn)</text>
+</g>
+<g >
+<title>csoaa_ldf-rank(predict) (3,167 samples, 27.54%)</title><rect x="865.1" y="69" width="324.9" height="15.0" fill="rgb(216,168,9)" rx="2" ry="2" />
+<text  x="868.07" y="79.5" >csoaa_ldf-rank(predict)</text>
+</g>
+<g >
+<title>cb_explore_adf_greedy(learn) (10,125 samples, 88.04%)</title><rect x="151.2" y="101" width="1038.8" height="15.0" fill="rgb(243,178,29)" rx="2" ry="2" />
+<text  x="154.18" y="111.5" >cb_explore_adf_greedy(learn)</text>
 </g>
 </g>
 </svg>

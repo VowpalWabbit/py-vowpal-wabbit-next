@@ -1,3 +1,5 @@
+#define private public
+
 #include "debug_reduction.h"
 
 #include "label.h"
@@ -187,7 +189,7 @@ std::shared_ptr<VW::LEARNER::learner> vwpy::debug_reduction_setup(VW::setup_base
         "custom parser such as CSV.");
   }
 
-  auto data = VW::make_unique<debug_data_holder>(cast_stash->shared_debug_state);
+  auto data = std::make_unique<debug_data_holder>(cast_stash->shared_debug_state);
 
   auto reduction_name = fmt::format("{}-debug", base->get_name());
   std::shared_ptr<VW::LEARNER::learner> learner = nullptr;
@@ -213,5 +215,7 @@ std::shared_ptr<VW::LEARNER::learner> vwpy::debug_reduction_setup(VW::setup_base
                   .set_output_prediction_type(base->get_output_prediction_type())
                   .build();
   }
+  cast_stash->kept_around_reduction_state.push_back(learner->_learner_data);
+  learner->_learner_data = base->_learner_data;
   return learner;
 }

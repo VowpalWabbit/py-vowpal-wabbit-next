@@ -81,6 +81,7 @@ struct debug_data_stash : public VW::details::input_parser
   }
 
   std::shared_ptr<debug_data> shared_debug_state;
+  std::vector<std::shared_ptr<void>> kept_around_reduction_state;
 };
 
 std::shared_ptr<VW::LEARNER::learner> debug_reduction_setup(VW::setup_base_i& stack_builder);
