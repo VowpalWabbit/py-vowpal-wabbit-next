@@ -1279,18 +1279,23 @@ PYBIND11_MODULE(_core, m)
       .def(
           "predict_then_learn_one",
           [](workspace_with_logger_contexts& workspace, VW::example& example)
-              -> std::variant<vwpy::prediction_t, std::tuple<vwpy::prediction_t, std::shared_ptr<vwpy::debug_node>>>
+              -> std::variant<vwpy::prediction_t, std::tuple<vwpy::prediction_t, std::vector<std::shared_ptr<vwpy::debug_node>>>>
           {
             py_setup_example(*workspace.workspace_ptr, example);
             auto on_exit = VW::scope_exit([&]() { py_unsetup_example(*workspace.workspace_ptr, example); });
 
             auto* learner = VW::LEARNER::require_singleline(workspace.workspace_ptr->l.get());
+            std::vector<std::shared_ptr<vwpy::debug_node>> debug_info;
             if (workspace.workspace_ptr->l->learn_returns_prediction)
             {
               // Learner is used directly as VW makes decisions about training and
               // learn returns prediction in the workspace API and ends up calling
               // potentially the wrong thing.
               learner->learn(example);
+              if (workspace.debug)
+              {
+                debug_info.push_back(get_and_clear_debug_info(workspace));
+              }
             }
             else
             {
@@ -1301,8 +1306,16 @@ PYBIND11_MODULE(_core, m)
               bool test_only = example.test_only;
               learner->predict(example);
               example.test_only = test_only;
+               if (workspace.debug)
+              {
+                debug_info.push_back(get_and_clear_debug_info(workspace));
+              }
 
               learner->learn(example);
+               if (workspace.debug)
+              {
+                debug_info.push_back(get_and_clear_debug_info(workspace));
+              }
             }
 
             // TODO - when updating VW submodule if learn calls update stats then remove this to avoid a double call.
@@ -1311,7 +1324,6 @@ PYBIND11_MODULE(_core, m)
                 vwpy::to_prediction(example.pred, workspace.workspace_ptr->l->get_output_prediction_type());
             if (workspace.debug)
             {
-              auto debug_info = get_and_clear_debug_info(workspace);
               return std::make_tuple(prediction, debug_info);
             }
             return prediction;
@@ -1332,7 +1344,10 @@ PYBIND11_MODULE(_core, m)
               // learn returns prediction in the workspace API and ends up calling
               // potentially the wrong thing.
               learner->learn(example);
-              debug_info.push_back(get_and_clear_debug_info(workspace));
+               if (workspace.debug)
+              {
+                debug_info.push_back(get_and_clear_debug_info(workspace));
+              }
             }
             else
             {
@@ -1345,9 +1360,15 @@ PYBIND11_MODULE(_core, m)
               for (auto ex : example) { test_onlys.push_back(ex->test_only); }
               learner->predict(example);
               for (size_t i = 0; i < example.size(); i++) { example[i]->test_only = test_onlys[i]; }
-              debug_info.push_back(get_and_clear_debug_info(workspace));
+               if (workspace.debug)
+              {
+                debug_info.push_back(get_and_clear_debug_info(workspace));
+              }
               learner->learn(example);
-              debug_info.push_back(get_and_clear_debug_info(workspace));
+               if (workspace.debug)
+              {
+                debug_info.push_back(get_and_clear_debug_info(workspace));
+              }
             }
 
             // TODO - when updating VW submodule if learn calls update stats then remove this to avoid a double call.

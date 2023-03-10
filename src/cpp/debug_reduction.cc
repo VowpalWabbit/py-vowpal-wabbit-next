@@ -1,5 +1,3 @@
-#define private public
-
 #include "debug_reduction.h"
 
 #include "label.h"
@@ -215,7 +213,7 @@ std::shared_ptr<VW::LEARNER::learner> vwpy::debug_reduction_setup(VW::setup_base
                   .set_output_prediction_type(base->get_output_prediction_type())
                   .build();
   }
-  cast_stash->kept_around_reduction_state.push_back(learner->_learner_data);
-  learner->_learner_data = base->_learner_data;
+  cast_stash->kept_around_reduction_state.push_back(learner->get_internal_type_erased_data_pointer_test_use_only_shared());
+  learner->set_internal_type_erased_data_pointer_does_not_override_funcs(base->get_internal_type_erased_data_pointer_test_use_only_shared());
   return learner;
 }
