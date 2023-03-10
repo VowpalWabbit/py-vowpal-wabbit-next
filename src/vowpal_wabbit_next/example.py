@@ -5,8 +5,11 @@ from vowpal_wabbit_next.labels import (
     MulticlassLabel,
     CBLabel,
     CSLabel,
+    CCBLabel,
 )
 from typing import Optional, Union
+
+AllLabels = Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, CCBLabel, None]
 
 
 class Example:
@@ -33,21 +36,19 @@ class Example:
             self._example = _core.Example()
             self.label_type = LabelType.NoLabel
 
-    def get_label(self) -> Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, None]:
+    def get_label(self) -> AllLabels:
         """Get the label of the example.
 
         Returns:
-            Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, None]: The label of the example
+            AllLabels: The label of the example
         """
         return self._example._get_label(self.label_type)
 
-    def set_label(
-        self, label: Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, None]
-    ) -> None:
+    def set_label(self, label: AllLabels) -> None:
         """Set the label of the example.
 
         Args:
-            label (Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, None]): The label to set
+            label (AllLabels): The label to set
 
         Raises:
             ValueError: If the label type is not supported.
@@ -60,6 +61,8 @@ class Example:
             self.label_type = LabelType.CB
         elif isinstance(label, CSLabel):
             self.label_type = LabelType.CS
+        elif isinstance(label, CCBLabel):
+            self.label_type = LabelType.CCB
         elif label is None:
             self.label_type = LabelType.NoLabel
         else:

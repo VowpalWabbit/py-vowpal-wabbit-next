@@ -4,6 +4,8 @@ import typing
 
 __all__ = [
     "CBLabel",
+    "CCBExampleType",
+    "CCBLabel",
     "CSLabel",
     "DebugNode",
     "DenseParameters",
@@ -63,6 +65,65 @@ class CBLabel():
         The weight of the example.
         """
     pass
+class CCBExampleType():
+    def __eq__(self, other: object) -> bool: ...
+    def __getstate__(self) -> int: ...
+    def __hash__(self) -> int: ...
+    def __index__(self) -> int: ...
+    def __init__(self, value: int) -> None: ...
+    def __int__(self) -> int: ...
+    def __ne__(self, other: object) -> bool: ...
+    def __repr__(self) -> str: ...
+    def __setstate__(self, state: int) -> None: ...
+    @property
+    def name(self) -> str:
+        """
+        :type: str
+        """
+    @property
+    def value(self) -> int:
+        """
+        :type: int
+        """
+    Action: vowpal_wabbit_next._core.CCBExampleType # value = <CCBExampleType.Action: 2>
+    Shared: vowpal_wabbit_next._core.CCBExampleType # value = <CCBExampleType.Shared: 1>
+    Slot: vowpal_wabbit_next._core.CCBExampleType # value = <CCBExampleType.Slot: 3>
+    Unset: vowpal_wabbit_next._core.CCBExampleType # value = <CCBExampleType.Unset: 0>
+    __members__: dict # value = {'Unset': <CCBExampleType.Unset: 0>, 'Shared': <CCBExampleType.Shared: 1>, 'Action': <CCBExampleType.Action: 2>, 'Slot': <CCBExampleType.Slot: 3>}
+    pass
+class CCBLabel():
+    def __init__(self, type: CCBExampleType, *, outcome: typing.Optional[typing.Tuple[float, typing.List[typing.Tuple[int, float]]]] = None, explicit_included_actions: typing.Optional[typing.List[int]] = None) -> None: 
+        """
+        A label representing a conditional contextual bandit problem.
+
+        Args:
+          type (CCBExampleType): The type of the example. Unset is invalid.
+          outcome (Optional[Tuple[float, List[Tuple[int, float]]]]): The outcome of the example. The format of the outcome is (cost, [(action, probability)]).
+          explicit_included_actions (Optional[List[int]]): The list of actions explicitly included from the slot.
+        """
+    def __repr__(self) -> str: ...
+    @property
+    def example_type(self) -> CCBExampleType:
+        """
+            Whether the example represents the shared context.
+
+        :type: CCBExampleType
+        """
+    @property
+    def explicit_included_actions(self) -> typing.Optional[typing.List[int]]:
+        """
+            The list of actions explicitly excluded from the slot.
+
+        :type: typing.Optional[typing.List[int]]
+        """
+    @property
+    def outcome(self) -> typing.Optional[typing.Tuple[float, typing.List[typing.Tuple[int, float]]]]:
+        """
+            The outcome of the example. The format of the outcome is (cost, [(action, probability)]).
+
+        :type: typing.Optional[typing.Tuple[float, typing.List[typing.Tuple[int, float]]]]
+        """
+    pass
 class CSLabel():
     def __init__(self, *, costs: typing.Optional[typing.List[typing.Tuple[float, float]]] = None, shared: bool = False) -> None: 
         """
@@ -115,11 +176,11 @@ class DebugNode():
         :type: str
         """
     @property
-    def input_labels(self) -> typing.Union[typing.Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, None], typing.List[typing.Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, None]]]:
+    def input_labels(self) -> typing.Union[typing.Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, CCBLabel, None], typing.List[typing.Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, CCBLabel, None]]]:
         """
         The label that was passed into this reduction. Or, list of labels if this reduction is a multi-example reduction.
 
-        :type: typing.Union[typing.Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, None], typing.List[typing.Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, None]]]
+        :type: typing.Union[typing.Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, CCBLabel, None], typing.List[typing.Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, CCBLabel, None]]]
         """
     @property
     def interactions(self) -> typing.Union[typing.List[str], typing.List[typing.List[str]]]:
@@ -203,10 +264,10 @@ class DenseParameters():
     pass
 class Example():
     def __init__(self) -> None: ...
-    def _get_label(self, arg0: LabelType) -> typing.Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, None]: ...
+    def _get_label(self, arg0: LabelType) -> typing.Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, CCBLabel, None]: ...
     def _get_tag(self) -> str: ...
     def _is_newline(self) -> bool: ...
-    def _set_label(self, arg0: typing.Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, None]) -> None: ...
+    def _set_label(self, arg0: typing.Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, CCBLabel, None]) -> None: ...
     pass
 class LabelType():
     def __eq__(self, other: object) -> bool: ...
