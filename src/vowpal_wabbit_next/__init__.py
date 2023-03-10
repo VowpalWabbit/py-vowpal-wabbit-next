@@ -1,6 +1,6 @@
 from ._core import __version__, _vw_version, _vw_commit
 from .example import Example
-from .workspace import Workspace
+from .workspace import Workspace, DebugNode
 from .text_format import TextFormatParser, TextFormatReader
 from .json_format import JsonFormatParser, JsonFormatReader
 from .dsjson_format import DSJsonFormatParser, DSJsonFormatReader
@@ -18,28 +18,29 @@ VW_VERSION: str = _vw_version
 
 __all__ = [
     "__version__",
-    "PredictionType",
-    "LabelType",
-    "Workspace",
-    "Example",
-    "TextFormatParser",
-    "TextFormatReader",
+    "apply_delta",
+    "CacheFormatReader",
+    "CacheFormatWriter",
+    "calculate_delta",
+    "CBLabel",
+    "CLIError",
+    "CSLabel",
+    "DebugNode",
     "DSJsonFormatParser",
     "DSJsonFormatReader",
-    "CacheFormatWriter",
-    "CacheFormatReader",
-    "ModelDelta",
-    "calculate_delta",
-    "apply_delta",
-    "merge_deltas",
-    "CLIError",
-    "run_cli_driver",
-    "VW_COMMIT",
-    "VW_VERSION",
-    "SimpleLabel",
-    "MulticlassLabel",
-    "CBLabel",
-    "CSLabel",
+    "Example",
     "JsonFormatParser",
     "JsonFormatReader",
+    "LabelType",
+    "merge_deltas",
+    "ModelDelta",
+    "MulticlassLabel",
+    "PredictionType",
+    "run_cli_driver",
+    "SimpleLabel",
+    "TextFormatParser",
+    "TextFormatReader",
+    "VW_COMMIT",
+    "VW_VERSION",
+    "Workspace",
 ]

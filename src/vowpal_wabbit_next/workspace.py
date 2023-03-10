@@ -1,5 +1,13 @@
-from typing import Dict, List, Optional, Tuple, Union
-import typing
+from __future__ import annotations
+import sys
+
+from typing import Dict, List, Optional, Tuple, Union, overload, cast, TypeVar, Generic
+
+if sys.version_info >= (3, 8):
+    from typing import Literal
+else:
+    from typing_extensions import Literal
+
 from vowpal_wabbit_next import _core, Example
 
 import numpy as np
@@ -34,8 +42,44 @@ Prediction = Union[
 
 MetricsDict = Dict[str, Union[int, float, str, bool, "MetricsDict"]]
 
+DebugNode = _core.DebugNode
 
-class Workspace:
+IsDebugT = TypeVar("IsDebugT")
+
+
+class Workspace(Generic[IsDebugT]):
+    @overload
+    def __init__(
+        self: Workspace[Literal[False]],
+        args: List[str] = [],
+        *,
+        model_data: Optional[bytes] = None,
+        record_feature_names: bool = False,
+        record_metrics: bool = False,
+        enable_debug_tree: Literal[False] = False,
+    ):
+        ...
+
+    @overload
+    def __init__(
+        self: Workspace[Literal[True]],
+        args: List[str] = [],
+        *,
+        model_data: Optional[bytes] = None,
+        record_feature_names: bool = False,
+        record_metrics: bool = False,
+        enable_debug_tree: Literal[True] = True,
+    ):
+        ...
+
+    @overload
+    def __init__(
+        self: Workspace[Literal[False]],
+        *,
+        _existing_workspace: Optional[_core.Workspace] = None,
+    ):
+        ...
+
     def __init__(
         self,
         args: List[str] = [],
@@ -43,6 +87,7 @@ class Workspace:
         model_data: Optional[bytes] = None,
         record_feature_names: bool = False,
         record_metrics: bool = False,
+        enable_debug_tree: bool = False,
         _existing_workspace: Optional[_core.Workspace] = None,
     ):
         """Main object used for making predictions and training a model.
@@ -80,6 +125,11 @@ class Workspace:
             model_data (Optional[bytes], optional): Bytes of a VW model to be loaded.
             record_invert_hash (bool, optional): If true, the invert hash will be recorded for each example. This is required to use :py:meth:`vowpal_wabbit_next.Workspace.json_weights`. This will slow down parsing and learn/predict.
             record_metrics (bool, optional): If true, reduction metrics will be enabled and can be fetched with :py:attr:`vowpal_wabbit_next.Workspace.metrics`
+            enable_debug_tree (bool, optional): If true, debug information in the form of the computation tree will be emitted by :py:meth:`~vowpal_wabbit_next.learn_one`, :py:meth:`~vowpal_wabbit_next.predict_one` and :py:meth:`~vowpal_wabbit_next.predict_then_learn_one`. This will affect performance negatively. See :py:class:`~vowpal_wabbit_next.DebugNode` for more information.
+
+                    .. warning::
+                        This is an experimental feature.
+
             _existing_workspace (Optional[_core.Workspace], optional): This is for internal usage and should not be set by a user.
         """
         if _existing_workspace is not None:
@@ -90,6 +140,7 @@ class Workspace:
                 model_data=model_data,
                 record_feature_names=record_feature_names,
                 record_metrics=record_metrics,
+                debug=enable_debug_tree,
             )
 
     def _check_label(self, example: Union[Example, List[Example]]) -> None:
@@ -105,7 +156,21 @@ class Workspace:
                     f"Label type mismatch. Expected {self.label_type}, got {example.label_type}"
                 )
 
-    def predict_one(self, example: typing.Union[Example, List[Example]]) -> Prediction:
+    @overload
+    def predict_one(
+        self: Workspace[Literal[True]], example: Union[Example, List[Example]]
+    ) -> Tuple[Prediction, DebugNode]:
+        ...
+
+    @overload
+    def predict_one(
+        self: Workspace[Literal[False]], example: Union[Example, List[Example]]
+    ) -> Prediction:
+        ...
+
+    def predict_one(
+        self, example: Union[Example, List[Example]]
+    ) -> Union[Prediction, Tuple[Prediction, DebugNode]]:
         """Make a single prediction.
 
         Examples:
@@ -117,10 +182,10 @@ class Workspace:
             1.0
 
         Args:
-            example (typing.Union[Example, List[Example]]): Example to use for prediction. This should be a list if this workspace is :py:meth:`vowpal_wabbit_next.Workspace.multiline`, otherwise it is should be a single Example
+            example (Union[Example, List[Example]]): Example to use for prediction. This should be a list if this workspace is :py:meth:`vowpal_wabbit_next.Workspace.multiline`, otherwise it is should be a single Example
 
         Returns:
-            Prediction: Prediction produced by this example. The type corresponds to the :py:meth:`vowpal_wabbit_next.Workspace.prediction_type` of the model. See :py:class:`vowpal_wabbit_next.PredictionType` for the mapping to types.
+            Prediction: Prediction produced by this example. Or, if `enable_debug_tree=True` was passed in the constructor then a tuple of prediction and :py:class:`~vowpal_wabbit_next.DebugNode` will be returned. The type corresponds to the :py:meth:`~vowpal_wabbit_next.Workspace.prediction_type` of the model. See :py:class:`~vowpal_wabbit_next.PredictionType` for the mapping to types.
         """
         self._check_label(example)
 
@@ -129,7 +194,21 @@ class Workspace:
         else:
             return self._workspace.predict_multi_ex_one([ex._example for ex in example])
 
-    def learn_one(self, example: typing.Union[Example, List[Example]]) -> None:
+    @overload
+    def learn_one(
+        self: Workspace[Literal[True]], example: Union[Example, List[Example]]
+    ) -> DebugNode:
+        ...
+
+    @overload
+    def learn_one(
+        self: Workspace[Literal[False]], example: Union[Example, List[Example]]
+    ) -> None:
+        ...
+
+    def learn_one(
+        self, example: Union[Example, List[Example]]
+    ) -> Union[None, DebugNode]:
         """Learn from one single example. Note, passing a list of examples here means the input is a multiline example, and not several individual examples. The label type of the example must match what is returned by :py:meth:`vowpal_wabbit_next.Workspace.label_type`.
 
         Examples:
@@ -141,18 +220,33 @@ class Workspace:
             1.0
 
         Args:
-            example (typing.Union[Example, List[Example]]): Example to learn on.
+            example (Union[Example, List[Example]]): Example to learn on.
+
+        Returns:
+            Union[None, DebugNode]: If `enable_debug_tree=True` was passed in the constructor then a :py:class:`~vowpal_wabbit_next.DebugNode` will be returned. Otherwise, None is returned.
         """
         self._check_label(example)
 
         if isinstance(example, Example):
-            self._workspace.learn_one(example._example)
+            return self._workspace.learn_one(example._example)
         else:
-            self._workspace.learn_multi_ex_one([ex._example for ex in example])
+            return self._workspace.learn_multi_ex_one([ex._example for ex in example])
+
+    @overload
+    def predict_then_learn_one(
+        self: Workspace[Literal[True]], example: Union[Example, List[Example]]
+    ) -> Tuple[Prediction, List[DebugNode]]:
+        ...
+
+    @overload
+    def predict_then_learn_one(
+        self: Workspace[Literal[False]], example: Union[Example, List[Example]]
+    ) -> Prediction:
+        ...
 
     def predict_then_learn_one(
-        self, example: typing.Union[Example, List[Example]]
-    ) -> Prediction:
+        self: Workspace[Literal[True]], example: Union[Example, List[Example]]
+    ) -> Union[Prediction, Tuple[Prediction, List[DebugNode]]]:
         """Make a prediction then learn from the example. This is potentially more efficient than a predict_one call followed by a learn_one call as the implementation is able to avoid duplicated work as long as the prediction is guaranteed to be from before learning.
 
         Examples:
@@ -163,10 +257,10 @@ class Workspace:
             0.0
 
         Args:
-            example (typing.Union[Example, List[Example]]): Example to use for prediction. This should be a list if this workspace is :py:meth:`vowpal_wabbit_next.Workspace.multiline`, otherwise it is should be a single Example
+            example (Union[Example, List[Example]]): Example to use for prediction. This should be a list if this workspace is :py:meth:`vowpal_wabbit_next.Workspace.multiline`, otherwise it is should be a single Example
 
         Returns:
-            Prediction: Prediction produced by this example. The type corresponds to the :py:meth:`vowpal_wabbit_next.Workspace.prediction_type` of the model. See :py:class:`vowpal_wabbit_next.PredictionType` for the mapping to types.
+            Prediction: Prediction produced by this example.  Or, if `enable_debug_tree=True` was passed in the constructor then a tuple of prediction and :py:class:`~vowpal_wabbit_next.DebugNode` will be returned. The type corresponds to the :py:meth:`~vowpal_wabbit_next.Workspace.prediction_type` of the model. See :py:class:`~vowpal_wabbit_next.PredictionType` for the mapping to types.
         """
         self._check_label(example)
 
@@ -215,7 +309,7 @@ class Workspace:
         Raises:
             ValueError: If the workspace is not configured to record metrics
         """
-        return typing.cast(MetricsDict, self._workspace.get_metrics())
+        return cast(MetricsDict, self._workspace.get_metrics())
 
     def serialize(self) -> bytes:
         """Serialize the current workspace as a VW model that can be loaded by the Workspace constructor, or command line tool.

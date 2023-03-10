@@ -38,3 +38,49 @@ def test_readable_model_feat_name_without_constructor_enabled():
     model = vw.Workspace()
     with pytest.raises(RuntimeError):
         model.readable_model(include_feature_names=True)
+
+
+def calc_depth(node, depth=1):
+    if len(node.children) == 0:
+        return depth
+    return max(calc_depth(child, depth + 1) for child in node.children)
+
+
+def test_debug_node_returned():
+    workspace = vw.Workspace(enable_debug_tree=True)
+    parser = vw.TextFormatParser(workspace)
+
+    workspace.learn_one(parser.parse_line("0 | price:.23 sqft:.25 age:.05 2006"))
+    workspace.learn_one(
+        parser.parse_line("1 2 'second_house | price:.18 sqft:.15 age:.35 1976")
+    )
+    workspace.learn_one(
+        parser.parse_line("0 1 0.5 'third_house | price:.053 sqft:.32 age:.87 1924")
+    )
+
+    prediction, dbg_node = workspace.predict_one(
+        parser.parse_line("| price:0.25 sqft:0.8 age:0.1")
+    )
+
+    assert isinstance(dbg_node, vw.DebugNode)
+    assert isinstance(dbg_node.output_prediction, type(prediction))
+    # count_label, scorer, gd
+    assert calc_depth(dbg_node) == 3
+
+
+def test_automl_epsilon_decay_return_tree():
+    workspace = vw.Workspace(
+        ["--cb_explore_adf", "--automl=4", "--cover=4"], enable_debug_tree=True
+    )
+    parser = vw.TextFormatParser(workspace)
+
+    ex = [
+        parser.parse_line("shared | s_1"),
+        parser.parse_line("0:0.1:0.25 | a:0.5 b:1"),
+        parser.parse_line("| a:-1 b:-0.5"),
+        parser.parse_line("| a:-2 b:-1"),
+    ]
+
+    dbg_node = workspace.learn_one(ex)
+    assert isinstance(dbg_node, vw.DebugNode)
+    assert calc_depth(dbg_node) > 5

@@ -3,9 +3,11 @@ import typing
 from vowpal_wabbit_next import _core, Workspace, Example
 from types import TracebackType
 
+T = typing.TypeVar("T")
+
 
 class JsonFormatParser:
-    def __init__(self, workspace: Workspace):
+    def __init__(self, workspace: Workspace[T]):
         """Parse VW Json format examples.
 
         Args:
@@ -55,7 +57,7 @@ JsonFormatReaderT = typing.TypeVar("JsonFormatReaderT", bound="JsonFormatReader"
 
 # takes a file and uses a context manager to generate based on the contents of the file
 class JsonFormatReader:
-    def __init__(self, workspace: Workspace, file: typing.TextIO):
+    def __init__(self, workspace: Workspace[T], file: typing.TextIO):
         """Read VW Json format examples from the given text file. This reader always produces lists of examples.
 
         Examples:

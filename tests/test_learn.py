@@ -3,7 +3,7 @@ import numpy as np
 
 
 def test_learn() -> None:
-    model = vw.Workspace()
+    model: vw.Workspace = vw.Workspace()
     parser = vw.TextFormatParser(model)
 
     pred = model.predict_one(parser.parse_line("| a"))
