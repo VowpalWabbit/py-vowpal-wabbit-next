@@ -1038,12 +1038,12 @@ PYBIND11_MODULE(_core, m)
           "The weight of the example. Or, list of weights if this reduction is a multi-example reduction.")
       .def_property_readonly(
           "updated_prediction",
-          [](const vwpy::debug_node& d) -> std::variant<float, std::vector<float>> { return d.partial_prediction; },
+          [](const vwpy::debug_node& d) -> std::variant<float, std::vector<float>> { return d.updated_prediction; },
           "The partial prediction on the example after this reduction ran. Or, list of partial predictions if this "
           "reduction is a multi-example reduction. This is generally only set by the bottom of the stack.")
       .def_property_readonly(
           "partial_prediction",
-          [](const vwpy::debug_node& d) -> std::variant<float, std::vector<float>> { return d.updated_prediction; },
+          [](const vwpy::debug_node& d) -> std::variant<float, std::vector<float>> { return d.partial_prediction; },
           "The partial prediction on the example after this reduction ran. Or, list of partial predictions if this "
           "reduction is a multi-example reduction. This is generally only set by the bottom of the stack.")
       .def_property_readonly(
