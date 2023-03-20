@@ -1504,6 +1504,12 @@ PYBIND11_MODULE(_core, m)
             return prediction;
           },
           py::arg("examples"), py::kw_only())
+      .def("end_pass",
+          [](workspace_with_logger_contexts& workspace)
+          {
+            workspace.workspace_ptr->current_pass++;
+            workspace.workspace_ptr->l->end_pass();
+          })
       .def("get_is_multiline",
           [](const workspace_with_logger_contexts& workspace) { return workspace.workspace_ptr->l->is_multiline(); })
       .def("get_metrics",
