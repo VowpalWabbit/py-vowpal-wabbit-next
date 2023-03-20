@@ -271,6 +271,10 @@ class Workspace(Generic[IsDebugT]):
                 [ex._example for ex in example]
             )
 
+    def end_pass(self) -> None:
+        """Signal the end of a pass to the model."""
+        self._workspace.end_pass()
+
     @property
     def prediction_type(self) -> PredictionType:
         """Based on the command line parameters used to setup VW a certain type of prediction is produced. See :py:class:`vowpal_wabbit_next.PredictionType` for the list of types and their corresponding Python type.
