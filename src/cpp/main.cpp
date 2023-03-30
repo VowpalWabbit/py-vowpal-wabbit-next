@@ -44,6 +44,7 @@
 #include <sys/types.h>
 
 #include <chrono>
+#include <csignal>
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -593,11 +594,24 @@ void py_unsetup_example(VW::workspace& ws, std::vector<VW::example*>& ex)
   for (auto& example : ex) { py_unsetup_example(ws, *example); }
 }
 
+// Because of the GIL we can use globals here.
+static bool SIGINT_CALLED = false;
+static VW::workspace* CLI_DRIVER_WORKSPACE = nullptr;
+
 // return type is an optional error information (nullopt if success), driver output, list of log messages
 // stdin is not supported
 std::tuple<std::optional<std::string>, std::string, std::vector<std::string>> run_cli_driver(
     const std::vector<std::string>& args, bool onethread)
 {
+  SIGINT_CALLED = false;
+  CLI_DRIVER_WORKSPACE = nullptr;
+  std::signal(SIGINT,
+      [](int)
+      {
+        if (CLI_DRIVER_WORKSPACE != nullptr) { VW::details::set_done(*CLI_DRIVER_WORKSPACE); }
+        SIGINT_CALLED = true;
+      });
+
   auto args_copy = args;
   args_copy.push_back("--no_stdin");
   auto options = VW::make_unique<VW::config::options_cli>(args_copy);
@@ -621,13 +635,22 @@ std::tuple<std::optional<std::string>, std::string, std::vector<std::string>> ru
   {
     auto all = VW::initialize_experimental(std::move(options), nullptr, driver_logger, &driver_log, &logger);
     all->runtime_config.vw_is_main = true;
+    CLI_DRIVER_WORKSPACE = all.get();
 
-    if (onethread) { VW::LEARNER::generic_driver_onethread(*all); }
-    else
+    // If sigint was called before we got here, we should avoid running the driver.
+    if (!SIGINT_CALLED)
     {
-      VW::start_parser(*all);
-      VW::LEARNER::generic_driver(*all);
-      VW::end_parser(*all);
+      if (onethread) { VW::LEARNER::generic_driver_onethread(*all); }
+      else
+      {
+        VW::start_parser(*all);
+        VW::LEARNER::generic_driver(*all);
+        VW::end_parser(*all);
+      }
+
+      if (all->example_parser->exc_ptr) { std::rethrow_exception(all->example_parser->exc_ptr); }
+      VW::sync_stats(*all);
+      all->finish();
     }
 
     if (all->parser_runtime.example_parser->exc_ptr)
@@ -646,6 +669,8 @@ std::tuple<std::optional<std::string>, std::string, std::vector<std::string>> ru
     return std::make_tuple("Unknown exception occurred", driver_log.str(), log_log);
   }
 
+  SIGINT_CALLED = false;
+  CLI_DRIVER_WORKSPACE = nullptr;
   return std::make_tuple(std::nullopt, driver_log.str(), log_log);
 }
 
