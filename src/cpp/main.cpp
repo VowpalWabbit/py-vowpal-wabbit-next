@@ -648,17 +648,13 @@ std::tuple<std::optional<std::string>, std::string, std::vector<std::string>> ru
         VW::end_parser(*all);
       }
 
-      if (all->example_parser->exc_ptr) { std::rethrow_exception(all->example_parser->exc_ptr); }
+      if (all->parser_runtime.example_parser->exc_ptr)
+      {
+        std::rethrow_exception(all->parser_runtime.example_parser->exc_ptr);
+      }
       VW::sync_stats(*all);
       all->finish();
     }
-
-    if (all->parser_runtime.example_parser->exc_ptr)
-    {
-      std::rethrow_exception(all->parser_runtime.example_parser->exc_ptr);
-    }
-    VW::sync_stats(*all);
-    all->finish();
   }
   catch (const std::exception& ex)
   {
