@@ -178,8 +178,11 @@ std::shared_ptr<VW::LEARNER::learner> vwpy::debug_reduction_setup(VW::setup_base
 
   // This is a huge hack, we need a way to keep global state between all instantiations of the debug reduction.
   // We use this abstract class field that we assume is not in use.
-  if (all->custom_parser == nullptr) { all->custom_parser = VW::make_unique<vwpy::debug_data_stash>(); }
-  auto* cast_stash = dynamic_cast<vwpy::debug_data_stash*>(all->custom_parser.get());
+  if (all->parser_runtime.custom_parser == nullptr)
+  {
+    all->parser_runtime.custom_parser = VW::make_unique<vwpy::debug_data_stash>();
+  }
+  auto* cast_stash = dynamic_cast<vwpy::debug_data_stash*>(all->parser_runtime.custom_parser.get());
   if (cast_stash == nullptr)
   {
     throw std::runtime_error(
@@ -213,7 +216,9 @@ std::shared_ptr<VW::LEARNER::learner> vwpy::debug_reduction_setup(VW::setup_base
                   .set_output_prediction_type(base->get_output_prediction_type())
                   .build();
   }
-  cast_stash->kept_around_reduction_state.push_back(learner->get_internal_type_erased_data_pointer_test_use_only_shared());
-  learner->set_internal_type_erased_data_pointer_does_not_override_funcs(base->get_internal_type_erased_data_pointer_test_use_only_shared());
+  cast_stash->kept_around_reduction_state.push_back(
+      learner->get_internal_type_erased_data_pointer_test_use_only_shared());
+  learner->set_internal_type_erased_data_pointer_does_not_override_funcs(
+      base->get_internal_type_erased_data_pointer_test_use_only_shared());
   return learner;
 }
