@@ -82,5 +82,6 @@ def test_automl_epsilon_decay_return_tree():
     ]
 
     dbg_node = workspace.learn_one(ex)
-    assert isinstance(dbg_node, vw.DebugNode)
-    assert calc_depth(dbg_node) > 5
+    assert isinstance(dbg_node, list)
+    assert len(dbg_node) == 1
+    assert calc_depth(dbg_node[0]) > 5

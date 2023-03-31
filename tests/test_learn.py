@@ -49,3 +49,26 @@ def test_predict_then_learn_equivalent() -> None:
     _ = model_predict_and_learn.predict_then_learn_one(parser.parse_line("0.5 | b"))
 
     assert np.allclose(model_learn.weights(), model_predict_and_learn.weights())
+
+
+# https://github.com/VowpalWabbit/py-vowpal-wabbit-next/issues/80
+def test_oaa_learn_crash():
+    dataset = [
+        "2 |text three",
+        "0 |text one",
+        "1 |text two",
+        "5 |text six",
+        "3 |text four",
+        "9 |text ten",
+        "7 |text eight",
+        "8 |text nine",
+        "6 |text seven",
+    ]
+
+    workspace = vw.Workspace(
+        ["--oaa=10", "--probabilities", "--loss_function=logistic"]
+    )
+    parser = vw.TextFormatParser(workspace)
+
+    for line in dataset:
+        workspace.learn_one(parser.parse_line(line))
