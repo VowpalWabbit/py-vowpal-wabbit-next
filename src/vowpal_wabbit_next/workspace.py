@@ -197,7 +197,7 @@ class Workspace(Generic[IsDebugT]):
     @overload
     def learn_one(
         self: Workspace[Literal[True]], example: Union[Example, List[Example]]
-    ) -> DebugNode:
+    ) -> List[DebugNode]:
         ...
 
     @overload
@@ -208,7 +208,7 @@ class Workspace(Generic[IsDebugT]):
 
     def learn_one(
         self, example: Union[Example, List[Example]]
-    ) -> Union[None, DebugNode]:
+    ) -> Union[None, List[DebugNode]]:
         """Learn from one single example. Note, passing a list of examples here means the input is a multiline example, and not several individual examples. The label type of the example must match what is returned by :py:meth:`vowpal_wabbit_next.Workspace.label_type`.
 
         Examples:
