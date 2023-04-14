@@ -291,15 +291,15 @@ class LabelType():
         """
     CB: vowpal_wabbit_next._core.LabelType # value = <LabelType.CB: 1>
     CBEval: vowpal_wabbit_next._core.LabelType # value = <LabelType.CBEval: 2>
-    CCB: vowpal_wabbit_next._core.LabelType # value = <LabelType.CCB: 6>
-    CS: vowpal_wabbit_next._core.LabelType # value = <LabelType.CS: 3>
-    Continuous: vowpal_wabbit_next._core.LabelType # value = <LabelType.Continuous: 9>
-    Multiclass: vowpal_wabbit_next._core.LabelType # value = <LabelType.Multiclass: 5>
-    Multilabel: vowpal_wabbit_next._core.LabelType # value = <LabelType.Multilabel: 4>
-    NoLabel: vowpal_wabbit_next._core.LabelType # value = <LabelType.NoLabel: 8>
+    CCB: vowpal_wabbit_next._core.LabelType # value = <LabelType.CCB: 7>
+    CS: vowpal_wabbit_next._core.LabelType # value = <LabelType.CS: 4>
+    Continuous: vowpal_wabbit_next._core.LabelType # value = <LabelType.Continuous: 10>
+    Multiclass: vowpal_wabbit_next._core.LabelType # value = <LabelType.Multiclass: 6>
+    Multilabel: vowpal_wabbit_next._core.LabelType # value = <LabelType.Multilabel: 5>
+    NoLabel: vowpal_wabbit_next._core.LabelType # value = <LabelType.NoLabel: 9>
     Simple: vowpal_wabbit_next._core.LabelType # value = <LabelType.Simple: 0>
-    Slates: vowpal_wabbit_next._core.LabelType # value = <LabelType.Slates: 7>
-    __members__: dict # value = {'Simple': <LabelType.Simple: 0>, 'CB': <LabelType.CB: 1>, 'CBEval': <LabelType.CBEval: 2>, 'CS': <LabelType.CS: 3>, 'Multilabel': <LabelType.Multilabel: 4>, 'Multiclass': <LabelType.Multiclass: 5>, 'CCB': <LabelType.CCB: 6>, 'Slates': <LabelType.Slates: 7>, 'NoLabel': <LabelType.NoLabel: 8>, 'Continuous': <LabelType.Continuous: 9>}
+    Slates: vowpal_wabbit_next._core.LabelType # value = <LabelType.Slates: 8>
+    __members__: dict # value = {'Simple': <LabelType.Simple: 0>, 'CB': <LabelType.CB: 1>, 'CBEval': <LabelType.CBEval: 2>, 'CS': <LabelType.CS: 4>, 'Multilabel': <LabelType.Multilabel: 5>, 'Multiclass': <LabelType.Multiclass: 6>, 'CCB': <LabelType.CCB: 7>, 'Slates': <LabelType.Slates: 8>, 'NoLabel': <LabelType.NoLabel: 9>, 'Continuous': <LabelType.Continuous: 10>}
     pass
 class ModelDelta():
     def __init__(self, model_data: bytes) -> None: ...
@@ -463,6 +463,6 @@ def _write_cache_example(workspace: Workspace, example: Example, file: object) -
     pass
 def _write_cache_header(workspace: Workspace, file: object) -> None:
     pass
-__version__ = '0.3.0'
-_vw_commit = 'a9b305f'
+__version__ = '0.4.0'
+_vw_commit = '4715756'
 _vw_version = '9.8.0'
