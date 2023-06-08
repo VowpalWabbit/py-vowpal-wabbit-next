@@ -9,6 +9,7 @@ These are a new set of bindings for [VowpalWabbit](https://github.com/VowpalWabb
 
 ```sh
 pip install vowpal-wabbit-next
+
 ```
 
 ## Example
