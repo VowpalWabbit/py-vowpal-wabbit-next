@@ -14,7 +14,7 @@ pip install vowpal-wabbit-next
 ## Example
 
 ```python
-import vowpalwabbit_next as vw
+import vowpal_wabbit_next as vw
 import io
 
 cb_input = io.StringIO(
