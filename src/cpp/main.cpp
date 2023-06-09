@@ -3,6 +3,7 @@
 #include "prediction.h"
 #include "vw/common/text_utils.h"
 #include "vw/config/options_cli.h"
+#include "vw/core/array_parameters.h"
 #include "vw/core/array_parameters_dense.h"
 #include "vw/core/cache.h"
 #include "vw/core/cb.h"
@@ -798,6 +799,18 @@ predict_then_learn(workspace_with_logger_contexts& workspace, std::vector<VW::ex
   return prediction;
 }
 
+size_t count_non_zero_weights(const VW::parameters& weights)
+{
+  if (weights.sparse)
+  {
+    return std::count_if(weights.sparse_weights.cbegin(), weights.sparse_weights.cend(), [](const float& w) { return w != 0.f; });
+  }
+  else
+  {
+    return std::count_if(weights.dense_weights.cbegin(), weights.dense_weights.cend(), [](const float& w) { return w != 0.f; });
+  }
+}
+
 }  // namespace
 
 PYBIND11_MODULE(_core, m)
@@ -1534,6 +1547,13 @@ PYBIND11_MODULE(_core, m)
           [](const workspace_with_logger_contexts& workspace) -> py::bytes
           {
             auto backing_vector = std::make_shared<std::vector<char>>();
+            // Determine size estimate by counting non-zero weights.
+            const auto non_zero_weights = count_non_zero_weights(workspace.workspace_ptr->weights);
+            const auto size_estimate_for_weights = non_zero_weights * sizeof(float) * workspace.workspace_ptr->weights.stride();
+            const auto size_estimate_overall = size_estimate_for_weights + 1024; // Add 1KB for other info
+            // Best effort reserve of likely final size to avoid reallocations.
+            backing_vector->reserve(size_estimate_overall);
+
             VW::io_buf io_writer;
             io_writer.add_file(VW::io::create_vector_writer(backing_vector));
             VW::save_predictor(*workspace.workspace_ptr, io_writer);
