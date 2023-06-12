@@ -1,7 +1,19 @@
 from __future__ import annotations
+import os
 import sys
 
-from typing import Dict, List, Optional, Tuple, Union, overload, cast, TypeVar, Generic
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional,
+    Tuple,
+    Union,
+    overload,
+    cast,
+    TypeVar,
+    Generic,
+)
 
 if sys.version_info >= (3, 8):
     from typing import Literal
@@ -322,6 +334,10 @@ class Workspace(Generic[IsDebugT]):
             bytes: raw bytes of serialized Workspace
         """
         return self._workspace.serialize()
+
+    def serialize_to_file(self, file_path: Union[str, os.PathLike[Any]]) -> None:
+        """Serialize the current workspace as a VW model to a file."""
+        return self._workspace.serialize_to_file(os.fspath(file_path))
 
     def weights(self) -> npt.NDArray[np.float32]:
         """Access to the weights of the model currently.
