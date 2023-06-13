@@ -14,3 +14,4 @@ The package also exports both the VW version and commit used which can be read u
 | `0.3.0` | `9.7.0` | [`2238d70`](https://github.com/VowpalWabbit/vowpal_wabbit/commits/2238d7053f1f86cb8db6224d65e6e34cff10381e) |
 | `0.4.0` | `9.8.0` | [`4715756`](https://github.com/VowpalWabbit/vowpal_wabbit/commits/4715756) |
 | `0.4.1` | `9.8.0` | [`b8c4ee3`](https://github.com/VowpalWabbit/vowpal_wabbit/commits/b8c4ee3) |
+| `0.5.0` | `9.8.0` | [`b8c4ee3`](https://github.com/VowpalWabbit/vowpal_wabbit/commits/b8c4ee3) |
