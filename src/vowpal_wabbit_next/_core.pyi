@@ -1,6 +1,8 @@
 from __future__ import annotations
 import vowpal_wabbit_next._core
 import typing
+import numpy
+_Shape = typing.Tuple[int, ...]
 
 __all__ = [
     "CBLabel",
@@ -10,6 +12,7 @@ __all__ = [
     "DebugNode",
     "DenseParameters",
     "Example",
+    "FeatureGroupRef",
     "LabelType",
     "ModelDelta",
     "MulticlassLabel",
@@ -263,11 +266,55 @@ class DebugNode():
 class DenseParameters():
     pass
 class Example():
+    def __contains__(self, arg0: int) -> bool: ...
+    def __delitem__(self, arg0: int) -> None: ...
+    def __getitem__(self, arg0: int) -> FeatureGroupRef: ...
     def __init__(self) -> None: ...
+    def __iter__(self) -> typing.Iterator: ...
     def _get_label(self, arg0: LabelType) -> typing.Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, CCBLabel, None]: ...
     def _get_tag(self) -> str: ...
     def _is_newline(self) -> bool: ...
     def _set_label(self, arg0: typing.Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, CCBLabel, None]) -> None: ...
+    def _set_tag(self, arg0: str) -> None: ...
+    @property
+    def _feat_group_indices(self) -> typing.List[int]:
+        """
+        :type: typing.List[int]
+        """
+    pass
+class FeatureGroupRef():
+    def __len__(self) -> int: ...
+    def push_feature(self, index: int, value: float) -> None: 
+        """
+        Push a single feature into this group. This is an advanced function. Specifically, to ensure consistency with data that comes from parsers the index passed should incorporate the namespace hash.
+        """
+    def push_many_features(self, indices: numpy.ndarray[numpy.uint64], values: numpy.ndarray[numpy.float32]) -> None: 
+        """
+        Push many features into this group. This is an advanced function. Specifically, to ensure consistency with data that comes from parsers the index passed should incorporate the namespace hash.
+        """
+    def truncate_to(self, i: int) -> None: 
+        """
+        Truncate this feature group to the given size
+        """
+    @property
+    def feat_group_index(self) -> int:
+        """
+        The index of the feature group. Since this is just the first letter of the namespace, multiple namespaces can map to the same group.
+
+        :type: int
+        """
+    @property
+    def indices(self) -> list:
+        """
+        :type: list
+        """
+    @property
+    def values(self) -> list:
+        """
+        Feature values in this group.
+
+        :type: list
+        """
     pass
 class LabelType():
     def __eq__(self, other: object) -> bool: ...

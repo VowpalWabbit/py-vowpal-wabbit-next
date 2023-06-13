@@ -30,8 +30,10 @@
 #include "vw/core/reduction_stack.h"
 #include "vw/core/scope_exit.h"
 #include "vw/core/simple_label.h"
+#include "vw/core/v_array.h"
 #include "vw/core/version.h"
 #include "vw/core/vw.h"
+#include "vw/core/vw_fwd.h"
 #include "vw/io/io_adapter.h"
 #include "vw/io/logger.h"
 #include "vw/json_parser/decision_service_utils.h"
@@ -803,13 +805,61 @@ size_t count_non_zero_weights(const VW::parameters& weights)
 {
   if (weights.sparse)
   {
-    return std::count_if(weights.sparse_weights.cbegin(), weights.sparse_weights.cend(), [](const float& w) { return w != 0.f; });
+    return std::count_if(
+        weights.sparse_weights.cbegin(), weights.sparse_weights.cend(), [](const float& w) { return w != 0.f; });
   }
   else
   {
-    return std::count_if(weights.dense_weights.cbegin(), weights.dense_weights.cend(), [](const float& w) { return w != 0.f; });
+    return std::count_if(
+        weights.dense_weights.cbegin(), weights.dense_weights.cend(), [](const float& w) { return w != 0.f; });
   }
 }
+
+struct feat_group_ref
+{
+  VW::example* _example;
+  VW::features* _features;
+  VW::namespace_index _fg_index;
+
+  feat_group_ref(VW::example* example, VW::features* features, VW::namespace_index ns)
+      : _example(example), _features(features), _fg_index(ns)
+  {
+  }
+};
+
+struct example_namespace_iterator
+{
+  using iterator_category = std::forward_iterator_tag;
+  using difference_type = std::ptrdiff_t;
+  using value_type = feat_group_ref;
+
+  example_namespace_iterator(VW::example* ptr, VW::v_array<VW::namespace_index>::iterator it) : _ptr(ptr), _it(it) {}
+
+  value_type operator*() const { return feat_group_ref{_ptr, &_ptr->feature_space[*_it], *_it}; }
+  example_namespace_iterator& operator++()
+  {
+    _it++;
+    return *this;
+  }
+  example_namespace_iterator operator++(int)
+  {
+    example_namespace_iterator tmp = *this;
+    ++(*this);
+    return tmp;
+  }
+  friend bool operator==(const example_namespace_iterator& a, const example_namespace_iterator& b)
+  {
+    return a._it == b._it;
+  };
+  friend bool operator!=(const example_namespace_iterator& a, const example_namespace_iterator& b)
+  {
+    return a._it != b._it;
+  };
+
+private:
+  VW::example* _ptr;
+  VW::v_array<VW::namespace_index>::iterator _it;
+};
 
 }  // namespace
 
@@ -1321,6 +1371,72 @@ PYBIND11_MODULE(_core, m)
           { return std::chrono::duration_cast<std::chrono::nanoseconds>(d.calc_overall_time()).count(); },
           "The duration of this reduction and all children in nanoseconds.");
 
+  py::class_<feat_group_ref>(m, "FeatureGroupRef")
+      .def_property_readonly(
+          "feat_group_index", [](const feat_group_ref& fg_ref) -> size_t { return fg_ref._fg_index; },
+          "The index of the feature group. Since this is just the first letter of the namespace, multiple namespaces "
+          "can map to the same group.")
+      .def_property_readonly(
+          "values",
+          [](const feat_group_ref& fg_ref) -> py::list
+          {
+            py::list values;
+            for (auto& v : fg_ref._features->values) { values.append(v); }
+            return values;
+          },
+          "Feature values in this group.")
+      .def_property_readonly("indices",
+          [](const feat_group_ref& fg_ref) -> py::list
+          {
+            py::list indices;
+            for (auto& v : fg_ref._features->indices) { indices.append(v); }
+            return indices;
+          })
+      .def(
+          "push_feature",
+          [](feat_group_ref& fg_ref, uint64_t index, float value) -> void
+          {
+            fg_ref._example->reset_total_sum_feat_sq();
+            fg_ref._features->push_back(value, index);
+          },
+          py::arg("index"), py::arg("value"),
+          "Push a single feature into this group. This is an advanced function. Specifically, to ensure consistency "
+          "with data that comes from parsers the index passed should incorporate the namespace hash.")
+      .def(
+          "push_many_features",
+          [](feat_group_ref& fg_ref, py::array_t<uint64_t> indices, py::array_t<float> values) -> void
+          {
+            if (indices.size() != values.size())
+            {
+              throw std::invalid_argument("indices and values must be the same size");
+            }
+            fg_ref._example->reset_total_sum_feat_sq();
+            fg_ref._features->values.reserve(fg_ref._features->values.size() + values.size());
+            fg_ref._features->indices.reserve(fg_ref._features->indices.size() + indices.size());
+            fg_ref._features->values.insert(fg_ref._features->values.end(), values.data(), values.data() + values.size());
+            fg_ref._features->indices.insert(fg_ref._features->indices.end(), indices.data(), indices.data() + indices.size());
+            for(size_t i = 0; i < indices.size(); i++)
+            {
+              fg_ref._features->sum_feat_sq += values.data()[i] * values.data()[i];
+            }
+          },
+          py::arg("indices"), py::arg("values"),
+          "Push many features into this group. This is an advanced function. Specifically, to ensure consistency with "
+          "data that comes from parsers the index passed should incorporate the namespace hash.")
+      .def(
+          "truncate_to",
+          [](feat_group_ref& fg_ref, size_t i) -> void
+          {
+            if (i > fg_ref._features->size())
+            {
+              throw std::invalid_argument("i must be less than the size of the feature group");
+            }
+            fg_ref._example->reset_total_sum_feat_sq();
+            fg_ref._features->truncate_to(i);
+          }, py::arg("i"),
+          "Truncate this feature group to the given size")
+      .def("__len__", [](const feat_group_ref& fg_ref) -> size_t { return fg_ref._features->size(); });
+
   py::class_<VW::example, std::shared_ptr<VW::example>>(m, "Example")
       .def(py::init(
           []()
@@ -1334,7 +1450,48 @@ PYBIND11_MODULE(_core, m)
           { return vwpy::to_label_variant(ex, label_type); })
       .def("_set_label",
           [](VW::example& ex, const vwpy::label_variant_ptrs_t& label) -> void { vwpy::from_label_variant(ex, label); })
-      .def("_get_tag", [](VW::example& ex) -> std::string { return std::string(ex.tag.data(), ex.tag.size()); });
+      .def("_get_tag", [](VW::example& ex) -> std::string { return std::string(ex.tag.data(), ex.tag.size()); })
+      .def("_set_tag",
+          [](VW::example& ex, const std::string& tag) -> void
+          {
+            ex.tag.clear();
+            ex.tag.insert(ex.tag.end(), tag.begin(), tag.end());
+          })
+      .def_property_readonly("_feat_group_indices",
+          [](VW::example& ex) -> std::vector<VW::namespace_index> {
+            return std::vector<VW::namespace_index>{ex.indices.begin(), ex.indices.end()};
+          })
+      .def("__getitem__",
+          [](VW::example* ex, VW::namespace_index ns) -> std::unique_ptr<feat_group_ref>
+          {
+            auto found = std::find(ex->indices.begin(), ex->indices.end(), ns);
+            if (found == ex->indices.end()) { ex->indices.emplace_back(ns); }
+
+            return std::make_unique<feat_group_ref>(ex, &ex->feature_space[ns], ns);
+          }, py::keep_alive<0, 1>())
+      .def("__delitem__",
+          [](VW::example* ex, VW::namespace_index ns)
+          {
+            auto found = std::find(ex->indices.begin(), ex->indices.end(), ns);
+            if (found == ex->indices.end()) { throw py::key_error("Namespace not found"); }
+
+            ex->feature_space[*found].clear();
+            ex->indices.erase(found);
+          })
+      .def("__contains__",
+          [](VW::example* ex, VW::namespace_index ns) -> bool
+          {
+            auto found = std::find(ex->indices.begin(), ex->indices.end(), ns);
+            return found != ex->indices.end();
+          })
+      .def(
+          "__iter__",
+          [](VW::example* ex) -> py::iterator
+          {
+            return py::make_iterator(
+                example_namespace_iterator{ex, ex->indices.begin()}, example_namespace_iterator{ex, ex->indices.end()});
+          },
+          py::keep_alive<0, 1>());
 
   py::class_<workspace_with_logger_contexts>(m, "Workspace")
       .def(py::init(
@@ -1549,8 +1706,9 @@ PYBIND11_MODULE(_core, m)
             auto backing_vector = std::make_shared<std::vector<char>>();
             // Determine size estimate by counting non-zero weights.
             const auto non_zero_weights = count_non_zero_weights(workspace.workspace_ptr->weights);
-            const auto size_estimate_for_weights = non_zero_weights * sizeof(float) * workspace.workspace_ptr->weights.stride();
-            const auto size_estimate_overall = size_estimate_for_weights + 1024; // Add 1KB for other info
+            const auto size_estimate_for_weights =
+                non_zero_weights * sizeof(float) * workspace.workspace_ptr->weights.stride();
+            const auto size_estimate_overall = size_estimate_for_weights + 1024;  // Add 1KB for other info
             // Best effort reserve of likely final size to avoid reallocations.
             backing_vector->reserve(size_estimate_overall);
 
