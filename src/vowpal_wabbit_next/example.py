@@ -7,7 +7,7 @@ from vowpal_wabbit_next.labels import (
     CSLabel,
     CCBLabel,
 )
-from typing import Optional, Union
+from typing import List, Optional, Union, Iterator
 
 AllLabels = Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, CCBLabel, None]
 
@@ -69,3 +69,51 @@ class Example:
             raise ValueError("Unsupported label type")
 
         self._example._set_label(label)
+
+    @property
+    def tag(self) -> str:
+        """Get the tag of the example.
+
+        Returns:
+            str: The tag of the example
+        """
+        return self._example._get_tag()
+
+    @tag.setter
+    def tag(self, tag: str) -> None:
+        """Set the tag of the example.
+
+        Args:
+            tag (str): The tag to set
+        """
+        self._example._set_tag(tag)
+
+    @property
+    def feat_group_indices(self) -> List[int]:
+        """Get the populated feature groups for this example.
+
+        Returns:
+            List[int]: The populated feature groups for this example
+        """
+        return self._example._feat_group_indices
+
+    def __iter__(self) -> Iterator[_core.FeatureGroupRef]:
+        return self._example.__iter__()
+
+    def __convert_key(self, key: Union[str, int]) -> int:
+        if isinstance(key, str):
+            return ord(key)
+        else:
+            # Key must be a valid byte
+            if key < 0 or key >= 256:
+                raise IndexError("Index out of range")
+            return key
+
+    def __getitem__(self, key: Union[str, int]) -> _core.FeatureGroupRef:
+        return self._example.__getitem__(self.__convert_key(key))
+
+    def __delitem__(self, key: Union[str, int]) -> None:
+        return self._example.__delitem__(self.__convert_key(key))
+
+    def __contains__(self, key: Union[str, int]) -> bool:
+        return self._example.__contains__(self.__convert_key(key))

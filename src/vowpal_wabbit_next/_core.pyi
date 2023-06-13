@@ -1,6 +1,8 @@
 from __future__ import annotations
 import vowpal_wabbit_next._core
 import typing
+import numpy
+_Shape = typing.Tuple[int, ...]
 
 __all__ = [
     "CBLabel",
@@ -10,6 +12,7 @@ __all__ = [
     "DebugNode",
     "DenseParameters",
     "Example",
+    "FeatureGroupRef",
     "LabelType",
     "ModelDelta",
     "MulticlassLabel",
@@ -263,11 +266,40 @@ class DebugNode():
 class DenseParameters():
     pass
 class Example():
+    def __getitem__(self, arg0: str) -> FeatureGroupRef: ...
     def __init__(self) -> None: ...
+    def __iter__(self) -> typing.Iterator: ...
     def _get_label(self, arg0: LabelType) -> typing.Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, CCBLabel, None]: ...
     def _get_tag(self) -> str: ...
     def _is_newline(self) -> bool: ...
     def _set_label(self, arg0: typing.Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, CCBLabel, None]) -> None: ...
+    def _set_tag(self, arg0: str) -> None: ...
+    @property
+    def _feat_group_indices(self) -> typing.List[int]:
+        """
+        :type: typing.List[int]
+        """
+    pass
+class FeatureGroupRef():
+    def __len__(self) -> int: ...
+    def push_feature(self, arg0: int, arg1: float) -> None: ...
+    def push_many_features(self, arg0: numpy.ndarray[numpy.uint64], arg1: numpy.ndarray[numpy.float32]) -> None: ...
+    def truncate_to(self, arg0: int) -> None: ...
+    @property
+    def feat_group_index(self) -> int:
+        """
+        :type: int
+        """
+    @property
+    def indices(self) -> list:
+        """
+        :type: list
+        """
+    @property
+    def values(self) -> list:
+        """
+        :type: list
+        """
     pass
 class LabelType():
     def __eq__(self, other: object) -> bool: ...
