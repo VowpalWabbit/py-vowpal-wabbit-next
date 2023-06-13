@@ -7,10 +7,10 @@ def test_example_creation() -> None:
     example = vw.Example()
     assert example.feat_group_indices == []
 
-    feat_group = example['a']
-    assert example.feat_group_indices == [ord('a')]
+    feat_group = example["a"]
+    assert example.feat_group_indices == [ord("a")]
 
-    feat_group = example['a']
+    feat_group = example["a"]
 
     assert len(feat_group) == 0
 

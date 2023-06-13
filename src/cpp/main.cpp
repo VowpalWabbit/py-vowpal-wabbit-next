@@ -1718,6 +1718,11 @@ PYBIND11_MODULE(_core, m)
             io_writer.flush();
             return py::bytes(backing_vector->data(), backing_vector->size());  // Return the data without transcoding
           })
+      .def("serialize_to_file",
+          [](const workspace_with_logger_contexts& workspace, const std::string& filename)
+          {
+            VW::save_predictor(*workspace.workspace_ptr, filename);
+          })
       .def(
           "get_index_for_scalar_feature",
           [](const workspace_with_logger_contexts& workspace, std::string_view feature_name,

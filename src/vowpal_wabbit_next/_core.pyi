@@ -266,7 +266,9 @@ class DebugNode():
 class DenseParameters():
     pass
 class Example():
-    def __getitem__(self, arg0: str) -> FeatureGroupRef: ...
+    def __contains__(self, arg0: int) -> bool: ...
+    def __delitem__(self, arg0: int) -> None: ...
+    def __getitem__(self, arg0: int) -> FeatureGroupRef: ...
     def __init__(self) -> None: ...
     def __iter__(self) -> typing.Iterator: ...
     def _get_label(self, arg0: LabelType) -> typing.Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, CCBLabel, None]: ...
@@ -282,12 +284,23 @@ class Example():
     pass
 class FeatureGroupRef():
     def __len__(self) -> int: ...
-    def push_feature(self, arg0: int, arg1: float) -> None: ...
-    def push_many_features(self, arg0: numpy.ndarray[numpy.uint64], arg1: numpy.ndarray[numpy.float32]) -> None: ...
-    def truncate_to(self, arg0: int) -> None: ...
+    def push_feature(self, index: int, value: float) -> None: 
+        """
+        Push a single feature into this group. This is an advanced function. Specifically, to ensure consistency with data that comes from parsers the index passed should incorporate the namespace hash.
+        """
+    def push_many_features(self, indices: numpy.ndarray[numpy.uint64], values: numpy.ndarray[numpy.float32]) -> None: 
+        """
+        Push many features into this group. This is an advanced function. Specifically, to ensure consistency with data that comes from parsers the index passed should incorporate the namespace hash.
+        """
+    def truncate_to(self, i: int) -> None: 
+        """
+        Truncate this feature group to the given size
+        """
     @property
     def feat_group_index(self) -> int:
         """
+        The index of the feature group. Since this is just the first letter of the namespace, multiple namespaces can map to the same group.
+
         :type: int
         """
     @property
@@ -298,6 +311,8 @@ class FeatureGroupRef():
     @property
     def values(self) -> list:
         """
+        Feature values in this group.
+
         :type: list
         """
     pass
@@ -471,6 +486,7 @@ class Workspace():
     def predict_then_learn_one(self, examples: Example) -> typing.Union[typing.Union[float, typing.List[float], typing.List[typing.Tuple[int, float]], typing.List[typing.List[typing.Tuple[int, float]]], int, typing.List[int], typing.List[typing.Tuple[float, float, float]], typing.Tuple[float, float], typing.Tuple[int, typing.List[int]], None], typing.Tuple[typing.Union[float, typing.List[float], typing.List[typing.Tuple[int, float]], typing.List[typing.List[typing.Tuple[int, float]]], int, typing.List[int], typing.List[typing.Tuple[float, float, float]], typing.Tuple[float, float], typing.Tuple[int, typing.List[int]], None], typing.List[DebugNode]]]: ...
     def readable_model(self, *, include_feature_names: bool = False) -> str: ...
     def serialize(self) -> bytes: ...
+    def serialize_to_file(self, arg0: str) -> None: ...
     def weights(self) -> DenseParameters: ...
     pass
 class _CacheReader():
