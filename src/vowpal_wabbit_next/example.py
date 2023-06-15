@@ -11,6 +11,8 @@ from typing import List, Optional, Union, Iterator
 
 AllLabels = Union[SimpleLabel, MulticlassLabel, CBLabel, CSLabel, CCBLabel, None]
 
+FeatureGroupRef = _core.FeatureGroupRef
+
 
 class Example:
     def __init__(
@@ -97,7 +99,18 @@ class Example:
         """
         return self._example._feat_group_indices
 
-    def __iter__(self) -> Iterator[_core.FeatureGroupRef]:
+    def __iter__(self) -> Iterator[FeatureGroupRef]:
+        """Iterate over the feature groups in this example.
+
+        Examples:
+            >>> for fg in example:
+            >>>     print(fg.feat_group_index)
+            >>>     print(fg.indices)
+            >>>     print(fg.values)
+
+        Yields:
+            Iterator[FeatureGroupRef]: An iterator over the feature groups in this example
+        """
         return self._example.__iter__()
 
     def __convert_key(self, key: Union[str, int]) -> int:
@@ -109,11 +122,37 @@ class Example:
                 raise IndexError("Index out of range")
             return key
 
-    def __getitem__(self, key: Union[str, int]) -> _core.FeatureGroupRef:
+    def __getitem__(self, key: Union[str, int]) -> FeatureGroupRef:
+        """Get a reference to a feature group. If it doesn't already exist it will be created.
+
+        Args:
+            key (Union[str, int]): Either the first character of namespace or index of namespace
+
+        Examples:
+            >>> print(example["d"].feat_group_index)
+            >>> print(example["d"].indices)
+            >>> print(example["d"].values)
+
+        Returns:
+            FeatureGroupRef: A reference to the feature group
+        """
         return self._example.__getitem__(self.__convert_key(key))
 
     def __delitem__(self, key: Union[str, int]) -> None:
+        """Delete a feature group.
+
+        Args:
+            key (Union[str, int]): Either the first character of namespace or index of namespace
+        """
         return self._example.__delitem__(self.__convert_key(key))
 
     def __contains__(self, key: Union[str, int]) -> bool:
+        """Check if a feature group exists.
+
+        Args:
+            key (Union[str, int]): Either the first character of namespace or index of namespace
+
+        Returns:
+            bool: True if the feature group exists, False otherwise
+        """
         return self._example.__contains__(self.__convert_key(key))
