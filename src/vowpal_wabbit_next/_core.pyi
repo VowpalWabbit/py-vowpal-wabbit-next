@@ -306,6 +306,8 @@ class FeatureGroupRef():
     @property
     def indices(self) -> list:
         """
+        Feature indices in this group.
+
         :type: list
         """
     @property
