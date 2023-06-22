@@ -5,6 +5,7 @@ API Reference
    :members:
    :undoc-members:
    :member-order: bysource
+   :special-members: __getitem__, __contains__, __iter__, __delitem__
    :exclude-members: PredictionType, LabelType
 
    .. autoclass:: PredictionType
@@ -114,3 +115,6 @@ API Reference
 
          Type: *NotImplemented*
 
+.. autoclass:: vowpal_wabbit_next._core.FeatureGroupRef
+   :members:
+   :undoc-members:
