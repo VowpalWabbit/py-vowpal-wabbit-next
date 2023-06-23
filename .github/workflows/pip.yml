@@ -30,6 +30,12 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    - name: Install gfortran
+      if: matrix.platform == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install gfortran
+
     - name: Set VCPKG_DEFAULT_TRIPLET on Windows
       if: ${{ matrix.platform == 'windows-latest' }}
       run: |
