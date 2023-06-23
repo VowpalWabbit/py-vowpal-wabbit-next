@@ -2,13 +2,13 @@
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
   "name": "py-vowpal-wabbit",
   "dependencies": [
-    "armadillo-code",
     "boost-math",
     "eigen3",
     "fmt",
     "rapidjson",
     "spdlog",
     "zlib",
-    "sse2neon"
+    "sse2neon",
+    "armadillo"
   ]
 }
