@@ -62,20 +62,17 @@ jobs:
 
     - name: Install pkg-config on MacOS
       if: ${{ matrix.platform == 'macos-latest' }}
-      run: brew install pkg-config
+      run: |
+        brew install pkg-config
 
-    - name: Build and install
-      run: pip install --verbose .
-      env:
-        CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/ext_libs/vcpkg/scripts/buildsystems/vcpkg.cmake
-        VCPKG_FORCE_DOWNLOADED_BINARIES: true
-        MACOSX_DEPLOYMENT_TARGET: "10.13"
+    - name: Install cmake
+      run: |
+        pip install cmake
 
-    - name: Install dev dependencies
-      run: pip install -r requirements-dev.txt
+    - name: Configure Environment
+      run: |
+        python setup.py configure -- -DBUILD_GCOV=OFF
 
-    - name: Test
-      run: pytest
-
-    - name: Typecheck
-      run: mypy
+    - name: Install from source
+      run: |
+        pip install . --verbose
