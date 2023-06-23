@@ -10,9 +10,8 @@ things have been changed, or rethought, to make using this API easier and safer.
 For example, there is no `finish_example` or `setup_example` in this API. If you
 don't know what that means then don't worry.
 
-They are highly experimental and the API may change significantly. If you'd
-prefer a more stable package then the `existing bindings
-<https://pypi.org/project/vowpalwabbit/>`_ are still available.
+They are experimental and so the API may change, but any changes will be
+communicated in the release notes.
 
 Installation
 ------------
