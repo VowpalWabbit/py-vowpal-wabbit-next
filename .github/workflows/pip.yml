@@ -30,11 +30,30 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Install gfortran
+    - name: Install gfortran on Linux
       if: matrix.platform == 'ubuntu-latest'
       run: |
         sudo apt-get update
         sudo apt-get install gfortran
+
+    - name: Install gfortran on Windows
+      if: ${{ matrix.platform == 'windows-latest' }}
+      run: |
+        choco install mingw --force
+        echo "CMAKE_MAKE_PROGRAM=C:/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin/make.exe" | Out-File -FilePath $env:GITHUB_ENV -Append
+        echo "CMAKE_C_COMPILER=C:/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin/gcc.exe" | Out-File -FilePath $env:GITHUB_ENV -Append
+        echo "CMAKE_CXX_COMPILER=C:/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin/g++.exe" | Out-File -FilePath $env:GITHUB_ENV -Append
+        echo "CMAKE_Fortran_COMPILER=C:/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin/gfortran.exe" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+    - name: Install gfortran on MacOS
+      if: ${{ matrix.platform == 'macos-latest' }}
+      run: |
+        brew install gcc
+        echo "CMAKE_MAKE_PROGRAM=make" >> $GITHUB_ENV
+        echo "CMAKE_C_COMPILER=/usr/local/bin/gcc-11" >> $GITHUB_ENV
+        echo "CMAKE_CXX_COMPILER=/usr/local/bin/g++-11" >> $GITHUB_ENV
+        echo "CMAKE_Fortran_COMPILER=/usr/local/bin/gfortran" >> $GITHUB_ENV
+  
 
     - name: Set VCPKG_DEFAULT_TRIPLET on Windows
       if: ${{ matrix.platform == 'windows-latest' }}
