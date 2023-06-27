@@ -36,15 +36,12 @@ jobs:
         sudo apt-get update
         sudo apt-get install gfortran
 
-    - name: Install gfortran on Windows
+    - name: Update vcpkg and install gfortran
       if: ${{ matrix.platform == 'windows-latest' }}
       run: |
-        choco install mingw --force
-        echo "CMAKE_MAKE_PROGRAM=C:/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin/make.exe" | Out-File -FilePath $env:GITHUB_ENV -Append
-        echo "CMAKE_C_COMPILER=C:/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin/gcc.exe" | Out-File -FilePath $env:GITHUB_ENV -Append
-        echo "CMAKE_CXX_COMPILER=C:/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin/g++.exe" | Out-File -FilePath $env:GITHUB_ENV -Append
-        echo "CMAKE_Fortran_COMPILER=C:/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin/gfortran.exe" | Out-File -FilePath $env:GITHUB_ENV -Append
-
+        git -C ext_libs/vcpkg pull
+        ext_libs/vcpkg/vcpkg install --debug vcpkg-gfortran:x64-windows-static -DCMAKE_Fortran_COMPILER=C:/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin/gfortran.exe
+    
     - name: Install gfortran on MacOS
       if: ${{ matrix.platform == 'macos-latest' }}
       run: |
