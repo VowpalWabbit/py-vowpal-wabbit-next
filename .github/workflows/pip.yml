@@ -42,8 +42,9 @@ jobs:
         git -C $($env:GITHUB_WORKSPACE + "/ext_libs/") pull
         git clone https://github.com/Microsoft/vcpkg.git $($env:GITHUB_WORKSPACE + "/ext_libs/vcpkg/")
         & $($env:GITHUB_WORKSPACE + "/ext_libs/vcpkg/bootstrap-vcpkg.bat")
-        & $($env:GITHUB_WORKSPACE + "/ext_libs/vcpkg/vcpkg") install --debug vcpkg-gfortran:x64-windows-static -DCMAKE_Fortran_COMPILER=C:/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin/gfortran.exe
-      
+        $env:Path += ";C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin\"
+        & $($env:GITHUB_WORKSPACE + "/ext_libs/vcpkg/vcpkg") install --debug vcpkg-gfortran:x64-windows-static
+
     - name: Install gfortran on MacOS
       if: ${{ matrix.platform == 'macos-latest' }}
       run: |
