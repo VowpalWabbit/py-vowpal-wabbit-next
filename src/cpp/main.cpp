@@ -1391,7 +1391,7 @@ PYBIND11_MODULE(_core, m)
             py::list indices;
             for (auto& v : fg_ref._features->indices) { indices.append(v); }
             return indices;
-          })
+          }, "Feature indices in this group.")
       .def(
           "push_feature",
           [](feat_group_ref& fg_ref, uint64_t index, float value) -> void
