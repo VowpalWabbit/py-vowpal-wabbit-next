@@ -26,6 +26,12 @@ jobs:
       with:
         submodules: true
 
+    - name: Checkout specific submodules
+      run: |
+        cd ext_libs/vowpal_wabbit
+        git submodule update --init ext_libs/armadillo-code
+        git submodule update --init ext_libs/ensmallen
+
     - uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
