@@ -28,8 +28,9 @@ jobs:
     
     - name: Checkout specific submodules
       run: |
-        git submodule update --init --recursive ext_libs/vowpal_wabbit/ext_libs/armadillo-code
-        git submodule update --init --recursive ext_libs/vowpal_wabbit/ext_libs/ensmallen
+        cd ext_libs/vowpal_wabbit
+        git submodule update --init ext_libs/armadillo-code
+        git submodule update --init ext_libs/ensmallen
 
     - uses: actions/setup-python@v4
       with:
