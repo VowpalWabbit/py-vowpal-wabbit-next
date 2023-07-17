@@ -24,7 +24,12 @@ jobs:
     steps:
     - uses: actions/checkout@v3
       with:
-        submodules: recursive
+        submodules: true
+    
+    - name: Checkout specific submodules
+      run: |
+        git submodule update --init --recursive ext_libs/vowpal_wabbit/ext_libs/armadillo-code
+        git submodule update --init --recursive ext_libs/vowpal_wabbit/ext_libs/ensmallen
 
     - uses: actions/setup-python@v4
       with:
