@@ -10,7 +10,7 @@ submodules:
   include:
     - ext_libs/pybind11
     - ext_libs/vowpal_wabbit
-  recursive: false
+  recursive: true
 
 python:
    version: "3.8"
