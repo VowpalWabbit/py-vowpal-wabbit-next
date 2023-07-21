@@ -43,7 +43,7 @@ def test_serialize_to_file_and_load() -> None:
     model.serialize_to_file(model_path)
 
     try:
-        model2 = vw.load_from_file(model_path)
+        model2 = vw.Worskapce.load_from_file(model_path)
 
         parser2 = vw.TextFormatParser(model)
         test_example2 = parser2.parse_line(test_example_input)
