@@ -342,7 +342,8 @@ class Workspace(Generic[IsDebugT]):
         *,
         record_feature_names: bool = False,
         record_metrics: bool = False,
-        enable_debug_tree: bool = False,) -> Workspace:
+        enable_debug_tree: bool = False,
+    ) -> Workspace:
         """Load a VW model from a file.
         Args:
             file_path (Union[str, os.PathLike[Any]]): Path to file containing serialized model
@@ -362,7 +363,8 @@ class Workspace(Generic[IsDebugT]):
             model_data=model_data,
             record_feature_names=record_feature_names,
             record_metrics=record_metrics,
-            enable_debug_tree=enable_debug_tree)
+            enable_debug_tree=enable_debug_tree,
+        )
 
     def serialize_to_file(self, file_path: Union[str, os.PathLike[Any]]) -> None:
         """Serialize the current workspace as a VW model to a file."""
