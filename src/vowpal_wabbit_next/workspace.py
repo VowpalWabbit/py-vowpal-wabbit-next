@@ -135,7 +135,7 @@ class Workspace(Generic[IsDebugT]):
             args (List[str]): VowpalWabbit command line options for configuring the model. An overall list can be found `here <https://vowpalwabbit.org/docs/vowpal_wabbit/python/latest/command_line_args.html>`_. Options which affect the driver are not supported. For example:
                 `--sort_features`, `--ngram`, `--feature_limit`, `--ignore`, `--extra_metrics`, `--dump_json_weights_experimental`
             model_data (Optional[bytes], optional): Bytes of a VW model to be loaded.
-            record_invert_hash (bool, optional): If true, the invert hash will be recorded for each example. This is required to use :py:meth:`vowpal_wabbit_next.Workspace.json_weights`. This will slow down parsing and learn/predict.
+            record_feature_names (bool, optional): If true, the invert hash will be recorded for each example. This is required to use :py:meth:`vowpal_wabbit_next.Workspace.json_weights`. This will slow down parsing and learn/predict.
             record_metrics (bool, optional): If true, reduction metrics will be enabled and can be fetched with :py:attr:`vowpal_wabbit_next.Workspace.metrics`
             enable_debug_tree (bool, optional): If true, debug information in the form of the computation tree will be emitted by :py:meth:`~vowpal_wabbit_next.learn_one`, :py:meth:`~vowpal_wabbit_next.predict_one` and :py:meth:`~vowpal_wabbit_next.predict_then_learn_one`. This will affect performance negatively. See :py:class:`~vowpal_wabbit_next.DebugNode` for more information.
 
@@ -345,11 +345,12 @@ class Workspace(Generic[IsDebugT]):
         enable_debug_tree: bool = False,
     ) -> Workspace:
         """Load a VW model from a file.
+
         Args:
             file_path (Union[str, os.PathLike[Any]]): Path to file containing serialized model
             args (List[str]): VowpalWabbit command line options for configuring the model. An overall list can be found `here <https://vowpalwabbit.org/docs/vowpal_wabbit/python/latest/command_line_args.html>`_. Options which affect the driver are not supported. For example:
                 `--sort_features`, `--ngram`, `--feature_limit`, `--ignore`, `--extra_metrics`, `--dump_json_weights_experimental`
-            record_invert_hash (bool, optional): If true, the invert hash will be recorded for each example. This is required to use :py:meth:`vowpal_wabbit_next.Workspace.json_weights`. This will slow down parsing and learn/predict.
+            record_feature_names (bool, optional): If true, the invert hash will be recorded for each example. This is required to use :py:meth:`vowpal_wabbit_next.Workspace.json_weights`. This will slow down parsing and learn/predict.
             record_metrics (bool, optional): If true, reduction metrics will be enabled and can be fetched with :py:attr:`vowpal_wabbit_next.Workspace.metrics`
             enable_debug_tree (bool, optional): If true, debug information in the form of the computation tree will be emitted by :py:meth:`~vowpal_wabbit_next.learn_one`, :py:meth:`~vowpal_wabbit_next.predict_one` and :py:meth:`~vowpal_wabbit_next.predict_then_learn_one`. This will affect performance negatively. See :py:class:`~vowpal_wabbit_next.DebugNode` for more information.
 
