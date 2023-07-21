@@ -359,12 +359,12 @@ class Workspace(Generic[IsDebugT]):
         """
         with open(file_path, "rb") as f:
             model_data = f.read()
-        return Workspace(
-            args=args,
+        return _core.Workspace(
+            args,
             model_data=model_data,
             record_feature_names=record_feature_names,
             record_metrics=record_metrics,
-            enable_debug_tree=enable_debug_tree,
+            debug=enable_debug_tree,
         )
 
     def serialize_to_file(self, file_path: Union[str, os.PathLike[Any]]) -> None:
