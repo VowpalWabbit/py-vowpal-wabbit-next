@@ -532,6 +532,9 @@ void py_unsetup_example(VW::workspace& ws, VW::example& ex)
     case VW::label_type_t::CB:
       replacement.cb = std::move(ex.l.cb);
       break;
+    case VW::label_type_t::CB_WITH_OBSERVATIONS:
+      replacement.cb_with_observations = std::move(ex.l.cb_with_observations);
+      break;
     case VW::label_type_t::CB_EVAL:
       replacement.cb_eval = std::move(ex.l.cb_eval);
       break;
@@ -890,6 +893,7 @@ PYBIND11_MODULE(_core, m)
       .value("Simple", VW::label_type_t::SIMPLE)
       .value("CB", VW::label_type_t::CB)
       .value("CBEval", VW::label_type_t::CB_EVAL)
+      .value("CBWithObservations", VW::label_type_t::CB_WITH_OBSERVATIONS)
       .value("CS", VW::label_type_t::CS)
       .value("Multilabel", VW::label_type_t::MULTILABEL)
       .value("Multiclass", VW::label_type_t::MULTICLASS)

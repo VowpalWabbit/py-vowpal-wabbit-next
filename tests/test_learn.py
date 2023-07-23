@@ -72,3 +72,26 @@ def test_oaa_learn_crash():
 
     for line in dataset:
         workspace.learn_one(parser.parse_line(line))
+
+
+def test_igl_predict_and_learn():
+    dsjson_input = """{"_label_cost": 0, "_label_probability": 0.25, "_label_Action": 1, "_labelIndex": 0, "o": [{"v": {"v=click": 1}, "_definitely_bad": false}], "a": [0, 1, 2, 3], "c": {"User": {"user=Tom": 1, "time=afternoon" : 1}, "_multi": [{"Action": {"action=politics": 1}}, {"Action": {"action=sports": 1}}, {"Action": {"action=music": 1}}, {"Action": {"action=food": 1}}]}, "p": [0.25, 0.25, 0.25, 0.25]}"""
+    model = vw.Workspace(
+        ["--cb_explore_adf", "--coin", "--experimental_igl", "-q", "UA"]
+    )
+
+    parser = vw.DSJsonFormatParser(model)
+    examples = parser.parse_json(dsjson_input)
+
+    assert len(examples) == 6
+
+    pred = model.predict_one(examples)
+    assert all([p == 0.25 for _, p in pred])
+    model.learn_one(examples)
+
+    assert (
+        model.weights()[
+            model.get_index_for_scalar_feature("user=Tom", namespace_name="User")
+        ][0][0]
+        != 0
+    )

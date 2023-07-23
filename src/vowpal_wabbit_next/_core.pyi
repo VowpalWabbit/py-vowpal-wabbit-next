@@ -340,6 +340,7 @@ class LabelType():
         """
     CB: vowpal_wabbit_next._core.LabelType # value = <LabelType.CB: 1>
     CBEval: vowpal_wabbit_next._core.LabelType # value = <LabelType.CBEval: 2>
+    CBWithObservations: vowpal_wabbit_next._core.LabelType # value = <LabelType.CBWithObservations: 3>
     CCB: vowpal_wabbit_next._core.LabelType # value = <LabelType.CCB: 7>
     CS: vowpal_wabbit_next._core.LabelType # value = <LabelType.CS: 4>
     Continuous: vowpal_wabbit_next._core.LabelType # value = <LabelType.Continuous: 10>
@@ -348,7 +349,7 @@ class LabelType():
     NoLabel: vowpal_wabbit_next._core.LabelType # value = <LabelType.NoLabel: 9>
     Simple: vowpal_wabbit_next._core.LabelType # value = <LabelType.Simple: 0>
     Slates: vowpal_wabbit_next._core.LabelType # value = <LabelType.Slates: 8>
-    __members__: dict # value = {'Simple': <LabelType.Simple: 0>, 'CB': <LabelType.CB: 1>, 'CBEval': <LabelType.CBEval: 2>, 'CS': <LabelType.CS: 4>, 'Multilabel': <LabelType.Multilabel: 5>, 'Multiclass': <LabelType.Multiclass: 6>, 'CCB': <LabelType.CCB: 7>, 'Slates': <LabelType.Slates: 8>, 'NoLabel': <LabelType.NoLabel: 9>, 'Continuous': <LabelType.Continuous: 10>}
+    __members__: dict # value = {'Simple': <LabelType.Simple: 0>, 'CB': <LabelType.CB: 1>, 'CBEval': <LabelType.CBEval: 2>, 'CBWithObservations': <LabelType.CBWithObservations: 3>, 'CS': <LabelType.CS: 4>, 'Multilabel': <LabelType.Multilabel: 5>, 'Multiclass': <LabelType.Multiclass: 6>, 'CCB': <LabelType.CCB: 7>, 'Slates': <LabelType.Slates: 8>, 'NoLabel': <LabelType.NoLabel: 9>, 'Continuous': <LabelType.Continuous: 10>}
     pass
 class ModelDelta():
     def __init__(self, model_data: bytes) -> None: ...
