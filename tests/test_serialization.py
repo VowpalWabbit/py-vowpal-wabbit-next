@@ -44,7 +44,6 @@ def test_serialize_to_file_and_load() -> None:
 
     try:
         model2 = vw.Workspace.load_from_file(model_path)
-
         parser2 = vw.TextFormatParser(model)
         test_example2 = parser2.parse_line(test_example_input)
         pred2 = model2.predict_one(test_example2)
