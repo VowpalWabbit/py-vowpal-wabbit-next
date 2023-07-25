@@ -343,7 +343,7 @@ class Workspace(Generic[IsDebugT]):
         record_feature_names: bool = False,
         record_metrics: bool = False,
         enable_debug_tree: bool = False,
-    ) -> Workspace:
+    ) -> Workspace[Any]:
         """Load a VW model from a file.
 
         Args:
@@ -356,6 +356,9 @@ class Workspace(Generic[IsDebugT]):
 
                     .. warning::
                         This is an experimental feature.
+        
+        Returns:
+            Workspace[Any]: Workspace with the loaded model
         """
         with open(file_path, "rb") as f:
             model_data = f.read()
