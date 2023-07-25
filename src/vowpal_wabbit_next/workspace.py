@@ -356,7 +356,7 @@ class Workspace(Generic[IsDebugT]):
 
                     .. warning::
                         This is an experimental feature.
-        
+
         Returns:
             Workspace[Any]: Workspace with the loaded model
         """
