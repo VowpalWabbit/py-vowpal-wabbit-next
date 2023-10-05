@@ -19,13 +19,13 @@ jobs:
       fail-fast: false
       matrix:
         platform: [windows-latest, macos-latest, ubuntu-latest]
-        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12"]
 
     steps:
     - uses: actions/checkout@v3
       with:
         submodules: true
-    
+
     - name: Checkout specific submodules
       run: |
         cd ext_libs/vowpal_wabbit
