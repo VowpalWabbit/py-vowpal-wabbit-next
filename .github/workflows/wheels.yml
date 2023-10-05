@@ -57,7 +57,7 @@ jobs:
         git submodule update --init ext_libs/armadillo-code
         git submodule update --init ext_libs/ensmallen
 
-    - uses: pypa/cibuildwheel@v2.13.1
+    - uses: pypa/cibuildwheel@v2.16.2
       env:
         CIBW_BUILD: ${{ matrix.cibw_python }}
         CIBW_ARCHS: x86_64
@@ -91,7 +91,7 @@ jobs:
 
     - id: change-path
       run: python -c "import pathlib;print('UNIX_PATH='+str(pathlib.PureWindowsPath(r'${{github.workspace}}').as_posix()))" >> $env:GITHUB_OUTPUT
-    - uses: pypa/cibuildwheel@v2.13.1
+    - uses: pypa/cibuildwheel@v2.16.2
       env:
         CIBW_BUILD: ${{ matrix.cibw_python }}
         CIBW_ARCHS: AMD64
@@ -116,7 +116,7 @@ jobs:
         submodules: recursive
 
     # We use full vendoring for this since we need to cross compile the ARM piece.
-    - uses: pypa/cibuildwheel@v2.13.1
+    - uses: pypa/cibuildwheel@v2.16.2
       env:
         CIBW_BUILD: ${{ matrix.cibw_python }}
         CIBW_ARCHS_MACOS: universal2
